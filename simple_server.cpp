@@ -4,6 +4,12 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+// readline
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+
+
 void handleClient(int clientSocket) {
     const char* message = "Hello from my first simple server!\n";
     char buffer[1024] = {0};
@@ -53,16 +59,28 @@ int main() {
     // htons is used to convert the number
     serverAddr.sin_port = htons(8080); // Choose any available port
 
-
+    // .sin_addr.s_addr is used to set the IP address for a server socket in the struct sockaddr_in
+    // data structure to listen on all available network interfaces on the local machine
+    // sin_addr: This is a member of the struct sockaddr_in that represents the IP address.
+    // s_addr: This is a member of the struct in_addr data structure, which is a nested structure
+    // within struct sockaddr_in. It holds the actual IP address as a 32-bit unsigned integer value.
+    // INADDR_ANY (represents the special IPv4 address "0.0.0.0,") allows the server to listen for
+    // incoming connections on any available IP address assigned to the system.
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+    // -- BIND FUNCTION --
+    // this function is used to bind a socket to a specific address and port on the local machine.
+        if (bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) == -1) {
         std::cerr << "Error binding to port\n";
         close(serverSocket);
         return 1;
     }
 
-    // Start listening for connections
+    // -- LISTEN FUNCTION --
+    // listen is used to make a socket a passive listening socket, allowing it to accept incoming
+    // connection requests from clients.
+    // the second parameter of the listen function stands for maximum number of pending connections
+    // that can be queued up for this listening socket.
     if (listen(serverSocket, 5) == -1) {
         std::cerr << "Error listening\n";
         close(serverSocket);
@@ -73,8 +91,11 @@ int main() {
 
     // Accept and handle client connections
     while (true) {
-//		if (std::cin.eof())
-//			break ;
+//        if (strncmp(readline(STDIN_FILENO), "STOP", 4) == 0)
+//            break ;
+
+
+        //
         clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
         if (clientSocket == -1) {
             std::cerr << "Error accepting connection\n";
