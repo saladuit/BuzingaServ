@@ -1,0 +1,55 @@
+name: tests
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - include/**
+      - libs/**
+      - makerc/**
+      - src/**
+      # - unit_test/**
+      - Makefile
+    branches:
+      - main
+  pull_request:
+    paths:
+      - include/**
+      - libs/**
+      - makerc/**
+      - src/**
+      # - unit_test/**
+      - Makefile
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Build project
+        run: make
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install libreadline-dev lcov libcriterion-dev
+  #         sudo pip install cpp-coveralls
+  #     - name: Run tests
+  #       run: make test_re
+  #     - name: Generate Coverage
+  #       run: make coverage_re
+  #     - name: Coveralls GitHub Action
+  #       uses: coverallsapp/github-action@v1
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         path-to-lcov: build/coverage.info
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      # - name: Install dependencies
+      #   run: |
+      #     brew update && brew install criterion readline lcov
+      - name: Build project
+        run: make
+      # - name: Run tests
+      #   run: make test_re
