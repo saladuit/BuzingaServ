@@ -19,11 +19,15 @@ void handleClient(int clientSocket) {
 }
 
 int main() {
-    // sockets -- like file descriptors
+    // -- SOCKET DESCRIPTORS --
     int	serverSocket;
     int	clientSocket;
 
-    // ?? server and client struct ??
+    // -- SOCKET DATA STRUCTURES -- for representing network addresses, specifically IPv4 addresses,
+    // in the internet domain
+    // you would use these structs to bind the server socket to a specific IP address and port,
+    // and when accepting client connections, you would use the clientAddr struct to retrieve
+    // the client's IP address and port information
     struct sockaddr_in serverAddr;
     struct sockaddr_in clientAddr;
 
@@ -42,9 +46,14 @@ int main() {
         return 1;
     }
 
-    // Bind the socket to a port
+    // .sin_family: this member specifies the address family
     serverAddr.sin_family = AF_INET;
+
+    // .sin_port: this member hold the port number in network byte order
+    // htons is used to convert the number
     serverAddr.sin_port = htons(8080); // Choose any available port
+
+
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
