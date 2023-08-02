@@ -49,10 +49,6 @@ fsan:
 	@$(MAKE) DEBUG=1 FSAN=1
 .PHONY: fsan
 
-run: all
-	./$(NAME)
-.PHONY: run
-
 resan: fclean fsan
 .PHONY: resan
 
