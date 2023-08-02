@@ -4,12 +4,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-// readline
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-
-
 void handleClient(int clientSocket) {
     const char* message = "Hello from my first simple server!\n";
     char buffer[1024] = {0};
@@ -20,7 +14,8 @@ void handleClient(int clientSocket) {
     // recv is used for receiving data from a connected socket
     recv(clientSocket, buffer, sizeof(buffer), 0);
 
-    std::cout << "Received from client: " << buffer << std::endl;
+//    std::cout << "Received from client: " << buffer << std::endl;
+    std::cout << buffer << std::endl;
     close(clientSocket);
 }
 
@@ -80,7 +75,8 @@ int main() {
     // listen is used to make a socket a passive listening socket, allowing it to accept incoming
     // connection requests from clients.
     // the second parameter of the listen function stands for maximum number of pending connections
-    // that can be queued up for this listening socket.
+    // (also known as backlog value) that can be queued up for this listening socket.
+	// The backlog value should be chosen based on the expected number of simultaneous client connections.
     if (listen(serverSocket, 5) == -1) {
         std::cerr << "Error listening\n";
         close(serverSocket);
@@ -89,13 +85,12 @@ int main() {
 
     std::cout << "Server listening on port 8080...\n";
 
-    // Accept and handle client connections
+	// -- ACCEPT FUNCTION -- steps:
+	// Waits until a client sends a connection request to the listening socket.
+	// Creates a new socket specifically for communication with that client.
+	// Copies the client's address information (IP address and port number) into the clientAddr structure.
+	// Returns the new socket descriptor (clientSocket) for the communication with the client.
     while (true) {
-//        if (strncmp(readline(STDIN_FILENO), "STOP", 4) == 0)
-//            break ;
-
-
-        //
         clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
         if (clientSocket == -1) {
             std::cerr << "Error accepting connection\n";
