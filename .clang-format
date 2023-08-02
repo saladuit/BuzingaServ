@@ -1,0 +1,53 @@
+# Use the LLVM coding style as the base for this configuration.
+BasedOnStyle: LLVM
+
+# Set maximum line width to 80 columns.
+# Exceeding lines will be wrapped.
+ColumnLimit: 80
+
+# Always use tabs for indentation instead of spaces.
+UseTab: Always
+
+# Set the width of a single tab to 4 columns.
+TabWidth: "4"
+
+# Enforce 4-space indentation, as per the Norminette.
+IndentWidth: "4"
+
+# Place opening braces on a new line (Allman style).
+BreakBeforeBraces: Allman
+
+# Insert a space before the parentheses of control statements.
+# e.g., "if (condition)" instead of "if(condition)"
+SpaceBeforeParens: ControlStatements
+
+# One instruction per line, as per the Norminette.
+AllowShortIfStatementsOnASingleLine: false
+
+# Don't put short functions on a single line.
+AllowShortFunctionsOnASingleLine: false
+
+# Do not include a space inside empty parentheses.
+# e.g., "f()" instead of "f( )"
+SpaceInEmptyParentheses: false
+
+# Do not include spaces inside parentheses in C-style casts.
+# e.g., "(int)value" instead of "( int )value"
+SpacesInCStyleCastParentheses: false
+
+# Do not include spaces immediately inside parentheses.
+# e.g., "f(a, b)" instead of "f( a, b )"
+SpacesInParentheses: false
+
+# Do not include spaces immediately inside square brackets.
+# e.g., "a[1]" instead of "a[ 1 ]"
+SpacesInSquareBrackets: false
+
+# All function arguments on one line if they fit within the column limit.
+BinPackArguments: true
+
+# Place all function parameters on one line if they fit within the column limit.
+BinPackParameters: true
+
+# Don't break template declarations
+AlwaysBreakTemplateDeclarations: "Yes"
