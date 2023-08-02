@@ -24,7 +24,7 @@ std::string findSubstringBetween(const char* buffer, const char* findStr, const 
     return "";
 }
 
-void    print_http_request(char *buffer) {
+void    toRequestFormat(char *buffer) {
     std::string get = findSubstringBetween(buffer, "GET", "Host");
     std::string host = findSubstringBetween(buffer, "Host", "Connection");
     std::string user = findSubstringBetween(buffer, "User-Agent", "AppleWebKit");
@@ -44,7 +44,7 @@ void handleClient(int clientSocket) {
     recv(clientSocket, buffer, sizeof(buffer), 0);
 
 //    std::cout << "Received from client: " << buffer << std::endl;
-    print_http_request(buffer);
+    toRequestFormat(buffer);
     close(clientSocket);
 }
 
