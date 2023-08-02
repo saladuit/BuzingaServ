@@ -4,6 +4,34 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+std::string findSubstringBetween(const char* buffer, const char* findStr, const char* tillStr) {
+    const char* startPtr = std::strstr(buffer, findStr);
+    const char* endPtr = std::strstr(buffer, tillStr);
+
+    if (startPtr != nullptr && endPtr != nullptr) {
+        // Move the start pointer forward by the length of findStr
+//        startPtr += (std::strlen(findStr);
+
+        // Calculate the length of the substring to extract
+        std::ptrdiff_t length = endPtr - startPtr;
+
+        // Extract the substring between findStr and tillStr
+        std::string result(startPtr, length);
+        return result;
+    }
+
+    // Return an empty string if either findStr or tillStr is not found
+    return "";
+}
+
+void    print_http_request(char *buffer) {
+    std::string get = findSubstringBetween(buffer, "GET", "Host");
+    std::string host = findSubstringBetween(buffer, "Host", "Connection");
+    std::string user = findSubstringBetween(buffer, "User-Agent", "AppleWebKit");
+
+    std::cout << get << host << user << "\n" << std::endl;
+}
+
 void handleClient(int clientSocket) {
     const char* message = "Hello from my first simple server!\n";
     char buffer[1024] = {0};
@@ -12,10 +40,11 @@ void handleClient(int clientSocket) {
     send(clientSocket, message, strlen(message), 0);
 
     // recv is used for receiving data from a connected socket
+    // and stores it into buffer
     recv(clientSocket, buffer, sizeof(buffer), 0);
 
 //    std::cout << "Received from client: " << buffer << std::endl;
-    std::cout << buffer << std::endl;
+    print_http_request(buffer);
     close(clientSocket);
 }
 
