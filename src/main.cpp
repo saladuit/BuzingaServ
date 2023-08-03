@@ -1,11 +1,10 @@
-#include <Webserver.hpp>
+#include <WebServ.hpp>
 #include <cstdlib>
 
 int main(int argc, char **argv)
 {
-	if (argc != 2 && argc != 3)
+	if (argc != 1 && argc != 2)
 		return (EXIT_FAILURE);
-	if (*argv[1] == '\0')
-		return (EXIT_FAILURE);
+	WebServ webserver(argc == 2 ? argv[1] : DEFAULT_CONFIG_FILE);
 	return (webserver.run());
 }

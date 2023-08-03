@@ -1,13 +1,15 @@
-#include <Webserver.hpp>
+#include <WebServ.hpp>
 
-Webserver::Webserver()
+WebServ::WebServ(const std::string &config_path) : _config_path(config_path)
 {
 }
 
-Webserver::Webserver(const std::string &config_file) : _config_file(config_file)
+WebServ::~WebServ()
 {
 }
 
-Webserver::~Webserver()
+int WebServ::run()
 {
+
+	return (EXIT_SUCCESS);
 }

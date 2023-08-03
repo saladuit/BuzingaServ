@@ -19,7 +19,7 @@ CC				:=c++
 RM				:=rm -rf
 
 #	Compiler flags
-CFLAGS			=-Wall -Wextra -Werror -Wpedantic -std=c++20
+CFLAGS			=-Wall -Wextra -Werror -Wpedantic -std=c++17
 
 #	Directories
 SRC_DIR		 	:=src

@@ -13,4 +13,9 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
+#define DEFAULT_PORT 8080
+#define DEFAULT_CONFIG_FILE "config/webserver.conf"
+#define DEFAULT_ERROR_PAGE "config/error_page.html"
+#define DEFAULT_INDEX_PAGE "config/index.html"
+
 #endif
