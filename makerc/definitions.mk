@@ -1,14 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                     .--.  _                  #
-#    definitions.mk                                  |o_o || |                 #
-#                                                    |:_/ || |_ _   ___  __    #
-#    By: safoh <safoh@student.codam.nl>             //   \ \ __| | | \ \/ /    #
-#                                                  (|     | )|_| |_| |>  <     #
-#    Created: 2023/05/24 15:08:00 by safoh        /'\_   _/`\__|\__,_/_/\_\    #
-#    Updated: 2023/05/24 15:08:00 by safoh        \___)=(___/                  #
-#                                                                              #
-# **************************************************************************** #
 
 NAME			:=WebServ.out
 
@@ -30,8 +19,9 @@ BUILD_DIR		:=build
 SRCS			:=$(wildcard $(SRC_DIR)/*.cpp)
 HEADERS			:=$(wildcard $(INCLUDE_DIR)/*.hpp)
 
-# 	Objects
-OBJS			:=$(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
+# 	Objects and Dependancies
+OBJS			:=$(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+DEPS			:=$(OBJS:%.o=%.d)
 
 INCLUDE_FLAGS	:=$(addprefix -I, $(sort $(dir $(HEADERS))))
 
