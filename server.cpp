@@ -5,37 +5,64 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void handleClient(int clientSocket)
+const char	*getResponse(t_method_index methodIndex)
 {
+	const char	*getResponse = "GET RESPONSE !!!";
+	const char	*postResponse = "POST RESPONSE ???";
+	const char	*delResponse = "DELETE RESPONSE >>>>>>>>>";
+	const char	*errorResponse = "!@! ERROR !@!";
+	if (methodIndex == GET)
+		return (getResponse);
+	else if (methodIndex == POST)
+		return (postResponse);
+	else if (methodIndex == DELETE)
+		return (delResponse);
+	else
+		return (errorResponse);
+}
+
+t_method_index	getMethodIndex(char *request)
+{
+//	t_method_index	methodIndex = 0;
+	const char		*get = "GET";
+	const char		*post = "POST";
+	const char		*del = "DELETE";
+
+	if (strncmp(request, get, strlen(get)) == 0)
+		return (GET);
+	else if (strncmp(request, post, strlen(post)) == 0)
+		return (POST);
+	else if (strncmp(request, del, strlen(del)) == 0)
+		return (DELETE);
+	else
+		return (ERROR);
+}
+
+void	handleClient(int clientSocket)
+{
+	t_method_index	indexMethod;
+//	char 			*response;
+
 	// it might be necessary to free buffer here
 	const char *message = "Hello from my first simple server!\n";
 	char buffer[1024] = {0};
 
 	if (send(clientSocket, message, strlen(message), 0) == -1)
 		printf("SERVER: send failed\n");
-	else
-		printf("SERVER: send succeeded\n");
 
 	if (recv(clientSocket, buffer, sizeof(buffer), 0) == -1)
 		printf("SERVER: recv failed\n");
-	else
-		printf("SERVER: recv succeeded\n");
 
-	std::cout << "Received from client: " << buffer << std::endl;
+	std::cout << "Received from client:\n" << buffer << std::endl;
 
-	const char	*response = "test";
-	if (strncmp(buffer, response, strlen(response)) == 0)
-	{
-		if (send(clientSocket, response, strlen(response), 0) == -1)
-			printf("SERVER: send failed\n");
-		else {
-			printf("SERVER: send succeeded\n");
-			close(clientSocket);
-		}
-	}
+	indexMethod = getMethodIndex(buffer);
+
+	if (send(clientSocket, getResponse(indexMethod), strlen(getResponse(indexMethod)), 0) == -1)
+		printf("SERVER: send failed\n");
+	close(clientSocket);
 }
 
-int main()
+int	main()
 {
 	int serverSocket;
 	int clientSocket;
@@ -74,7 +101,7 @@ int main()
 	}
 
 	std::cout << "Server listening on port " << std::to_string(PORT_NUM)
-			  << "...\n";
+			  << "...\n\n";
 
 	// try to do something with the clients message
 	// -> send something back for example or an error code if the request cannot
