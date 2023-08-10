@@ -1,7 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#define PORT_NUM 8081
+// following IANA regulations port 80 is dedicated for web servers.
+#define PORT_NUM 80
 
 typedef enum e_method_index
 {

@@ -23,7 +23,6 @@ const char	*getResponse(t_method_index methodIndex)
 
 t_method_index	getMethodIndex(char *request)
 {
-//	t_method_index	methodIndex = 0;
 	const char		*get = "GET";
 	const char		*post = "POST";
 	const char		*del = "DELETE";

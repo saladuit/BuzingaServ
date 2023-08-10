@@ -33,11 +33,11 @@ void	validateAndSend(char *method, int clientSocket)
 		"Sec-Fetch-Mode: navigate\n"
 		"Sec-Fetch-User: ?1\n"
 		"Sec-Fetch-Dest: document\n"
-		"Accept-Encoding: gzip, deflate, br";
+		"Accept-Encoding: gzip, deflate, br\n";
 
-	char post[] = "POST / HTTP/1.1\nHost:localhost\nand more";
+	char post[] = "POST / HTTP/1.1\nHost:localhost\nand more\n";
 
-	char del[] = "DELETE / HTTP/1.1\nHost:\nenzo";
+	char del[] = "DELETE / HTTP/1.1\nHost:\nenzo\n";
 
 	if (strncmp(method, "GET", strlen("GET")) == 0) {
 		if (send(clientSocket, get, strlen(get), 0) == -1)
@@ -55,7 +55,7 @@ void	validateAndSend(char *method, int clientSocket)
 	}
 	else
 	{
-		if (send(clientSocket, "bal met jus", strlen("bal met jus"), 0) == -1)
+		if (send(clientSocket, "bal met jus\n", strlen("bal met jus\n"), 0) == -1)
 			printf("CLIENT: send failed\n");
 	}
 }
@@ -68,7 +68,6 @@ int main()
 	char buffer[1024] = {0};
 	struct sockaddr_in serverAddr;
 	int port = PORT_NUM;
-	//	const char *message = "Hello from client!\n";
 
 	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (clientSocket == -1)
@@ -82,6 +81,8 @@ int main()
 	serverAddr.sin_port = htons(port);
 
 	inet_pton(AF_INET, "127.0.0.1", &(serverAddr.sin_addr));
+
+	// client opens connection
 	if (connect(clientSocket, (struct sockaddr *)&serverAddr,
 				sizeof(serverAddr)) == -1)
 	{
@@ -93,9 +94,13 @@ int main()
 	std::cout << "Received from server: " << buffer << std::endl;
 
 	char *method = readline("What method do you want to test?\n");
+
+	// send request
 	validateAndSend(method, clientSocket);
 
 	char responseBuffer[1024] = {0};
+
+	// receive response
 	recv(clientSocket, responseBuffer, sizeof(responseBuffer), 0);
 	std::cout << "Received from server: " << responseBuffer << std::endl;
 	close(clientSocket);
