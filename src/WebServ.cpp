@@ -18,9 +18,9 @@ int WebServ::run()
 	// Create a socket for TCP/IP connection
 	struct sockaddr_in address;
 	int address_len = sizeof(address);
-	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (server_fd == -1)
+	if (tcp_socket == -1)
 	{
 		std::cerr << "Error: socket creation failed" << std::endl;
 		return (EXIT_FAILURE);
@@ -34,22 +34,22 @@ int WebServ::run()
 	address.sin_port = htons(PORT);
 	memset(address.sin_zero, '\0', sizeof address.sin_zero);
 	// Bind a name to a socket
-	if (bind(server_fd, (struct sockaddr *)&address, address_len) < 0)
+	if (bind(tcp_socket, (struct sockaddr *)&address, address_len) < 0)
 	{
 		std::cerr << "Error: bind failed" << std::endl;
 		return (EXIT_FAILURE);
 	}
 	// Listen for connections on a socket
-	if (listen(server_fd, 3) < 0)
+	if (listen(tcp_socket, 3) < 0)
 	{
 		std::cerr << "Error: listen failed" << std::endl;
 		return (EXIT_FAILURE);
 	}
+	// Accept a connection on a socket
 	while (true)
 	{
 		std::cout << "Waiting for connection...\n";
-		// Accept a connection on a socket
-		int new_socket = accept(server_fd, (struct sockaddr *)&address,
+		int new_socket = accept(tcp_socket, (struct sockaddr *)&address,
 								(socklen_t *)&address_len);
 		if (new_socket < 0)
 		{
