@@ -5,6 +5,12 @@
 #include <Defines.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+typedef struct sockaddr_in t_sockaddr_in;
+typedef struct sockaddr t_sockaddr;
 
 class WebServ
 {
@@ -14,7 +20,13 @@ class WebServ
 	int run();
 
   private:
+	void _setup_server_socket(int port);
+	void _check(int exp, const char *msg);
+
 	const std::string _config_path;
+	size_t _address_len;
+	int _server_socket;
+	t_sockaddr_in _address;
 
 	WebServ();
 	WebServ(const WebServ &src);
