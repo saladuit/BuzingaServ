@@ -13,6 +13,7 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
+#define MAX_PENDING_CONNECTIONS 10
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 4096
 #define ERROR (-1)

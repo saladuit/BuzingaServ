@@ -3,6 +3,7 @@
 
 #include <Color.hpp>
 #include <Defines.hpp>
+#include <arpa/inet.h>
 #include <cstdlib>
 #include <iostream>
 #include <netinet/in.h>
@@ -11,6 +12,13 @@
 
 typedef struct sockaddr_in t_sockaddr_in;
 typedef struct sockaddr t_sockaddr;
+
+typedef struct s_socket
+{
+	int fd;
+	t_sockaddr_in addr;
+	socklen_t addr_len;
+} t_socket;
 
 class WebServ
 {
@@ -24,10 +32,11 @@ class WebServ
 	void _check(int exp, const char *msg);
 
 	const std::string _config_path;
-	size_t _address_len;
-	int _server_socket;
-	t_sockaddr_in _address;
 
+	t_socket _server;
+	t_socket _client;
+	char _buffer[BUFFER_SIZE];
+	char _recvline[BUFFER_SIZE];
 	WebServ();
 	WebServ(const WebServ &src);
 	WebServ &operator=(const WebServ &rhs);

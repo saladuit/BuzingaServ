@@ -60,6 +60,9 @@ cov:
 	@genhtml -q build/coverage.info -o build/coverage_report --rc genhtml_branch_coverage=1
 .PHONY: cov
 
+run: all
+	@./$(NAME)
+
 recov: fclean cov
 .PHONY: recov
 
