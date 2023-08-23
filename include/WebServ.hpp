@@ -28,7 +28,7 @@ class WebServ
 	int run();
 
   private:
-	void _setup_server_socket(int port);
+	void _setup_server_socket();
 	void handle_connection();
 	void accept_connection();
 
@@ -39,7 +39,7 @@ class WebServ
 	t_socket _server;
 	t_socket _client;
 	char _buffer[BUFFER_SIZE];
-	char _recvline[BUFFER_SIZE];
+	char _actual_path[BUFFER_SIZE];
 	WebServ();
 	WebServ(const WebServ &src);
 	WebServ &operator=(const WebServ &rhs);

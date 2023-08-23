@@ -9,7 +9,7 @@ void WebServ::_check(int exp, const char *msg)
 	}
 }
 
-WebServ::WebServ(const std::string &config_path) : _config_path(config_path)
+void WebServ::_setup_server_socket()
 {
 	_check(_server.fd = socket(AF_INET, SOCK_STREAM, 0),
 		   "Error: socket creation failed");
@@ -24,24 +24,55 @@ WebServ::WebServ(const std::string &config_path) : _config_path(config_path)
 	_check(listen(_server.fd, MAX_PENDING_CONNECTIONS), "Error: listen failed");
 }
 
+WebServ::WebServ(const std::string &config_path)
+	: _config_path(config_path), _actual_path(PATH_MAX + 1, '\0')
+{
+}
+
 WebServ::~WebServ()
 {
 }
 
 void WebServ::handle_connection()
 {
-	int valread;
-	std::fill_n(_recvline, sizeof(_recvline), '\0');
+	size_t bytes_read;
+	int msgsize = 0;
+	std::fill_n(_buffer, sizeof(_buffer), '\0');
+	std::fill_n(_actual_path, sizeof(_actual_path), '\0');
 	do
 	{
-		_check(valread = read(_client.fd, _recvline, sizeof(_recvline) - 1),
+		_check(bytes_read = read(_client.fd, _buffer + msgsize,
+								 sizeof(_buffer) - msgsize - 1),
 			   "Error: read failed");
-		std::cout << "Received: " << _recvline << std::endl;
-		if (_recvline[valread - 1] == '\n') // http req ends in /r/n/r/n
+		msgsize += bytes_read;
+
+		if (msgsize > BUFFER_SIZE - 1 || _buffer[msgsize - 1] == '\n')
 			break;
-		std::fill_n(_recvline, sizeof(_recvline), '\0');
-	} while (valread > 0);
-	snprintf(_buffer, sizeof(_buffer), "HTTP/1.0 200 OK\r\n\r\nHello");
+		std::fill_n(_buffer, sizeof(_buffer), '\0');
+	} while (bytes_read > 0);
+
+	_buffer[msgsize - 1] = 0;
+	std::cout << "REQUEST: " << _buffer << std::endl;
+	if (realpath(_buffer, _actual_path) == NULL)
+	{
+		std::cout << "Error: realpath failed" << std::endl;
+		close(_client.fd);
+		return;
+	}
+	FILE *file = fopen(_actual_path, "r");
+	if (file == NULL)
+	{
+		std::cout << "Error: fopen failed" << std::endl;
+		close(_client.fd);
+		return;
+	}
+	while (bytes_read = fread(_buffer, 1, sizeof(_buffer), file) > 0)
+	{
+		std::cout << "Sending: " << bytes_Read << " bytes" << std::endl;
+		write(_client.fd, _buffer, bytes_read);
+	}
+	std::fill_n(_buffer, sizeof(_buffer), '\0');
+	snprintf(_buffer, sizeof(_buffer), "HTTP/1.1 200 OK\r\n\r\nHello");
 	write(_client.fd, _buffer, strlen(_buffer));
 	close(_client.fd);
 }
@@ -60,6 +91,7 @@ void WebServ::accept_connection()
 
 int WebServ::run()
 {
+	_setup_server_socket();
 	while (true)
 	{
 		accept_connection();
