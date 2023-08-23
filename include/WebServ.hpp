@@ -29,6 +29,9 @@ class WebServ
 
   private:
 	void _setup_server_socket(int port);
+	void handle_connection();
+	void accept_connection();
+
 	void _check(int exp, const char *msg);
 
 	const std::string _config_path;
