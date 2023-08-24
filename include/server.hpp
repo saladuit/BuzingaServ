@@ -1,9 +1,16 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-// following IANA regulations port 80 is dedicated for web servers.
-#define PORT_NUM 80
+// INCLUDES
+#include <cstring>
+#include <iostream>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <fstream>
+#include <string.h>
 
+// STRUCTURES
 typedef enum e_method_index
 {
 	GET,

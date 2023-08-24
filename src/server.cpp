@@ -1,16 +1,11 @@
 #include "server.hpp"
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
-const char	*getResponse(t_method_index methodIndex)
+const char *getResponse(t_method_index methodIndex)
 {
-	const char	*getResponse = "GET RESPONSE !!!";
-	const char	*postResponse = "POST RESPONSE ???";
-	const char	*delResponse = "DELETE RESPONSE >>>>>>>>>";
-	const char	*errorResponse = "!@! ERROR !@!";
+	const char *getResponse = "GET RESPONSE !!!";
+	const char *postResponse = "POST RESPONSE ???";
+	const char *delResponse = "DELETE RESPONSE >>>>>>>>>";
+	const char *errorResponse = "!@! ERROR !@!";
 	if (methodIndex == GET)
 		return (getResponse);
 	else if (methodIndex == POST)
@@ -21,11 +16,11 @@ const char	*getResponse(t_method_index methodIndex)
 		return (errorResponse);
 }
 
-t_method_index	getMethodIndex(char *request)
+t_method_index getMethodIndex(char *request)
 {
-	const char		*get = "GET";
-	const char		*post = "POST";
-	const char		*del = "DELETE";
+	const char *get = "GET";
+	const char *post = "POST";
+	const char *del = "DELETE";
 
 	if (strncmp(request, get, strlen(get)) == 0)
 		return (GET);
@@ -37,10 +32,10 @@ t_method_index	getMethodIndex(char *request)
 		return (ERROR);
 }
 
-void	handleClient(int clientSocket)
+void handleClient(int clientSocket)
 {
-	t_method_index	indexMethod;
-//	char 			*response;
+	t_method_index indexMethod;
+	//	char 			*response;
 
 	// it might be necessary to free buffer here
 	const char *message = "Hello from my first simple server!\n";
@@ -62,19 +57,32 @@ void	handleClient(int clientSocket)
 	close(clientSocket);
 }
 
-static bool	parse_default_config_file(uint32_t *port_num)
+static bool	parse_config_file(uint32_t **port_num, std::string config_file)
 {
-	(void)port_num;
-	std::ifstream fd("conf/my_config.conf");
+	std::ifstream fd(config_file);
 	if (!fd.is_open())
 	{
-		std::cerr << "Error opening config file: conf/my_config.conf" << std::endl;
+		std::cerr << "Error opening config file: " << config_file << std::endl;
 		return (false);
 	}
+    std::string searchString = "listen";
+    std::string line;
+    uint32_t count = 0;
 
-	std::string line;
+    while (std::getline(fd, line)) {
+        size_t pos = 0;
+        while ((pos = line.find(searchString, pos)) != std::string::npos) {
+            count++;
+            pos += searchString.length();
+        }
+    }
+//    std::cout << std::to_string(count) << std::endl;
+    *port_num = new uint32_t[count + 1];
+	uint32_t j = 0;
 	std::string portStr;
-	while (std::getline(fd, line))
+    fd.clear();
+    fd.seekg(0, std::ios::beg);
+	while (std::getline(fd, line) && j < count)
 	{
 		size_t pos = line.find("listen");
 		if (pos != std::string::npos)
@@ -86,14 +94,14 @@ static bool	parse_default_config_file(uint32_t *port_num)
 				i++;
 			}
 			portStr = afterListen.substr(0, i);
-			std::cout << "Port number: " << portStr << std::endl;
+			std::cout << "Port number:" << portStr << std::endl;
+            if (!portStr.empty()) {
+				(*port_num)[j++] = std::stoul(portStr);
+            } else {
+                std::cerr << "Port number not found in the configuration." << std::endl;
+                return (false);
+            }
 		}
-	}
-	if (!portStr.empty()) {
-		*port_num = std::stoul(portStr);
-	} else {
-		std::cerr << "Port number not found in the configuration." << std::endl;
-		return false;
 	}
 	fd.close();
 	return (true);
@@ -107,20 +115,25 @@ int main(int argc, char **argv)
 	struct sockaddr_in serverAddr;
 	struct sockaddr_in clientAddr;
 
-	uint32_t port_num = 0;
+	uint32_t *port_num = NULL;
 
 	if (argc != 1 && argc != 2)
 	{
 		std::cerr << "SERVER: Invalid number of arguments\n";
 		return 1;
 	}
-	 if (argc == 1)
-	 {
-		parse_default_config_file(&port_num);
-	 }
-
-	// Parse configuration file
-	(void)argv;
+	if (argc == 1)
+	{
+		if (parse_config_file(&port_num, "conf/default_config_file.conf") == false)
+			return (1);
+	}
+	else
+	{
+		if (parse_config_file(&port_num, argv[1]) == false)
+		{
+			return (1);
+		}
+	}
 
 	socklen_t clientAddrLen = sizeof(clientAddr);
 
@@ -133,8 +146,7 @@ int main(int argc, char **argv)
 
 	serverAddr.sin_family = AF_INET;
 
-	serverAddr.sin_port = htons(port_num); // Choose any available port
-
+	serverAddr.sin_port = htons(port_num[0]); // Choose any available port
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(serverSocket, (struct sockaddr *)&serverAddr,
@@ -152,7 +164,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	std::cout << "Server listening on port " << std::to_string(port_num)
+	std::cout << "Server listening on port " << std::to_string(port_num[0])
 			  << "...\n\n";
 
 	// try to do something with the clients message
