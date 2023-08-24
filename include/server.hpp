@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <fstream>
 #include <string.h>
+#include <vector>
+#include <poll.h>
 
 // STRUCTURES
 typedef enum e_method_index
@@ -18,5 +20,10 @@ typedef enum e_method_index
 	DELETE,
 	ERROR,
 }	t_method_index;
+
+//typedef struct s_client_information
+//{
+//
+//}	t_client_information;
 
 #endif
