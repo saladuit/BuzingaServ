@@ -1,5 +1,5 @@
-#ifndef WebServ_HPP
-#define WebServ_HPP
+#ifndef Server_HPP
+#define Server_HPP
 
 #include <Color.hpp>
 #include <Defines.hpp>
@@ -20,14 +20,19 @@ typedef struct s_socket
 	socklen_t addr_len;
 } t_socket;
 
-class WebServ
+class Server
 {
   public:
-	WebServ(const std::string &config_path);
-	~WebServ();
+	Server(const std::string &config_path);
+	~Server();
+
 	int run();
 
   private:
+	Server();
+	Server(const Server &src);
+	Server &operator=(const Server &rhs);
+
 	void _setup_server_socket();
 	void handle_connection();
 	void accept_connection();
@@ -40,9 +45,6 @@ class WebServ
 	t_socket _client;
 	char _buffer[BUFFER_SIZE];
 	char _actual_path[BUFFER_SIZE];
-	WebServ();
-	WebServ(const WebServ &src);
-	WebServ &operator=(const WebServ &rhs);
 };
 #endif
 

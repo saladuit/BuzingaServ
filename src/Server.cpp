@@ -1,6 +1,6 @@
-#include <WebServ.hpp>
+#include <Server.hpp>
 
-void WebServ::_check(int exp, const char *msg)
+void Server::_check(int exp, const char *msg)
 {
 	if (exp == ERROR)
 	{
@@ -9,7 +9,7 @@ void WebServ::_check(int exp, const char *msg)
 	}
 }
 
-void WebServ::_setup_server_socket()
+void Server::_setup_server_socket()
 {
 	_check(_server.fd = socket(AF_INET, SOCK_STREAM, 0),
 		   "Error: socket creation failed");
@@ -24,16 +24,16 @@ void WebServ::_setup_server_socket()
 	_check(listen(_server.fd, MAX_PENDING_CONNECTIONS), "Error: listen failed");
 }
 
-WebServ::WebServ(const std::string &config_path)
+Server::Server(const std::string &config_path)
 	: _config_path(config_path), _actual_path(PATH_MAX + 1, '\0')
 {
 }
 
-WebServ::~WebServ()
+Server::~Server()
 {
 }
 
-void WebServ::handle_connection()
+void Server::handle_connection()
 {
 	size_t bytes_read;
 	int msgsize = 0;
@@ -77,7 +77,7 @@ void WebServ::handle_connection()
 	close(_client.fd);
 }
 
-void WebServ::accept_connection()
+void Server::accept_connection()
 {
 	char client_address[BUFFER_SIZE + 1];
 	std::cout << "Waiting for connection on port " << SERVER_PORT << std::endl;
@@ -89,7 +89,7 @@ void WebServ::accept_connection()
 	std::cout << "Connection received from " << client_address << std::endl;
 }
 
-int WebServ::run()
+int Server::run()
 {
 	_setup_server_socket();
 	while (true)
