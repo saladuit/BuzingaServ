@@ -8,7 +8,7 @@ Logger::~Logger()
 {
 }
 
-std::string logLevelToString(LogLevel lvl)
+std::string Logger::logLevelToString(LogLevel lvl)
 {
 	switch (lvl)
 	{
@@ -41,15 +41,10 @@ void Logger::log(LogLevel lvl, const char *message, ...)
 
 std::string Logger::format(std::string msg, va_list args)
 {
-	char *buffer;
-	std::size_t size;
+	char buffer[1024];
 
-	buffer = NULL;
-	size = vsnprintf(buffer, 0, msg.c_str(), args);
-	buffer = new char[size + 1];
-	vsnprintf(buffer, size + 1, msg.c_str(), args);
+	vsnprintf(buffer, 1024, msg.c_str(), args);
 	std::string formatted_msg = buffer;
-	delete[] buffer;
 	return (formatted_msg);
 }
 
@@ -59,6 +54,6 @@ std::string Logger::getTimestamp()
 	struct tm tstruct;
 	char buf[80];
 	tstruct = *localtime(&now);
-	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
 	return (buf);
 }

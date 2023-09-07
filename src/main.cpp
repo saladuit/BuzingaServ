@@ -8,6 +8,7 @@ int main()
 	ConfigParser parser("config/default.conf");
 
 	parser.readConfig();
+	parser.debug_print_server_blocks();
 }
 // int main(int argc, char **argv)
 // {
