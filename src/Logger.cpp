@@ -8,18 +8,6 @@ Logger::~Logger()
 {
 }
 
-void Logger::log(LogLevel lvl, const char *message, ...)
-{
-	va_list args;
-	va_start(args, message);
-	std::string msg = message;
-	std::string lvlStr = logLevelToString(lvl);
-	std::string formattedMsg = format(msg, args);
-	va_end(args);
-	std::cout << "[" << getTimestamp() << "] " << lvlStr << ": " << formattedMsg
-			  << Color::reset << std::endl;
-}
-
 std::string logLevelToString(LogLevel lvl)
 {
 	switch (lvl)
@@ -37,6 +25,18 @@ std::string logLevelToString(LogLevel lvl)
 	default:
 		throw std::invalid_argument("Invalid log level");
 	}
+}
+
+void Logger::log(LogLevel lvl, const char *message, ...)
+{
+	va_list args;
+	va_start(args, message);
+	std::string msg = message;
+	std::string level = logLevelToString(lvl);
+	std::string formatted_message = format(msg, args);
+	va_end(args);
+	std::cout << "[" << getTimestamp() << "] " << level << ": "
+			  << formatted_message << Color::reset << std::endl;
 }
 
 std::string Logger::format(std::string msg, va_list args)

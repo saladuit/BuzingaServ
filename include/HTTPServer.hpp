@@ -1,5 +1,5 @@
-#ifndef Server_HPP
-#define Server_HPP
+#ifndef HTTPSERVER_HPP
+#define HTTPSERVER_HPP
 
 #include <Color.hpp>
 #include <Defines.hpp>
@@ -20,18 +20,18 @@ typedef struct s_socket
 	socklen_t addr_len;
 } t_socket;
 
-class Server
+class HTTPServer
 {
   public:
-	Server(const std::string &config_path);
-	~Server();
+	HTTPServer(const std::string &config_path);
+	~HTTPServer();
 
 	int run();
 
   private:
-	Server();
-	Server(const Server &src);
-	Server &operator=(const Server &rhs);
+	HTTPServer();
+	HTTPServer(const HTTPServer &src);
+	HTTPServer &operator=(const HTTPServer &rhs);
 
 	void _setup_server_socket();
 	void handle_connection();
@@ -46,6 +46,7 @@ class Server
 	char _buffer[BUFFER_SIZE];
 	char _actual_path[BUFFER_SIZE];
 };
+
 #endif
 
 /* ************************************************************************** */

@@ -1,6 +1,6 @@
-#include <Server.hpp>
+#include <HTTPServer.hpp>
 
-void Server::_check(int exp, const char *msg)
+void HTTPServer::_check(int exp, const char *msg)
 {
 	if (exp == ERROR)
 	{
@@ -9,7 +9,7 @@ void Server::_check(int exp, const char *msg)
 	}
 }
 
-void Server::_setup_server_socket()
+void HTTPServer::_setup_server_socket()
 {
 	_check(_server.fd = socket(AF_INET, SOCK_STREAM, 0),
 		   "Error: socket creation failed");
@@ -24,16 +24,16 @@ void Server::_setup_server_socket()
 	_check(listen(_server.fd, MAX_PENDING_CONNECTIONS), "Error: listen failed");
 }
 
-Server::Server(const std::string &config_path)
-	: _config_path(config_path), _actual_path(PATH_MAX + 1, '\0')
+HTTPServer::HTTPServer(const std::string &config_path)
+	: _config_path(config_path) /* , _actual_path(PATH_MAX + 1, '\0') */
 {
 }
 
-Server::~Server()
+HTTPServer::~HTTPServer()
 {
 }
 
-void Server::handle_connection()
+void HTTPServer::handle_connection()
 {
 	size_t bytes_read;
 	int msgsize = 0;
@@ -66,18 +66,18 @@ void Server::handle_connection()
 		close(_client.fd);
 		return;
 	}
-	while (bytes_read = fread(_buffer, 1, sizeof(_buffer), file) > 0)
-	{
-		std::cout << "Sending: " << bytes_Read << " bytes" << std::endl;
-		write(_client.fd, _buffer, bytes_read);
-	}
+	// while (bytes_read = fread(_buffer, 1, sizeof(_buffer), file) > 0)
+	// {
+	// 	std::cout << "Sending: " << bytes_Read << " bytes" << std::endl;
+	// 	write(_client.fd, _buffer, bytes_read);
+	// }
 	std::fill_n(_buffer, sizeof(_buffer), '\0');
 	snprintf(_buffer, sizeof(_buffer), "HTTP/1.1 200 OK\r\n\r\nHello");
 	write(_client.fd, _buffer, strlen(_buffer));
 	close(_client.fd);
 }
 
-void Server::accept_connection()
+void HTTPServer::accept_connection()
 {
 	char client_address[BUFFER_SIZE + 1];
 	std::cout << "Waiting for connection on port " << SERVER_PORT << std::endl;
@@ -89,7 +89,7 @@ void Server::accept_connection()
 	std::cout << "Connection received from " << client_address << std::endl;
 }
 
-int Server::run()
+int HTTPServer::run()
 {
 	_setup_server_socket();
 	while (true)
