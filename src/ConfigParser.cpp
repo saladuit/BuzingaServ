@@ -97,8 +97,8 @@ void ConfigParser::readConfig()
 		}
 		else if (first_word == "global" && first_word[0] != '#')
 		{
-			auto keyValue = parseLine(line);
-			_global_settings[keyValue.first] = keyValue.second;
+			std::pair<std::string, std::string> key_value = parseLine(line);
+			_global_settings[key_value.first] = key_value.second;
 		}
 	}
 	config_file.close();

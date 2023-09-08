@@ -1,6 +1,7 @@
 #include "Logger.hpp"
+#include <sstream>
 
-Logger::Logger()
+Logger::Logger() : _current_level(LogLevel::INFO)
 {
 }
 
@@ -8,44 +9,62 @@ Logger::~Logger()
 {
 }
 
+void Logger::setLogLevel(LogLevel lvl)
+{
+	_current_level = lvl;
+}
+
 std::string Logger::logLevelToString(LogLevel lvl)
 {
 	switch (lvl)
 	{
-	case LOG_DEBUG:
+	case LogLevel::DEBUG:
 		return Color::cyan + "DEBUG";
-	case LOG_INFO:
+	case LogLevel::INFO:
 		return Color::white + "INFO";
-	case LOG_WARNING:
+	case LogLevel::WARNING:
 		return Color::yellow + "WARNING";
-	case LOG_ERROR:
+	case LogLevel::ERROR:
 		return Color::red + "ERROR";
-	case LOG_FATAL:
+	case LogLevel::FATAL:
 		return Color::magenta + "FATAL";
 	default:
 		throw std::invalid_argument("Invalid log level");
 	}
 }
 
-void Logger::log(LogLevel lvl, const char *message, ...)
+template <typename... Args>
+void Logger::log(LogLevel lvl, const char *message, Args... args)
 {
-	va_list args;
-	va_start(args, message);
-	std::string msg = message;
-	std::string level = logLevelToString(lvl);
-	std::string formatted_message = format(msg, args);
-	va_end(args);
-	std::cout << "[" << getTimestamp() << "] " << level << ": "
-			  << formatted_message << Color::reset << std::endl;
+	std::string formatted_msg = format(message, args...);
+	if (lvl < _current_level)
+		return;
+
+	std::cout << "[" << getTimestamp() << "]" << logLevelToString(lvl) << ": "
+			  << formatted_msg << Color::reset << std::endl;
 }
 
-std::string Logger::format(std::string msg, va_list args)
+template <typename... Args>
+std::string Logger::format(std::string &fmt, Args... args)
 {
-	char buffer[1024];
+	std::ostringstream os;
+	size_t i;
 
-	vsnprintf(buffer, 1024, msg.c_str(), args);
-	std::string formatted_msg = buffer;
-	return (formatted_msg);
+	i = 0;
+	for (char c : fmt)
+	{
+		if (c == '%')
+		{
+			std::array<std::string, sizeof...(Args)> arr(
+				std::to_string(args)...);
+			os << arr[i++];
+		}
+		else
+		{
+			os << c;
+		}
+	}
+	return (os.str());
 }
 
 std::string Logger::getTimestamp()

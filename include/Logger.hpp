@@ -9,29 +9,33 @@
 
 enum LogLevel
 {
-	LOG_DEBUG,
-	LOG_INFO,
-	LOG_WARNING,
-	LOG_ERROR,
-	LOG_FATAL,
+	DEBUG,
+	INFO,
+	WARNING,
+	ERROR,
+	FATAL,
 };
 
 class Logger
 {
-
   public:
 	Logger();
 	~Logger();
 
-	static void log(LogLevel lvl, const char *message, ...);
+	void setLogLevel(LogLevel lvl);
+	template <typename... Args>
+	void log(LogLevel lvl, const char *message, Args... args);
 
   private:
 	Logger &operator=(const Logger &src);
 	Logger(const Logger &src);
 
-	static std::string logLevelToString(LogLevel lvl);
-	static std::string format(std::string msg, va_list args);
-	static std::string getTimestamp();
+	LogLevel _current_level;
+	std::string logLevelToString(LogLevel lvl);
+	std::string getTimestamp();
+
+	template <typename... Args>
+	std::string format(std::string &fmt, Args... args);
 };
 
 #endif
