@@ -35,7 +35,7 @@ class Logger
 			return;
 
 		std::string formatted_msg = format(message, args...);
-		std::cout << "[" << getTimestamp() << "]" << logLevelToString(lvl)
+		std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
 				  << ": " << formatted_msg << Color::reset << std::endl;
 	}
 
