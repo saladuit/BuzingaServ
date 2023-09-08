@@ -16,7 +16,7 @@
 #define MAX_PENDING_CONNECTIONS 10
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 4096
-#define ERROR (-1)
+#define G_ERROR (-1)
 #define DEFAULT_CONFIG_PATH "config/webserver.conf"
 #define DEFAULT_ERROR_PAGE "config/error_page.html"
 #define DEFAULT_INDEX_PAGE "config/index.html"

@@ -1,7 +1,7 @@
 #include "ConfigParser.hpp"
 #include "Logger.hpp"
+#include <fstream>
 #include <sstream>
-#include <stdexcept>
 
 ConfigParser::ConfigParser(const std::string &file_path)
 	: _file_path(file_path), _global_settings(), _server_blocks()
@@ -76,12 +76,12 @@ void ConfigParser::parseBlock(std::istream &stream, ServerBlock &current_server)
 
 void ConfigParser::readConfig()
 {
-	Logger::log(LogLevel::LOG_INFO, "Reading config file: %s",
-				_file_path.c_str());
+	Logger &logger = Logger::getInstance();
 	std::ifstream config_file(_file_path);
 	if (!config_file.is_open())
 		throw std::runtime_error("Could not open config file");
 
+	logger.log(LogLevel::INFO, "Reading config file from: %s", _file_path);
 	std::string line;
 	while (std::getline(config_file, line))
 	{
@@ -112,32 +112,4 @@ std::map<std::string, std::string> ConfigParser::getGlobalSettings() const
 std::vector<ServerBlock> ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
-}
-
-void ConfigParser::debug_print_server_blocks() const
-{
-	std::cout << "---- Debugging Server Blocks ----" << std::endl;
-
-	for (const auto &serverBlock : _server_blocks)
-	{
-		std::cout << "Server Block:" << std::endl;
-
-		for (const auto &setting : serverBlock.settings)
-		{
-			std::cout << "  " << setting.first << ": " << setting.second
-					  << std::endl;
-		}
-
-		std::cout << "  Location Blocks:" << std::endl;
-		for (const auto &locationBlock : serverBlock.location_blocks)
-		{
-			std::cout << "    Location Block:" << std::endl;
-			for (const auto &setting : locationBlock.settings)
-			{
-				std::cout << "      " << setting.first << ": " << setting.second
-						  << std::endl;
-			}
-		}
-		std::cout << "-------------------------------" << std::endl;
-	}
 }

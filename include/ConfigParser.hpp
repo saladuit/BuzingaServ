@@ -1,11 +1,8 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
-#include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
-#include <variant>
 #include <vector>
 
 struct LocationBlock
@@ -36,8 +33,6 @@ class ConfigParser
 
 	std::map<std::string, std::string> getGlobalSettings() const;
 	std::vector<ServerBlock> getServerBlocks() const;
-
-	void debug_print_server_blocks() const;
 };
 
 #endif

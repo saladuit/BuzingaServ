@@ -2,7 +2,7 @@
 
 void HTTPServer::_check(int exp, const char *msg)
 {
-	if (exp == ERROR)
+	if (exp == G_ERROR)
 	{
 		perror(msg);
 		exit(EXIT_FAILURE);
