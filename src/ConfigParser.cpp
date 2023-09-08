@@ -26,13 +26,33 @@ std::string stripInlineComments(const std::string &line)
 	return (line);
 }
 
+void ConfigParser::parseGlobalBlock(std::istream &stream)
+{
+	Logger &logger = Logger::getInstance();
+	logger.log(LogLevel::DEBUG, "Parsing global block");
+	std::string line;
+	while (std::getline(stream, line))
+	{
+		line = stripInlineComments(line);
+		if (isCommentOrEmpty(line))
+			continue;
+		std::istringstream line_stream(line);
+		std::string first_word;
+		line_stream >> first_word;
+		if (first_word == "server")
+		{
+			// ServerBlock server_block = parseServerBlock(stream);
+		}
+	}
+}
+
 void ConfigParser::parseServerBlock(std::istream &stream)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(LogLevel::DEBUG, "Parsing server block");
 	ServerBlock server_block;
 	std::string line;
-	while (std::getline(config_file, line))
+	while (std::getline(stream, line))
 	{
 		line = stripInlineComments(line);
 		if (isCommentOrEmpty(line))
