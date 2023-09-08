@@ -1,20 +1,22 @@
 #include <ConfigParser.hpp>
+#include <Logger.hpp>
 // #include <HTTPServer.hpp>
 // #include <cstdlib>
 
-int main()
+int main(int argc, char **argv)
 {
-	ConfigParser parser("config/default.conf");
+	Logger &logger = Logger::getInstance();
+	if (argc != 1 && argc != 2)
+	{
+		logger.log(LogLevel::ERROR, "Usage: % [config_path]", argv[0]);
+		return (EXIT_FAILURE);
+	}
+	ConfigParser parser(argc == 2 ? argv[1] : "config/default.conf");
 
 	parser.readConfig();
 }
 // int main(int argc, char **argv)
 // {
-// 	if (argc != 1 && argc != 2)
-// 	{
-// 		Logger::log(LOG_ERROR, "Usage: %s [config_path]", argv[0]);
-// 		return (EXIT_FAILURE);
-// 	}
 // 	return (EXIT_FAILURE);
 // 	try
 // 	{
