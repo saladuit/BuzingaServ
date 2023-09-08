@@ -42,11 +42,12 @@ void ConfigParser::parseServerBlock(std::istream &stream)
 		line_stream >> first_word;
 		if (first_word == "location")
 		{
-			LocationBlock location_block = parseLocationBlock(config_file);
+			// LocationBlock location_block = parseLocationBlock(stream);
 		}
 	}
 	_server_blocks.push_back(server_block);
 }
+
 bool ConfigParser::isCommentOrEmpty(const std::string &line)
 {
 	return (line.empty() || line[0] == '#');
@@ -66,6 +67,7 @@ void ConfigParser::readConfigFile(std::istream &config_file)
 		std::string first_word;
 		line_stream >> first_word;
 
+		// logger.log(LogLevel::DEBUG, "Parsing block type: " + first_word);
 		if (first_word == "server")
 			parseServerBlock(config_file);
 		else if (first_word == "global")
@@ -93,6 +95,6 @@ void ConfigParser::readConfig()
 {
 	std::ifstream config_file = openConfigFile(_file_path);
 	readConfigFile(config_file);
-	validateConfig();
+	// validateConfig();
 	config_file.close();
 }

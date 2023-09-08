@@ -22,12 +22,14 @@ class Logger
 {
   public:
 	Logger();
+	~Logger();
+
 	Logger(Logger const &) = delete;
 	void operator=(Logger const &) = delete;
-	~Logger();
 
 	static Logger &getInstance();
 	void setLogLevel(LogLevel lvl);
+
 	template <typename... Args>
 	void log(LogLevel lvl, const std::string &message, Args... args)
 	{
