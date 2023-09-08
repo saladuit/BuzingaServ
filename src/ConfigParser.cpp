@@ -8,103 +8,7 @@ ConfigParser::ConfigParser(const std::string &file_path)
 {
 }
 
-std::pair<std::string, std::string>
-ConfigParser::parseLine(const std::string &line)
-{
-	std::istringstream lineStream(line);
-	std::string key, value;
-
-	std::getline(lineStream, key, ' ');
-
-	key.erase(0, key.find_first_not_of(" \t"));
-	key.erase(key.find_last_not_of(" \t") + 1);
-
-	std::getline(lineStream, value);
-
-	value.erase(0, value.find_first_not_of(" \t"));
-	value.erase(value.find_last_not_of(" \t") + 1);
-
-	return {key, value};
-}
-
-void ConfigParser::parseBlock(std::istream &stream,
-							  LocationBlock &current_location)
-{
-	std::string line;
-	while (std::getline(stream, line))
-	{
-		std::istringstream line_stream(line);
-		std::string first_word;
-		line_stream >> first_word;
-
-		if (first_word == "}")
-			return;
-		else if (!first_word.empty() && first_word[0] != '#')
-		{
-			std::pair<std::string, std::string> key_value = parseLine(line);
-			current_location.settings[key_value.first] = key_value.second;
-		}
-	}
-}
-
-void ConfigParser::parseBlock(std::istream &stream, ServerBlock &current_server)
-{
-	std::string line;
-	while (std::getline(stream, line))
-	{
-		std::istringstream line_stream(line);
-		std::string first_word;
-		line_stream >> first_word;
-
-		if (first_word == "}")
-			return;
-		else if (first_word == "location")
-		{
-			std::string location_path;
-			line_stream >> location_path;
-			LocationBlock new_location_block;
-			parseBlock(stream, new_location_block);
-			current_server.location_blocks.push_back(new_location_block);
-		}
-		else if (!first_word.empty() && first_word[0] != '#')
-		{
-			std::pair<std::string, std::string> key_value = parseLine(line);
-			current_server.settings[key_value.first] = key_value.second;
-		}
-	}
-}
-
-void ConfigParser::readConfig()
-{
-	Logger &logger = Logger::getInstance();
-	std::ifstream config_file(_file_path);
-	if (!config_file.is_open())
-		throw std::runtime_error("Could not open config file");
-
-	logger.log(LogLevel::INFO, "Reading config file from: %s", _file_path);
-	std::string line;
-	while (std::getline(config_file, line))
-	{
-		std::istringstream line_stream(line);
-		std::string first_word;
-		line_stream >> first_word;
-
-		if (first_word == "server")
-		{
-			ServerBlock new_server_block;
-			parseBlock(config_file, new_server_block);
-			_server_blocks.push_back(new_server_block);
-		}
-		else if (first_word == "global" && first_word[0] != '#')
-		{
-			std::pair<std::string, std::string> key_value = parseLine(line);
-			_global_settings[key_value.first] = key_value.second;
-		}
-	}
-	config_file.close();
-}
-
-std::map<std::string, std::string> ConfigParser::getGlobalSettings() const
+std::map<GlobalSetting, std::string> ConfigParser::getGlobalSettings() const
 {
 	return (_global_settings);
 }
@@ -112,4 +16,83 @@ std::map<std::string, std::string> ConfigParser::getGlobalSettings() const
 std::vector<ServerBlock> ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
+}
+
+std::string stripInlineComments(const std::string &line)
+{
+	auto commentPosition = line.find('#');
+	if (commentPosition != std::string::npos)
+		return (line.substr(0, commentPosition));
+	return (line);
+}
+
+void ConfigParser::parseServerBlock(std::istream &stream)
+{
+	Logger &logger = Logger::getInstance();
+	logger.log(LogLevel::DEBUG, "Parsing server block");
+	ServerBlock server_block;
+	std::string line;
+	while (std::getline(config_file, line))
+	{
+		line = stripInlineComments(line);
+		if (isCommentOrEmpty(line))
+			continue;
+		std::istringstream line_stream(line);
+		std::string first_word;
+		line_stream >> first_word;
+		if (first_word == "location")
+		{
+			LocationBlock location_block = parseLocationBlock(config_file);
+		}
+	}
+	_server_blocks.push_back(server_block);
+}
+bool ConfigParser::isCommentOrEmpty(const std::string &line)
+{
+	return (line.empty() || line[0] == '#');
+}
+
+void ConfigParser::readConfigFile(std::istream &config_file)
+{
+	Logger &logger = Logger::getInstance();
+	std::string line;
+
+	while (std::getline(config_file, line))
+	{
+		if (isCommentOrEmpty(line))
+			continue;
+
+		std::istringstream line_stream(line);
+		std::string first_word;
+		line_stream >> first_word;
+
+		if (first_word == "server")
+			parseServerBlock(config_file);
+		else if (first_word == "global")
+			parseGlobalBlock(config_file);
+		else
+			logger.log(LogLevel::WARNING, "Unkown block type: " + first_word);
+	}
+}
+std::ifstream ConfigParser::openConfigFile(const std::string &file_path)
+{
+	Logger &logger = Logger::getInstance();
+	std::ifstream config_file(file_path);
+
+	if (!config_file.is_open())
+	{
+		logger.log(LogLevel::FATAL, "Could not open config file: " + file_path);
+		throw std::runtime_error("Config file could not be opened");
+	}
+
+	logger.log(LogLevel::INFO, "Opened config file: " + file_path);
+	return (config_file);
+}
+
+void ConfigParser::readConfig()
+{
+	std::ifstream config_file = openConfigFile(_file_path);
+	readConfigFile(config_file);
+	validateConfig();
+	config_file.close();
 }
