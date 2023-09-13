@@ -23,6 +23,7 @@ enum class ServerSetting
 
 enum class LocationSetting
 {
+	Prefix,
 	Root,
 	Index,
 	DirectoryListing,
@@ -47,9 +48,11 @@ class ConfigParser
 	const std::string _file_path;
 	std::map<GlobalSetting, std::string> _global_settings;
 	std::vector<ServerBlock> _server_blocks;
+
 	void parseBlock(std::ifstream &config_file, ServerBlock &current_server);
 	void parseServerBlock(std::istream &stream);
 	void parseGlobalBlock(std::istream &stream);
+	void parseLocationBlock(std::istream &stream, const std::string &URI);
 
 	std::ifstream openConfigFile(const std::string &file_path);
 	void readConfigFile(std::istream &config_file);
