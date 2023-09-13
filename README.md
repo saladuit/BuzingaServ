@@ -77,3 +77,4 @@ socket() creates an endpoint for communication and returns a descriptor.
 - [HTTP Server: Everything you need to know to Build a simple HTTP server from scratch](https://bruinsslot.jp/post/simple-http-webserver-in-c/)
 - [Making a simple HTTP webserver in C](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
 - [RFC Navigator](https://rfc.fyi/?collection=HTTP)
+- [Thread pools](https://stackoverflow.com/questions/15752659/thread-pooling-in-c11)
