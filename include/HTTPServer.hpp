@@ -22,29 +22,25 @@ typedef struct s_socket
 
 class HTTPServer
 {
-  public:
-	HTTPServer(const std::string &config_path);
-	~HTTPServer();
-
-	int run();
-
   private:
-	HTTPServer();
-	HTTPServer(const HTTPServer &src);
-	HTTPServer &operator=(const HTTPServer &rhs);
-
 	void _setup_server_socket();
 	void handle_connection();
 	void accept_connection();
-
 	void _check(int exp, const char *msg);
 
 	const std::string _config_path;
-
 	t_socket _server;
 	t_socket _client;
 	char _buffer[BUFFER_SIZE];
 	char _actual_path[BUFFER_SIZE];
+
+  public:
+	HTTPServer();
+	HTTPServer(const HTTPServer &src) = delete;
+	HTTPServer &operator=(const HTTPServer &rhs) = delete;
+	~HTTPServer();
+
+	int run();
 };
 
 #endif

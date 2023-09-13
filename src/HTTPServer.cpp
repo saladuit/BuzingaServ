@@ -24,12 +24,7 @@ void HTTPServer::_setup_server_socket()
 	_check(listen(_server.fd, MAX_PENDING_CONNECTIONS), "Error: listen failed");
 }
 
-HTTPServer::HTTPServer(const std::string &config_path)
-	: _config_path(config_path) /* , _actual_path(PATH_MAX + 1, '\0') */
-{
-}
-
-HTTPServer::~HTTPServer()
+HTTPServer::HTTPServer()
 {
 }
 
