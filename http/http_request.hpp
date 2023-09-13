@@ -25,6 +25,7 @@ private:
 	std::string							_path;
 	std::string							_version;
 	std::map<std::string, std::string>	_headers;
+//	int 								_headersCount;
 	std::string							_body;
 
 public:
@@ -45,6 +46,14 @@ public:
 	// version methods
 	void				setVersion(const std::string& requestLine);
 	const std::string& 	getVersion(void) const;
+
+	// header methods
+	void				setHeader(const std::string& headerLine);
+	std::string&		getValue(const std::string& key);
+
+	// body methods
+	void				setBody(const std::string& body);
+	const std::string& 	getBody(void) const;
 };
 
 #endif

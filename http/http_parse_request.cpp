@@ -41,14 +41,12 @@ int main(void) {
 			}
 			else if (bodyLine)
 			{
-				// setBody
-				std::cout << substring << "\n";
+				request.setBody(substring);
 				break ;
 			}
 			else
 			{
-//				request.setPath();
-				std::cout << "header" << "\n";
+				request.setHeader(substring);
 			}
 			startPos = foundPos + 2;
 		}
@@ -57,6 +55,10 @@ int main(void) {
 	std::cout << "\nRequest line:\nMethod: " << request.getMethodType() << "\n";
 	std::cout << "Path: " << request.getPath() << "\n";
 	std::cout << "Version: " << request.getVersion() << "\n";
+
+	std::cout << "\nThe value of the key \"Host\":\n" << request.getValue("Host") << "\n";
+
+	std::cout << "\nBody:\n" << request.getBody() << "\n";
 
 	return 0;
 }
