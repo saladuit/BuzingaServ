@@ -1,17 +1,6 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                     .--.  _                  #
-#    Makefile                                        |o_o || |                 #
-#                                                    |:_/ || |_ _   ___  __    #
-#    By: safoh <safoh@student.codam.nl>             //   \ \ __| | | \ \/ /    #
-#                                                  (|     | )|_| |_| |>  <     #
-#    Created: 2022/07/07 17:49:38 by safoh        /'\_   _/`\__|\__,_/_/\_\    #
-#    Updated: 2022/10/27 11:30:15 by safoh        \___)=(___/                  #
-#                                                                              #
-# **************************************************************************** #
-
 include makerc/definitions.mk
 include makerc/options.mk
+-include $(DEPS)
 
 # ************************************Rules*********************************** #
 
@@ -20,12 +9,14 @@ all: $(NAME)
 
 $(NAME): SHELL :=/bin/bash
 
-$(NAME): $(OBJS)
+$(NAME): $(BUILD_DIR) $(OBJS)
 	$(CC) $(CFLAGS) $^ $(INCLUDE_FLAGS) -o $(NAME)
 
+$(BUILD_DIR):
+	@mkdir -p $@
+
 $(OBJS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -MMD -c $< -o $@
 
 clean:
 	@$(RM) $(BUILD_DIR)
