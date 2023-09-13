@@ -8,16 +8,15 @@
 // 		a) Set method type -- enum				done
 // 		b) Set path								done
 //		c) Set version							done
-// 2) parse headers --> map
-// 3) parse body --> ??
+// 2) parse headers --> map						done
+// 3) parse body --> ??							done (as string)
 
-
-int main(void) {
-	std::string inputString = REQUEST;
+void HTTPRequestParser(HTTPRequest& request, const std::string& HTTPRequestString) {
+	std::string inputString = HTTPRequestString;
 	bool		bodyLine = false;
 	bool		firstLine = true;
 	size_t		startPos = 0;
-	HTTPRequest request;
+//	HTTPRequest request;
 
 	while (startPos != std::string::npos)
 	{
@@ -51,6 +50,12 @@ int main(void) {
 			startPos = foundPos + 2;
 		}
 	}
+}
+
+int main(void) {
+	HTTPRequest request;
+
+	HTTPRequestParser(request, REQUEST);
 
 	std::cout << "\nRequest line:\nMethod: " << request.getMethodType() << "\n";
 	std::cout << "Path: " << request.getPath() << "\n";

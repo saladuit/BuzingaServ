@@ -69,6 +69,7 @@ void	HTTPRequest::setHeader(const std::string& headerLine) {
 }
 
 std::string&	HTTPRequest::getValue(const std::string& key) {
+	// what if the key or value does not exist??
 	return (_headers[key]);
 }
 
