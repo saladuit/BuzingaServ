@@ -19,9 +19,8 @@ BUILD_DIR		:=build
 SRCS			:=$(wildcard $(SRC_DIR)/*.cpp)
 HEADERS			:=$(wildcard $(INCLUDE_DIR)/*.hpp)
 
-# 	Objects and Dependancies
-OBJS			:=$(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
-DEPS			:=$(OBJS:%.o=%.d)
+# 	Objects
+OBJS 			:=$(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
 INCLUDE_FLAGS	:=$(addprefix -I, $(sort $(dir $(HEADERS))))
 

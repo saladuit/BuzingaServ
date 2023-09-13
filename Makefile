@@ -1,6 +1,6 @@
 include makerc/definitions.mk
 include makerc/options.mk
--include $(DEPS)
+# -include $(DEPS)
 
 # ************************************Rules*********************************** #
 
@@ -9,14 +9,15 @@ all: $(NAME)
 
 $(NAME): SHELL :=/bin/bash
 
-$(NAME): $(BUILD_DIR) $(OBJS)
+$(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $^ $(INCLUDE_FLAGS) -o $(NAME)
 
 $(BUILD_DIR):
 	@mkdir -p $@
 
 $(OBJS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -MMD -c $< -o $@
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 clean:
 	@$(RM) $(BUILD_DIR)
