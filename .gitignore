@@ -1,3 +1,8 @@
+# Bullshit
+.*
+!.gitignore
+compile_commands.json
+
 # Prerequisites
 *.d
 
