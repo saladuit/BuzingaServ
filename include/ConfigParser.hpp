@@ -8,7 +8,6 @@
 enum class GlobalSetting
 {
 	Threads,
-	LogLevel,
 	DefaultErrorPages,
 };
 

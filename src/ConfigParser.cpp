@@ -179,13 +179,6 @@ void ConfigParser::parseGlobalBlock(std::istream &stream)
 			_global_settings[GlobalSetting::Threads] = threads;
 			logger.log(LogLevel::DEBUG, "Threads: " + threads);
 		}
-		else if (first_word == "log_level")
-		{
-			std::string log_level;
-			line_stream >> log_level;
-			_global_settings[GlobalSetting::LogLevel] = log_level;
-			logger.log(LogLevel::DEBUG, "log_level: " + log_level);
-		}
 		else if (first_word == "default_error_pages")
 		{
 			std::string default_error_pages;
