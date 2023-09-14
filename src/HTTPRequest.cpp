@@ -1,6 +1,7 @@
-#include <HTTPRequest.hpp>
-#include <string>
+#include "HTTPRequest.hpp"
+#include "../include/HTTPRequest.hpp"
 #include <sstream>
+#include <string>
 
 HTTPRequest::HTTPRequest() {
 }
