@@ -1,6 +1,14 @@
 #ifndef HTTP_REQUEST_HPP
 #define HTTP_REQUEST_HPP
 
+// PARSE_HTTP_REQUEST -- request struct?		Status:
+// 1) parse request line						done
+// 		a) Set method type -- enum				done
+// 		b) Set path								done
+//		c) Set version							done
+// 2) parse headers --> map						done
+// 3) parse body --> ??							done (as string)
+
 // INCLUDE
 #include <iostream>
 #include <map>
