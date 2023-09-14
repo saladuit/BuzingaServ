@@ -11,7 +11,7 @@ int main() {
 	Logger	&logger = Logger::getInstance();
 	FileManager	file;
 
-	file.manage(PATH);
+	file.manage(1, PATH);
 	if (file.getContent().empty()) {
 		logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
 		return (0);

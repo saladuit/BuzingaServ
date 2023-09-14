@@ -5,13 +5,12 @@
 #include "../include/FileManager.hpp"
 
 FileManager::FileManager() {
-	_statusCode = 0;
 }
 
 FileManager::~FileManager() {
 }
 
-void FileManager::manage(const std::string& filename) {
+void	FileManager::manageGet(const std::string& filename) {
 	std::ifstream	file(filename);
 	std::string line;
 
@@ -24,6 +23,26 @@ void FileManager::manage(const std::string& filename) {
 	}
 	_statusCode = 200;
 
+}
+
+void	FileManager::managePost(const std::string& filename) {
+	(void)filename;
+	_statusCode = 201;
+}
+
+void	FileManager::manageDelete(const std::string& filename) {
+	(void)filename;
+	_statusCode = 204;
+}
+
+void	FileManager::manage(int method, const std::string &filename)
+{
+	if (method == 0)
+		manageGet(filename);
+	else if (method == 1)
+		managePost(filename);
+	else
+		manageDelete(filename);
 }
 
 std::string FileManager::getContent()
