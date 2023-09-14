@@ -1,22 +1,20 @@
 #include <iostream>
-#include <filesystem>
+#include <fstream>
 #include <string>
 
-#define PATH "data/www/index.html"
-//std::string	FileManager(std::string path) {
-int	FileManager() {
-	std::string	content;
-
-	const std::filesystem::path projectPath = "data/www";
-	const std::string filenameToFind = "index.html";
-
-	for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath)) {
-		if (entry.is_regular_file() && entry.path().filename() == filenameToFind) {
-			std::cout << "File found: " << entry.path() << std::endl;
-			return 0; // File found, exit with success status
-		}
+std::string readFileToString(const std::string& filename) {
+	std::ifstream file(filename);
+	if (!file.is_open()) {
+		// Handle the case where the file could not be opened
+		throw std::runtime_error("Failed to open file: " + filename);
 	}
-	std::cout << "File not found." << std::endl;
-	return 1; // File not found, exit with error status
-//	return (content);
+
+	std::string content;
+	std::string line;
+
+	while (std::getline(file, line)) {
+		content += line + "\n"; // Add newline character if needed
+	}
+
+	return content;
 }
