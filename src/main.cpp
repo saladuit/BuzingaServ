@@ -2,18 +2,22 @@
 #include <Logger.hpp>
 // #include <HTTPServer.hpp>
 // #include <cstdlib>
+#include "../include/FileManager.hpp"
 
-#define PATH "data/www/index.html"
+#define PATH "data/www/index.htmlg"
+std::string manage(const std::string& filename);
 
 int main() {
-	try {
-		std::string filename = PATH;
-		std::string fileContent = readFileToString(filename);
-		std::cout << "File content:\n" << fileContent;
-	} catch (const std::exception& e) {
-		std::cerr << "Error: " << e.what() << std::endl;
+	Logger	&logger = Logger::getInstance();
+	FileManager	file;
+
+	file.manage(PATH);
+	if (file.getContent().empty()) {
+		logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
+		return (0);
 	}
 
+	logger.log(INFO, "Status_code: %, Body:\n\n%", file.getStatusCode(), file.getContent());
 	return 0;
 }
 

@@ -1,20 +1,37 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "../include/Logger.hpp"
+#include "../include/FileManager.hpp"
 
-std::string readFileToString(const std::string& filename) {
-	std::ifstream file(filename);
-	if (!file.is_open()) {
-		// Handle the case where the file could not be opened
-		throw std::runtime_error("Failed to open file: " + filename);
-	}
+FileManager::FileManager() {
+	_statusCode = 0;
+}
 
-	std::string content;
+FileManager::~FileManager() {
+}
+
+void FileManager::manage(const std::string& filename) {
+	std::ifstream	file(filename);
 	std::string line;
 
-	while (std::getline(file, line)) {
-		content += line + "\n"; // Add newline character if needed
+	if (!file.is_open()) {
+		_statusCode = 404;
+		return ;
 	}
+	while (std::getline(file, line)) {
+		_content += line + "\n";
+	}
+	_statusCode = 200;
 
-	return content;
+}
+
+std::string FileManager::getContent()
+{
+	return (_content);
+}
+
+int FileManager::getStatusCode()
+{
+	return (_statusCode);
 }
