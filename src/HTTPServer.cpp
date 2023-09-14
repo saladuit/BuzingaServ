@@ -1,4 +1,5 @@
 #include <HTTPServer.hpp>
+#include <Logger.hpp>
 
 void HTTPServer::_check(int exp, const char *msg)
 {
@@ -86,11 +87,57 @@ void HTTPServer::accept_connection()
 
 int HTTPServer::run()
 {
+	Logger &logger = Logger::getInstance();
+
 	_setup_server_socket();
-	while (true)
+
+	try
 	{
-		accept_connection();
-		handle_connection();
+		while (true)
+		{
+			int timeout = 1000;
+			int poll_count = poll(_fds.data(), _fds.size(), timeout);
+			if (poll_count == -1)
+			{
+				logger.log(FATAL, "poll() failed");
+				throw std::runtime_error("poll() failed");
+			}
+			if (poll_count == 0)
+			{
+				logger.log(INFO, "poll() timed out");
+				continue;
+			}
+			for (auto &fd : _fds)
+			{
+				if (fd.revents == 0)
+					continue;
+				if (fd.revents != POLLIN)
+				{
+					logger.log(FATAL, "Error! revents = %d", fd.revents);
+					throw std::runtime_error("Error! revents = " +
+											 std::to_string(fd.revents));
+				}
+				if (fd.fd == _server.fd)
+				{
+					accept_connection();
+					_fds.push_back(pollfd{_client.fd, POLLIN, 0});
+				}
+				else
+				{
+					handle_connection();
+					close(fd.fd);
+					fd.fd = -1;
+				}
+			}
+			accept_connection();
+			handle_connection();
+		}
+	}
+	catch (const std::exception &e)
+	{
+		logger.log(FATAL, e.what());
+		// Perform any necessary cleanup here
+		return EXIT_FAILURE;
 	}
 	return (EXIT_SUCCESS);
 }

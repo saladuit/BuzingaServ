@@ -12,9 +12,8 @@ int main(int argc, char **argv)
 		return (EXIT_FAILURE);
 	}
 	ConfigParser parser(argc == 2 ? argv[1] : "config/default.conf");
-
-	parser.readConfig();
 }
+
 // int main(int argc, char **argv)
 // {
 // 	return (EXIT_FAILURE);

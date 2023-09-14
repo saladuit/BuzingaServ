@@ -23,7 +23,7 @@ class ThreadPool
 	void Start();
 	void QueueTask(const std::function<void()> &task);
 	void Stop();
-	bool busy();
+	bool isBusy();
 	ThreadPool() = delete;
 	ThreadPool(const unsigned int &thread_count);
 	ThreadPool(const ThreadPool &src) = delete;

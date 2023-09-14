@@ -3,10 +3,12 @@
 
 #include <Color.hpp>
 #include <Defines.hpp>
+#include <ThreadPool.hpp>
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <iostream>
 #include <netinet/in.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -28,6 +30,8 @@ class HTTPServer
 	void accept_connection();
 	void _check(int exp, const char *msg);
 
+	ThreadPool _thread_pool;
+	std::vector<pollfd> _fds;
 	const std::string _config_path;
 	t_socket _server;
 	t_socket _client;

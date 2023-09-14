@@ -10,6 +10,7 @@ ThreadPool::ThreadPool(const unsigned int &thread_count)
 
 ThreadPool::~ThreadPool()
 {
+	Stop();
 }
 
 void ThreadPool::Start()
@@ -17,8 +18,9 @@ void ThreadPool::Start()
 	Logger &logger = Logger::getInstance();
 	if (_thread_count == 0)
 	{
-		logger.log(INFO, "Using maximum number of threads");
 		_thread_count = std::thread::hardware_concurrency();
+		logger.log(INFO, "Using maximum number of threads: " +
+							 std::to_string(_thread_count));
 	}
 	for (std::size_t i = 0; i < _thread_count; ++i)
 	{
@@ -28,39 +30,41 @@ void ThreadPool::Start()
 
 void ThreadPool::ThreadLoop()
 {
+	Logger &logger = Logger::getInstance();
 	while (true)
 	{
 		std::function<void()> task;
 		{
-			{
-				std::unique_lock<std::mutex> lock(_queue_mutex);
-				_condition.wait(lock,
-								[this] { return !_tasks.empty() || _stop; });
-			}
+			std::unique_lock<std::mutex> lock(_queue_mutex);
+			_condition.wait(lock, [this] { return !_tasks.empty() || _stop; });
 			if (_stop == true)
 				return;
+			logger.log(DEBUG, "Thread % is running",
+					   std::this_thread::get_id());
 			task = _tasks.front();
 			_tasks.pop();
 		}
+		task();
 	}
 }
 
 void ThreadPool::QueueTask(const std::function<void()> &task)
 {
-	std::unique_lock<std::mutex> lock(_queue_mutex);
-	_tasks.push(task);
+	Logger &logger = Logger::getInstance();
+	{
+		std::unique_lock<std::mutex> lock(_queue_mutex);
+		_tasks.push(task);
+		logger.log(DEBUG, "New task queued");
+	}
 	_condition.notify_one();
 }
 
-bool ThreadPool::busy()
+bool ThreadPool::isBusy()
 {
-	bool poolbusy;
-	{
-		std::unique_lock<std::mutex> lock(_queue_mutex);
-		poolbusy = !_tasks.empty();
-	}
-	return (poolbusy);
+	std::unique_lock<std::mutex> lock(_queue_mutex);
+	return (!_tasks.empty());
 }
+
 void ThreadPool::Stop()
 {
 	{
