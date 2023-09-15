@@ -4,20 +4,23 @@
 // #include <cstdlib>
 #include "../include/FileManager.hpp"
 
-#define PATH "data/www/index.htmlg"
+#define PATH "data/www/index.htmll"
 std::string manage(const std::string& filename);
 
 int main() {
 	Logger	&logger = Logger::getInstance();
 	FileManager	file;
 
-	file.manage(1, PATH);
+	file.manage(0, PATH);
 	if (file.getContent().empty()) {
-		logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
+		if (file.getStatusCode() == 401)
+			logger.log(ERROR, "Status_code: %, UNAUTHORIZED", file.getStatusCode());
+		if (file.getStatusCode() == 404)
+			logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
 		return (0);
 	}
 
-	logger.log(INFO, "Status_code: %, Body:\n\n%", file.getStatusCode(), file.getContent());
+	logger.log(INFO, "Status_code: %, OK\n\n%", file.getStatusCode(), file.getContent());
 	return 0;
 }
 

@@ -3,6 +3,9 @@
 #include <string>
 #include "../include/Logger.hpp"
 #include "../include/FileManager.hpp"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 FileManager::FileManager() {
 }
@@ -14,15 +17,19 @@ void	FileManager::manageGet(const std::string& filename) {
 	std::ifstream	file(filename);
 	std::string line;
 
-	if (!file.is_open()) {
-		_statusCode = 404;
+	if (fs::exists(filename)) 
+	{
+		if (!file.is_open()) 
+		{
+		_statusCode = 401;
 		return ;
-	}
-	while (std::getline(file, line)) {
-		_content += line + "\n";
-	}
+		}
+		while (std::getline(file, line)) 
+			_content += line + "\n";
 	_statusCode = 200;
-
+	}
+	else
+		_statusCode = 404;
 }
 
 void	FileManager::managePost(const std::string& filename) {
