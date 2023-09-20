@@ -39,7 +39,8 @@ class HTTPServer
 	char _actual_path[BUFFER_SIZE];
 
   public:
-	HTTPServer();
+	HTTPServer(int thread_count);
+	HTTPServer() = delete;
 	HTTPServer(const HTTPServer &src) = delete;
 	HTTPServer &operator=(const HTTPServer &rhs) = delete;
 	~HTTPServer();

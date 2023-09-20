@@ -1,5 +1,6 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <cstring>
 
 void HTTPServer::_check(int exp, const char *msg)
 {
@@ -25,7 +26,7 @@ void HTTPServer::_setup_server_socket()
 	_check(listen(_server.fd, MAX_PENDING_CONNECTIONS), "Error: listen failed");
 }
 
-HTTPServer::HTTPServer()
+HTTPServer::HTTPServer(int thread_count) : _thread_pool(thread_count)
 {
 }
 

@@ -1,4 +1,5 @@
 #include "Logger.hpp"
+#include <chrono>
 #include <iomanip>
 
 Logger::Logger() : _current_level(LogLevel::DEBUG)
