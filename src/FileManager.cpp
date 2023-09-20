@@ -32,8 +32,14 @@ void	FileManager::manageGet(const std::string& filename) {
 		_statusCode = 404;
 }
 
+// steps for managing the post method:
+// - inject the content of the file on the webpage or in the folder of the specified website
+// - 
 void	FileManager::managePost(const std::string& filename) {
 	(void)filename;
+
+
+
 	_statusCode = 201;
 }
 
