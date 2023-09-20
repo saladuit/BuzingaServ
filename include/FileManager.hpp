@@ -4,6 +4,14 @@
 // INCLUDES
 #include <string>
 
+// ENUM
+enum class HTTPMethod {
+	GET,
+	POST,
+	DELETE,
+};
+
+// CLASS
 class FileManager {
   private:
 	int			_statusCode;
@@ -17,7 +25,7 @@ class FileManager {
 	~FileManager();
 
 	// manage methods
-	void manage(int method, const std::string& filename);
+	void manage(HTTPMethod method, const std::string& filename);
 	void manageGet(const std::string& filename);
 	void managePost(const std::string& filename);
 	void manageDelete(const std::string& filename);

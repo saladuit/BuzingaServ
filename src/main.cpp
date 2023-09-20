@@ -1,17 +1,18 @@
 #include <ConfigParser.hpp>
 #include <Logger.hpp>
+#include <FileManager.hpp>
 // #include <HTTPServer.hpp>
 // #include <cstdlib>
 #include "../include/FileManager.hpp"
 
-#define PATH "data/www/index.htmll"
+#define PATH "data/www/index.html"
 std::string manage(const std::string& filename);
 
 int main() {
 	Logger	&logger = Logger::getInstance();
 	FileManager	file;
 
-	file.manage(0, PATH);
+	file.manage(HTTPMethod::GET, PATH);
 	if (file.getContent().empty()) {
 		if (file.getStatusCode() == 401)
 			logger.log(ERROR, "Status_code: %, UNAUTHORIZED", file.getStatusCode());

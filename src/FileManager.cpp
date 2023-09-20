@@ -26,7 +26,7 @@ void	FileManager::manageGet(const std::string& filename) {
 		}
 		while (std::getline(file, line)) 
 			_content += line + "\n";
-	_statusCode = 200;
+		_statusCode = 200;
 	}
 	else
 		_statusCode = 404;
@@ -42,11 +42,11 @@ void	FileManager::manageDelete(const std::string& filename) {
 	_statusCode = 204;
 }
 
-void	FileManager::manage(int method, const std::string &filename)
+void	FileManager::manage(HTTPMethod method, const std::string &filename)
 {
-	if (method == 0)
+	if (method == HTTPMethod::GET)
 		manageGet(filename);
-	else if (method == 1)
+	else if (method == HTTPMethod::POST)
 		managePost(filename);
 	else
 		manageDelete(filename);
