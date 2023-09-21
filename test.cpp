@@ -93,17 +93,38 @@ void	post_text(const std::string filename, const std::string content)
     std::cout << "Text inserted successfully." << std::endl;
 }
 
+void	save_image(const std::string post_message, const std::string content)
+{
+	std::ifstream	image_content(content);
+
+	if (!image_content)
+	{
+		std::cerr << "Error opening files." << std::endl;
+		return ;
+	}
+	std::ofstream	new_image("data/" + post_message);
+	
+	std::string line;
+	// int currentLine = 0;
+	while (std::getline(image_content, line)) {
+    	new_image << line << '\n';
+    }
+
+}
+
 int main(int argc, char **argv) {
-	if (argc != 3)
+	if (argc != 4)
 	{
 		std::cout << "Invalid number of parameters.\n";
 		return 0;
 	}
+
 	const std::string	filename = "data/www/index.html";
     const std::string   post_message = argv[2];
 	const std::string	content_type = argv[1];
 	if (content_type == "image") {
-		 post_image(filename, post_message);
+		save_image(post_message, argv[3]);
+		post_image(filename, post_message);
 	}
 	else if (content_type == "text")
 		post_text(filename, post_message);
