@@ -13,6 +13,11 @@ ThreadPool::~ThreadPool()
 	Stop();
 }
 
+const size_t &ThreadPool::getThreadCount() const
+{
+	return (_thread_count);
+}
+
 void ThreadPool::Start()
 {
 	Logger &logger = Logger::getInstance();

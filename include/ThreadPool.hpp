@@ -21,6 +21,7 @@ class ThreadPool
 	void ThreadLoop();
 
   public:
+	const size_t &getThreadCount() const;
 	void Start();
 	void QueueTask(const std::function<void()> &task);
 	void Stop();
