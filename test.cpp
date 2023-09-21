@@ -3,25 +3,25 @@
 #include <vector>
 #include <string>
 
-void	post_image(const std::string filename, const std::string post_data) 
+int	post_image(const std::string filename, const std::string post_data) 
 {
 	std::ifstream		inputFile(filename);
 	std::ofstream		outputFile("temp.txt");
-	std::ifstream		image("data/" + post_data);
-	const std::string	check_point = "        <!-- IMAGES -->";
-	std::string			converted_post_data = "        <img src=\"/home/lvan-bus/Documents/webserv/data/";
+	std::ifstream		image("data/images/" + post_data);
+	const std::string	check_point = "        <!-- image -->";
+	std::string			converted_post_data = "        <img src=\"/home/lvan-bus/Documents/webserv/data/images/";
 	bool				done = true;
 
 	if (!inputFile || !outputFile || !image) {
 		std::cerr << "Error opening files." << std::endl;
-		return ;
+		return 1;
     }
+	if (image.peek() == std::string::traits_type::eof())
+		return 204;
 	converted_post_data += post_data + "\" width=250 height=200>";
-	
 	std::string line;
 	std::vector<std::string> lines;
 	int currentLine = 0;
-
 	while (std::getline(inputFile, line)) {
 		currentLine++;
 		if (line == check_point && done) {
@@ -32,41 +32,38 @@ void	post_image(const std::string filename, const std::string post_data)
 		}
 		lines.push_back(line);
 	}
-
     for (const std::string& storedLine : lines) {
         outputFile << storedLine << '\n';
     }
-
     inputFile.close();
     outputFile.close();
-
     if (std::rename("temp.txt", filename.c_str()) != 0) {
         std::cerr << "Error renaming the file." << std::endl;
-        return ;
+        return 1;
     }
-
-    std::cout << "Text inserted successfully." << std::endl;
+    std::cout << "Image inserted successfully." << std::endl;
+	return 0;
 }
 
 
-void	post_text(const std::string filename, const std::string content)
+int	post_text(const std::string filename, const std::string content)
 {
 	std::ifstream		inputFile(filename);
 	std::ofstream		outputFile("temp.txt");
-	const std::string	check_point = "        <!-- text/plain -->";
+	const std::string	check_point = "        <!-- text -->";
 	std::string			converted_post_data = "        <P ALIGN=\"LEFT\">";
 	bool				done = true;
 
 	if (!inputFile || !outputFile) {
 		std::cerr << "Error opening files." << std::endl;
-		return ;
+		return 1;
     }
+	if (content == "")
+		return 204;
 	converted_post_data += content + "</P>";
-	
 	std::string line;
 	std::vector<std::string> lines;
 	int currentLine = 0;
-
 	while (std::getline(inputFile, line)) {
 		currentLine++;
 		if (line == check_point && done) {
@@ -87,17 +84,19 @@ void	post_text(const std::string filename, const std::string content)
 
     if (std::rename("temp.txt", filename.c_str()) != 0) {
         std::cerr << "Error renaming the file." << std::endl;
-        return ;
+        return 1;
     }
 
     std::cout << "Text inserted successfully." << std::endl;
+	return 0;
 }
 
 // when implementing save_image it can be simplified by replacing
 // function body with:
 	// std::ofstream	new_image("data/" + post_message);
 	// new_image << conent;
-void	save_image(const std::string post_message, const std::string content)
+bool	save_data(const std::string post_message, const std::string content, 
+			const std::string content_type)
 {
 	std::ifstream	image_content(content);
 	std::string		line;
@@ -105,29 +104,42 @@ void	save_image(const std::string post_message, const std::string content)
 	if (!image_content)
 	{
 		std::cerr << "Error opening files." << std::endl;
-		return ;
+		return (false);
 	}
-	std::ofstream	new_image("data/" + post_message);
+	// std::cout << "data/" + content_type + "/" + post_message + "\n";
+	std::ofstream	new_image("data/" + content_type + "/" + post_message);
 	while (std::getline(image_content, line)) {
     	new_image << line << '\n';
     }
+	return (true);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
 	if (argc != 4)
 	{
 		std::cout << "Invalid number of parameters.\n";
 		return 0;
 	}
-
 	const std::string	filename = "data/www/index.html";
     const std::string   post_message = argv[2];
 	const std::string	content_type = argv[1];
-	if (content_type == "image") {
-		save_image(post_message, argv[3]);
-		post_image(filename, post_message);
+	if (save_data(post_message, argv[3], content_type) == false) {
+		std::cout << "400 BAD REQUEST\n";
+		return (400);
 	}
-	else if (content_type == "text")
-		post_text(filename, post_message);
+
+	// post functionality is optional I guess
+	if (content_type == "images") {
+		if (post_image(filename, post_message) == 204) {
+			std::cout << "204 NO CONTENT\n";
+			return (204);
+		}
+	} else if (content_type == "text") {
+		if (post_text(filename, post_message) == 204) {
+			std::cout << "204 NO CONTENT\n";
+			return (204);
+		}
+	}
 	return 0;
 }
