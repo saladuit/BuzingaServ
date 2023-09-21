@@ -93,9 +93,14 @@ void	post_text(const std::string filename, const std::string content)
     std::cout << "Text inserted successfully." << std::endl;
 }
 
+// when implementing save_image it can be simplified by replacing
+// function body with:
+	// std::ofstream	new_image("data/" + post_message);
+	// new_image << conent;
 void	save_image(const std::string post_message, const std::string content)
 {
 	std::ifstream	image_content(content);
+	std::string		line;
 
 	if (!image_content)
 	{
@@ -103,13 +108,9 @@ void	save_image(const std::string post_message, const std::string content)
 		return ;
 	}
 	std::ofstream	new_image("data/" + post_message);
-	
-	std::string line;
-	// int currentLine = 0;
 	while (std::getline(image_content, line)) {
     	new_image << line << '\n';
     }
-
 }
 
 int main(int argc, char **argv) {
