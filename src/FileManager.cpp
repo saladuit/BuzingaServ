@@ -33,19 +33,24 @@ void	FileManager::manageGet(const std::string& filename) {
 }
 
 // steps for managing the post method:
-// - inject the content of the file on the webpage or in the folder of the specified website
-// - 
+// - save the post file in file system
+// - (optionally inject the post file in the html of the webpage)
 void	FileManager::managePost(const std::string& filename) {
 	(void)filename;
-
-
-
+	// implement saveData.cpp here
 	_statusCode = 201;
 }
 
 void	FileManager::manageDelete(const std::string& filename) {
-	(void)filename;
-	_statusCode = 204;
+	std::ifstream		inputFile(filename);
+
+	if (!inputFile)
+		_statusCode = 404;
+	else if (std::remove(filename.c_str()) != 0) 
+		_statusCode = 403;
+	else
+		_statusCode = 204;
+	// std::cout << filename << std::endl;
 }
 
 void	FileManager::manage(HTTPMethod method, const std::string &filename)

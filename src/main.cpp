@@ -5,20 +5,23 @@
 // #include <cstdlib>
 #include "../include/FileManager.hpp"
 
-#define PATH "data/www/index.html"
+#define PATH "data/pdf/en.subject.pdf"
 std::string manage(const std::string& filename);
 
 int main() {
 	Logger	&logger = Logger::getInstance();
 	FileManager	file;
 
-	file.manage(HTTPMethod::GET, PATH);
+	file.manage(HTTPMethod::DELETE, PATH);
 	if (file.getContent().empty()) {
-		if (file.getStatusCode() == 401)
+		if (file.getStatusCode() == 401) {
 			logger.log(ERROR, "Status_code: %, UNAUTHORIZED", file.getStatusCode());
-		if (file.getStatusCode() == 404)
+			return (0);
+		}
+		if (file.getStatusCode() == 404) {
 			logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
-		return (0);
+			return (0);
+		}
 	}
 
 	logger.log(INFO, "Status_code: %, OK\n\n%", file.getStatusCode(), file.getContent());
