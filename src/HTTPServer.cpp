@@ -131,21 +131,12 @@ int HTTPServer::run()
 {
 	Logger &logger = Logger::getInstance();
 
-	try
-	{
-		logger.log(INFO, "Setting up server sockets");
-		setupServerSocket();
-	}
-	catch (const std::exception &e)
-	{
-		logger.log(FATAL, e.what());
-		return (EXIT_FAILURE);
-	}
 	logger.log(INFO, "Server started");
 	while (true)
 	{
 		logger.log(INFO, "Polling for connections");
-		int poll_count = poll(_fds.data(), _fds.size(), 0);
+		logger.log(DEBUG, "Polling % file descriptors", _fds.size());
+		int poll_count = poll(_fds.data(), _fds.size(), -1);
 		if (poll_count == G_ERROR)
 		{
 			logger.log(ERROR, strerror(errno));
