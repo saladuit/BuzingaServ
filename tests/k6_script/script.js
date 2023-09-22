@@ -19,12 +19,12 @@ export default function () {
         }
   }
     */
-  handleSummary(res);
+  handleSummary(url, res);
 }
 
-export function handleSummary(response) {
+export function handleSummary(url, response) {
   return {
-        './log/HTML_body.log' : response.data.body(),
-        './log/HTML_header.log' : response.data.allHeaders(),
+        './log/HTML_body.log' : JSON.stringify(url),
+        './log/HTML_header.log' : JSON.stringify(url),
   };
 }
