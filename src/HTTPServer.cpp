@@ -49,8 +49,18 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	  _thread_pool(
 		  std::stoul(_parser.getGlobalSettings(GlobalSetting::Threads)))
 {
-	setupServerSocket();
-	_thread_pool.Start();
+	Logger &logger = Logger::getInstance();
+	try
+	{
+		logger.log(INFO, "Setting up server sockets");
+		setupServerSocket();
+		_thread_pool.Start();
+	}
+	catch (const std::exception &e)
+	{
+		logger.log(FATAL, e.what());
+		exit(EXIT_FAILURE);
+	}
 }
 
 void HTTPServer::handleConnection()
