@@ -32,7 +32,6 @@ class HTTPServer
 	t_socket _server;
 	t_socket _client;
 	char _buffer[BUFFER_SIZE];
-	// char _actual_path[BUFFER_SIZE];
 
   public:
 	HTTPServer(const std::string &config_file_path);
