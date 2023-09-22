@@ -41,6 +41,7 @@ void HTTPServer::setupServerSocket()
 		logger.log(FATAL, strerror(errno));
 		throw std::runtime_error("listen failed");
 	}
+	_fds.push_back(pollfd{_server.fd, POLLIN, 0});
 }
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
