@@ -10,22 +10,30 @@ HTTPServer::~HTTPServer()
 void HTTPServer::setupServerSocket()
 {
 	Logger &logger = Logger::getInstance();
+	int option = 1;
+
 	_server.fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_server.fd == G_ERROR)
 	{
 		logger.log(FATAL, strerror(errno));
 		throw std::runtime_error("socket creation failed");
 	}
+	if (setsockopt(_server.fd, SOL_SOCKET, SO_REUSEADDR, &option,
+				   sizeof(option)) == G_ERROR)
+	{
+		logger.log(FATAL, strerror(errno));
+		throw std::runtime_error("setsockopt failed");
+	}
 	bzero(&_server.addr, sizeof(_server.addr));
 	_server.addr.sin_family = AF_INET;
 	_server.addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	_server.addr.sin_port = htons(SERVER_PORT);
+	_server.addr.sin_port = htons(18000);
 	_server.addr_len = sizeof(_server.addr);
 	std::fill_n(_server.addr.sin_zero, sizeof(_server.addr.sin_zero), '\0');
 	if (bind(_server.fd, (t_sockaddr *)&_server.addr, _server.addr_len) ==
 		G_ERROR)
 	{
-		logger.log(FATAL, strerror(errno));
+		logger.log(FATAL, "bind: %", strerror(errno));
 		throw std::runtime_error("bind failed");
 	}
 	if (listen(_server.fd, MAX_PENDING_CONNECTIONS) == G_ERROR)
