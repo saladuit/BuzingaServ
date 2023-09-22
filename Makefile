@@ -13,19 +13,21 @@
 include makerc/definitions.mk
 include makerc/options.mk
 
+
+
 # ************************************Rules*********************************** #
 
 all: $(NAME)
 .PHONY: all
 
-$(NAME): SHELL :=/bin/bash
-
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $^ $(INCLUDE_FLAGS) -o $(NAME)
 
-$(OBJS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+-include $(DEPENDS)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 clean:
 	@$(RM) $(BUILD_DIR)
@@ -62,11 +64,14 @@ cov:
 
 run: all
 	@./$(NAME)
+.PHONY: run
 
 recov: fclean cov
 .PHONY: recov
 
 test:
 	./tests/test.sh
+.PHONY: test
+
 
 # **************************************************************************** #
