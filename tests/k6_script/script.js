@@ -5,7 +5,7 @@ import { sleep } from 'k6';
 
 export default function () {
 
-    const res = http.get('https://localhost::8080/index.html');
+    const res = http.get('https://google.com');
 
     for (const p in res.headers) 
     {
