@@ -32,13 +32,16 @@ void	FileManager::manageGet(const std::string& filename) {
 		_statusCode = 404;
 }
 
-// steps for managing the post method:
-// - save the post file in file system
-// - (optionally inject the post file in the html of the webpage)
-void	FileManager::managePost(const std::string& filename) {
-	(void)filename;
-	// implement saveData.cpp here
-	_statusCode = 201;
+void	FileManager::managePost(const std::string& filename, const std::string& body) {
+	std::ofstream	newFile(filename);
+	if (!newFile) {
+		std::cerr << "Error opening file." << std::endl;
+		_statusCode = 400;
+    }
+	else {
+		newFile << body;
+		_statusCode = 201;
+	}
 }
 
 void	FileManager::manageDelete(const std::string& filename) {
@@ -50,15 +53,14 @@ void	FileManager::manageDelete(const std::string& filename) {
 		_statusCode = 403;
 	else
 		_statusCode = 204;
-	// std::cout << filename << std::endl;
 }
 
-void	FileManager::manage(HTTPMethod method, const std::string &filename)
+void	FileManager::manage(HTTPMethod method, const std::string &filename, const std::string& body)
 {
 	if (method == HTTPMethod::GET)
 		manageGet(filename);
 	else if (method == HTTPMethod::POST)
-		managePost(filename);
+		managePost(filename, body);
 	else
 		manageDelete(filename);
 }

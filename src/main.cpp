@@ -5,14 +5,14 @@
 // #include <cstdlib>
 #include "../include/FileManager.hpp"
 
-#define PATH "data/pdf/en.subject.pdf"
+#define PATH "data/upload/something.kip"
 std::string manage(const std::string& filename);
 
 int main() {
 	Logger	&logger = Logger::getInstance();
 	FileManager	file;
 
-	file.manage(HTTPMethod::DELETE, PATH);
+	file.manage(HTTPMethod::POST, PATH, "this is een kip man");
 	if (file.getContent().empty()) {
 		if (file.getStatusCode() == 401) {
 			logger.log(ERROR, "Status_code: %, UNAUTHORIZED", file.getStatusCode());

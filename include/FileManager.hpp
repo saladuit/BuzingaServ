@@ -25,10 +25,10 @@ class FileManager {
 	~FileManager();
 
 	// manage methods
-	void manage(HTTPMethod method, const std::string& filename);
-	void manageGet(const std::string& filename);
-	void managePost(const std::string& filename);
-	void manageDelete(const std::string& filename);
+	void	manage(HTTPMethod method, const std::string& filename, const std::string& body);
+	void	manageGet(const std::string& filename);
+	void	managePost(const std::string& filename, const std::string& body);
+	void	manageDelete(const std::string& filename);
 
 	// getters
 	std::string getContent();
