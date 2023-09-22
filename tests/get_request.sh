@@ -2,7 +2,7 @@
 
 # Server configuration
 SERVER_HOST="localhost"
-SERVER_PORT="80"
+SERVER_PORT="8080"
 
 # Request file
 REQUEST_FILE="tests/request/get.txt"

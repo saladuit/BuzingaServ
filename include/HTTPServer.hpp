@@ -24,7 +24,6 @@ class HTTPServer
 	void setupServerSocket(void);
 	void handleConnection(void);
 	void acceptConnection(void);
-	void check(int exp, const std::string &msg);
 
 	ConfigParser _parser;
 	ThreadPool _thread_pool;
@@ -33,7 +32,7 @@ class HTTPServer
 	t_socket _server;
 	t_socket _client;
 	char _buffer[BUFFER_SIZE];
-	char _actual_path[BUFFER_SIZE];
+	// char _actual_path[BUFFER_SIZE];
 
   public:
 	HTTPServer(const std::string &config_file_path);

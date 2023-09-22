@@ -27,6 +27,9 @@ void ThreadPool::Start()
 		logger.log(INFO, "Using maximum number of threads: " +
 							 std::to_string(_thread_count));
 	}
+	else
+		logger.log(INFO, "Starting thread pool with " +
+							 std::to_string(_thread_count) + " threads");
 	for (std::size_t i = 0; i < _thread_count; ++i)
 	{
 		_threads.emplace_back(&ThreadPool::ThreadLoop, this);
@@ -44,8 +47,7 @@ void ThreadPool::ThreadLoop()
 			_condition.wait(lock, [this] { return !_tasks.empty() || _stop; });
 			if (_stop == true)
 				return;
-			logger.log(DEBUG, "Thread % is running",
-					   std::this_thread::get_id());
+			logger.log(INFO, "Thread % is running", std::this_thread::get_id());
 			task = _tasks.front();
 			_tasks.pop();
 		}
@@ -59,7 +61,7 @@ void ThreadPool::QueueTask(const std::function<void()> &task)
 	{
 		std::unique_lock<std::mutex> lock(_queue_mutex);
 		_tasks.push(task);
-		logger.log(DEBUG, "New task queued");
+		logger.log(INFO, "New task queued");
 	}
 	_condition.notify_one();
 }
@@ -72,6 +74,8 @@ bool ThreadPool::isBusy()
 
 void ThreadPool::Stop()
 {
+	Logger &logger = Logger::getInstance();
+	logger.log(INFO, "Stopping thread pool");
 	{
 		std::unique_lock<std::mutex> lock(_queue_mutex);
 		_stop = true;
