@@ -3,10 +3,14 @@ import { sleep } from 'k6';
 
 
 
+
 export default function () {
 
-    const res = http.get('https://google.com');
+    const url = 'https://google.com';
 
+    const res = http.get(url);
+
+/*
     for (const p in res.headers) 
     {
         if (res.headers.hasOwnProperty(p))
@@ -14,6 +18,13 @@ export default function () {
             console.log(p + ' : ' + res.headers[p]);
         }
   }
-  sleep(1);
+    */
+  handleSummary(res);
+}
 
+export function handleSummary(response) {
+  return {
+        './log/HTML_body.log' : response.data.body(),
+        './log/HTML_header.log' : response.data.allHeaders(),
+  };
 }
