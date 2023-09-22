@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdarg>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -33,12 +34,24 @@ class Logger
 	template <typename... Args>
 	void log(LogLevel lvl, const std::string &message, Args... args)
 	{
+		std::string formatted_msg = format(message, args...);
+		if (lvl > DEBUG)
+		{
+			std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
+					  << ": " << formatted_msg << Color::reset << std::endl;
+		}
 		if (lvl < _current_level)
 			return;
-
-		std::string formatted_msg = format(message, args...);
-		std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
-				  << ": " << formatted_msg << Color::reset << std::endl;
+		std::ofstream log_file("log.txt",
+							   std::ios_base::app | std::ios_base::out);
+		if (!log_file.is_open())
+		{
+			std::cout << "Failed to open log file" << std::endl;
+			return;
+		}
+		log_file << "[" << getTimestamp() << "] " << logLevelToString(lvl)
+				 << ": " << formatted_msg << Color::reset << std::endl;
+		log_file.close();
 	}
 
   private:
