@@ -1,5 +1,6 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <algorithm>
 #include <cstring>
 #include <unistd.h>
 
@@ -7,14 +8,24 @@ HTTPServer::~HTTPServer()
 {
 }
 
-void HTTPServer::setupServerSocket()
+void HTTPServer::setupServerSocket(const ServerBlock &server_block)
 {
 	Logger &logger = Logger::getInstance();
+	const std::string &host = server_block.settings.at(ServerSetting::Host);
+	const std::string &port = server_block.settings.at(ServerSetting::Port);
+	const std::string &server_name =
+		server_block.settings.at(ServerSetting::ServerName);
+	const std::string &client_max_body_size =
+		server_block.settings.at(ServerSetting::ClientMaxBodySize);
 	t_socket server;
 	int option = 1;
 
 	server.fd = socket(AF_INET, SOCK_STREAM, 0);
 	logger.log(DEBUG, "Server socket fd: %", server.fd);
+	logger.log(DEBUG, "host: " + host);
+	logger.log(DEBUG, "port: " + port);
+	logger.log(DEBUG, "servername: ", server_name);
+	logger.log(DEBUG, "client max body size: ", client_max_body_size);
 	if (server.fd == G_ERROR)
 	{
 		logger.log(FATAL, strerror(errno));
@@ -29,7 +40,7 @@ void HTTPServer::setupServerSocket()
 	bzero(&server.addr, sizeof(server.addr));
 	server.addr.sin_family = AF_INET;
 	server.addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server.addr.sin_port = htons(18000);
+	server.addr.sin_port = htons(std::stoi(port));
 	server.addr_len = sizeof(server.addr);
 	std::fill_n(server.addr.sin_zero, sizeof(server.addr.sin_zero), '\0');
 	if (bind(server.fd, (t_sockaddr *)&server.addr, server.addr_len) == G_ERROR)
@@ -55,7 +66,10 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	try
 	{
 		logger.log(INFO, "Setting up server sockets");
-		setupServerSocket();
+		const std::vector<ServerBlock> &server_blocks =
+			_parser.getServerBlocks();
+		for (const auto &server_block : server_blocks)
+			setupServerSocket(server_block);
 		// _thread_pool.Start();
 	}
 	catch (const std::exception &e)
