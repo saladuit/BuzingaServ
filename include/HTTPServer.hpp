@@ -1,9 +1,11 @@
 #ifndef HTTPSERVER_HPP
 #define HTTPSERVER_HPP
 
+#define NO_TIMEOUT -1
+
 #include <ConfigParser.hpp>
 #include <Defines.hpp>
-#include <ThreadPool.hpp>
+// #include <ThreadPool.hpp>
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -22,16 +24,14 @@ class HTTPServer
 {
   private:
 	void setupServerSocket(void);
-	void handleConnection(void);
-	void acceptConnection(void);
+	void handleConnection(const pollfd &fd);
+	void acceptConnection(const pollfd &fd);
+	void logPollfd(const pollfd &fd) const;
 
 	ConfigParser _parser;
-	ThreadPool _thread_pool;
+	// ThreadPool _thread_pool;
 	std::vector<pollfd> _fds;
-	const std::string _config_path;
-	t_socket _server;
-	t_socket _client;
-	char _buffer[BUFFER_SIZE];
+	std::vector<int> _server_fds;
 
   public:
 	HTTPServer(const std::string &config_file_path);

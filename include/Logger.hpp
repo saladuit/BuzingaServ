@@ -35,29 +35,25 @@ class Logger
 	void log(LogLevel lvl, const std::string &message, Args... args)
 	{
 		std::string formatted_msg = format(message, args...);
-		if (lvl > DEBUG)
-		{
-			std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
-					  << ": " << formatted_msg << Color::reset << std::endl;
-		}
 		if (lvl < _current_level)
 			return;
-		std::ofstream log_file("log.txt",
-							   std::ios_base::app | std::ios_base::out);
-		if (!log_file.is_open())
+		if (!_log_file.is_open())
 		{
 			std::cout << "Failed to open log file" << std::endl;
 			return;
 		}
-		log_file << "[" << getTimestamp() << "] " << logLevelToString(lvl)
-				 << ": " << formatted_msg << Color::reset << std::endl;
-		log_file.close();
+		std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
+				  << ": " << formatted_msg << Color::reset << std::endl;
+		_log_file << "[" << getTimestamp() << "] " << logLevelToStringFile(lvl)
+				  << ": " << formatted_msg << std::endl;
 	}
 
   private:
 	LogLevel _current_level;
 	std::string logLevelToString(LogLevel lvl);
+	std::string logLevelToStringFile(LogLevel lvl);
 	std::string getTimestamp();
+	std::ofstream _log_file;
 
 	template <typename T>
 	std::string any_to_string(const T &value)
