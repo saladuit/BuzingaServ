@@ -72,7 +72,20 @@ The following diagram gives a bit of an overview of what we need to implement.
 socket() creates an endpoint for communication and returns a descriptor.
 
 
+## Tools
+
+- [RFC Navigator](https://rfc.fyi/?collection=HTTP)
+- [Postman](https://www.postman.com/)
+- [Postman community](https://www.community.postman.com/)
+
 ## References
 
-- [HTTP Server: Everything you need to know to Build a simple HTTP server from scratch](https://bruinsslot.jp/post/simple-http-webserver-in-c/)
-- [Making a simple HTTP webserver in C](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
+- [42 Evaluation Sheet](https://rphlr.github.io/42-Evals/Rank05/webserv/)
+- [HTTP Server: Everything you need to know to Build a simple HTTP Server](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa) (Medium Premium)
+- [Making a simple HTTP webserver in C](https://bruinsslot.jp/post/simple-http-webserver-in-c/)
+- [Thread pools](https://stackoverflow.com/questions/15752659/thread-pooling-in-c11)
+
+## Required Reading
+
+- [Linux Programming Interface](https://sciencesoftcode.files.wordpress.com/2018/12/the-linux-programming-interface-michael-kerrisk-1.pdfh): Chapter 56-61
+- [RFC:  9112](https://www.rfc-editor.org/rfc/rfc9112.pdf) (HTTP/1.1) (could be obsolete)
