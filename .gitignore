@@ -5,6 +5,9 @@ tests/log/
 !.gitignore
 compile_commands.json
 
+# Logger
+log.txt
+
 # Prerequisites
 *.d
 

@@ -6,11 +6,15 @@
 ConfigParser::ConfigParser(const std::string &file_path)
 	: _file_path(file_path), _global_settings(), _server_blocks()
 {
+	readConfig();
 }
 
-std::map<GlobalSetting, std::string> ConfigParser::getGlobalSettings() const
+std::string ConfigParser::getGlobalSettings(GlobalSetting setting) const
 {
-	return (_global_settings);
+	auto it = _global_settings.find(setting);
+	if (it != _global_settings.end())
+		return (it->second);
+	return ("");
 }
 
 std::vector<ServerBlock> ConfigParser::getServerBlocks() const
@@ -241,6 +245,5 @@ void ConfigParser::readConfig()
 {
 	std::ifstream config_file = openConfigFile(_file_path);
 	readConfigFile(config_file);
-	// validateConfig();
 	config_file.close();
 }

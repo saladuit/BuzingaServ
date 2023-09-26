@@ -9,6 +9,7 @@ RM				:=rm -rf
 
 #	Compiler flags
 CFLAGS			=-Wall -Wextra -Werror -Wpedantic -std=c++17
+DFLAGS			:=-MMD -MP
 
 #	Directories
 SRC_DIR		 	:=src
@@ -23,6 +24,7 @@ HEADERS			:=$(wildcard $(INCLUDE_DIR)/*.hpp)
 OBJS 			:=$(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
 INCLUDE_FLAGS	:=$(addprefix -I, $(sort $(dir $(HEADERS))))
+DEPENDS 		:= $(patsubst %.o,%.d,$(OBJS))
 
 #	Coverage
 COVERAGE_GCDA		:=build/**/*.gcda
