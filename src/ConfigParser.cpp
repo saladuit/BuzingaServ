@@ -191,6 +191,20 @@ void ConfigParser::parseGlobalBlock(std::istream &stream)
 				default_error_pages;
 			logger.log(LogLevel::DEBUG, "log_level: " + default_error_pages);
 		}
+		else if (first_word == "read_size")
+		{
+			std::string read_size;
+			line_stream >> read_size;
+			_global_settings[GlobalSetting::ReadSize] = read_size;
+			logger.log(LogLevel::DEBUG, "read_size: " + read_size);
+		}
+		else if (first_word == "write_size")
+		{
+			std::string write_size;
+			line_stream >> write_size;
+			_global_settings[GlobalSetting::ReadSize] = write_size;
+			logger.log(LogLevel::DEBUG, "write_size: " + write_size);
+		}
 		else
 			logger.log(LogLevel::WARNING,
 					   "Unkown global setting: " + first_word);

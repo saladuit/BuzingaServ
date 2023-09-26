@@ -82,20 +82,30 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 void HTTPServer::handleConnection(pollfd &fd)
 {
 	Logger &logger = Logger::getInstance();
-	char _buffer[BUFFER_SIZE];
-
-	logger.log(INFO,
-			   "Handling connection of client fd: " + std::to_string(fd.fd));
-	read(fd.fd, _buffer, BUFFER_SIZE);
-	logger.log(DEBUG, "Received: %", _buffer);
 	std::string response = "HTTP/1.1 200 OK\r\n\r\nHello World!";
-	write(fd.fd, response.c_str(), response.size());
-	fd.revents = 0;
-	close(fd.fd);
-	_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
-							  [&](const pollfd &pfd)
-							  { return (pfd.fd == fd.fd); }),
-			   _fds.end());
+	static std::string tmp;
+	char _buffer[1];
+
+	if (fd.revents & POLLIN)
+	{
+		logger.log(INFO, "Handling connection of client fd: " +
+							 std::to_string(fd.fd));
+		read(fd.fd, _buffer, 1);
+		tmp += _buffer[0];
+		logger.log(DEBUG, "Received: " + tmp);
+		if (tmp.find("\r\n\r\n") != std::string::npos)
+
+			fd.events |= POLLOUT;
+	}
+	if (fd.revents & POLLOUT)
+	{
+		write(fd.fd, response.c_str(), response.size());
+		close(fd.fd);
+		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
+								  [&](const pollfd &pfd)
+								  { return (pfd.fd == fd.fd); }),
+				   _fds.end());
+	}
 }
 
 void HTTPServer::acceptConnection(const pollfd &fd)
@@ -164,16 +174,13 @@ int HTTPServer::run()
 			logPollfd(fd);
 			if (std::find(_server_fds.begin(), _server_fds.end(), fd.fd) !=
 				_server_fds.end())
-			{
 				acceptConnection(fd);
-				// _thread_pool.QueueTask([&]() { acceptConnection(); });
-			}
 			else
-			{
 				handleConnection(fd);
-				// _thread_pool.QueueTask([&]() { handleConnection(); });
-			}
 		}
 	}
 	return (EXIT_SUCCESS);
 }
+
+// _thread_pool.QueueTask([&]() { acceptConnection(); });
+// _thread_pool.QueueTask([&]() { handleConnection(); });
