@@ -29,44 +29,49 @@ class Logger
 	void operator=(Logger const &) = delete;
 
 	static Logger &getInstance();
-	void setLogLevel(LogLevel lvl);
+	void setLogLevel(const LogLevel lvl);
 
 	template <typename... Args>
-	void log(LogLevel lvl, const std::string &message, Args... args)
+	void log(const LogLevel lvl, const std::string &message, Args... args)
 	{
-		std::string formatted_msg = format(message, args...);
+		const std::string formatted_msg = format(message, args...);
+		const std::string ss = "[" + getTimestamp() + "] " +
+							   logLevelToString(lvl) + ": " + formatted_msg;
 		if (lvl < _current_level)
 			return;
-		if (!_log_file.is_open())
-		{
-			std::cout << "Failed to open log file" << std::endl;
-			return;
-		}
-		std::cout << "[" << getTimestamp() << "] " << logLevelToString(lvl)
-				  << ": " << formatted_msg << Color::reset << std::endl;
-		_log_file << "[" << getTimestamp() << "] " << logLevelToStringFile(lvl)
-				  << ": " << formatted_msg << std::endl;
+		if (lvl == LogLevel::DEBUG)
+			std::cout << Color::cyan << ss << Color::reset << std::endl;
+		if (lvl == LogLevel::INFO)
+			std::cout << ss << std::endl;
+		else if (lvl == LogLevel::WARNING)
+			std::cerr << Color::yellow << ss << Color::reset << std::endl;
+		else if (lvl == LogLevel::ERROR)
+			std::cerr << Color::red << ss << Color::reset << std::endl;
+		else if (lvl == LogLevel::FATAL)
+			std::cerr << Color::magenta << ss << Color::reset << std::endl;
+		if (_log_file.is_open())
+			_log_file << ss << std::endl;
 	}
 
   private:
 	LogLevel _current_level;
-	std::string logLevelToString(LogLevel lvl);
-	std::string logLevelToStringFile(LogLevel lvl);
-	std::string getTimestamp();
+	const std::string logLevelToString(const LogLevel lvl);
+	const std::string getTimestamp();
 	std::ofstream _log_file;
 
 	template <typename T>
-	std::string any_to_string(const T &value)
+	const std::string any_to_string(const T &value)
 	{
 		std::ostringstream oss;
 		oss << value;
-		return oss.str();
+		return (oss.str());
 	}
 	template <typename... Args>
-	std::string format(const std::string &fmt, Args... args)
+	const std::string format(const std::string &fmt, Args... args)
 	{
 		std::ostringstream os;
-		std::array<std::string, sizeof...(Args)> arr{any_to_string(args)...};
+		const std::array<std::string, sizeof...(Args)> arr{
+			any_to_string(args)...};
 		size_t i;
 
 		i = 0;

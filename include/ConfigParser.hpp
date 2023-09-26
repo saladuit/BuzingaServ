@@ -69,8 +69,8 @@ class ConfigParser
 
 	void readConfig();
 
-	std::string getGlobalSettings(GlobalSetting setting) const;
-	std::vector<ServerBlock> getServerBlocks() const;
+	const std::string &getGlobalSettings(const GlobalSetting setting) const;
+	const std::vector<ServerBlock> &getServerBlocks() const;
 };
 
 #endif
