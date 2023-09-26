@@ -79,16 +79,23 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	}
 }
 
-void HTTPServer::handleConnection(const pollfd &fd)
+void HTTPServer::handleConnection(pollfd &fd)
 {
 	Logger &logger = Logger::getInstance();
 	char _buffer[BUFFER_SIZE];
 
-	logger.log(INFO, "Handling connection");
+	logger.log(INFO,
+			   "Handling connection of client fd: " + std::to_string(fd.fd));
 	read(fd.fd, _buffer, BUFFER_SIZE);
 	logger.log(DEBUG, "Received: %", _buffer);
 	std::string response = "HTTP/1.1 200 OK\r\n\r\nHello World!";
 	write(fd.fd, response.c_str(), response.size());
+	fd.revents = 0;
+	close(fd.fd);
+	_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
+							  [&](const pollfd &pfd)
+							  { return (pfd.fd == fd.fd); }),
+			   _fds.end());
 }
 
 void HTTPServer::acceptConnection(const pollfd &fd)
@@ -97,6 +104,8 @@ void HTTPServer::acceptConnection(const pollfd &fd)
 	Logger &logger = Logger::getInstance();
 	char address[INET_ADDRSTRLEN];
 
+	logger.log(INFO,
+			   "Accepting connection on server fd: " + std::to_string(fd.fd));
 	client.addr_len = sizeof(client.addr);
 	client.fd = accept(fd.fd, (t_sockaddr *)&client.addr,
 					   (socklen_t *)&client.addr_len);
@@ -156,15 +165,11 @@ int HTTPServer::run()
 			if (std::find(_server_fds.begin(), _server_fds.end(), fd.fd) !=
 				_server_fds.end())
 			{
-				logger.log(INFO, "Accepting connection on server fd: " +
-									 std::to_string(fd.fd));
 				acceptConnection(fd);
 				// _thread_pool.QueueTask([&]() { acceptConnection(); });
 			}
 			else
 			{
-				logger.log(INFO, "Handling connection of client fd: " +
-									 std::to_string(fd.fd));
 				handleConnection(fd);
 				// _thread_pool.QueueTask([&]() { handleConnection(); });
 			}

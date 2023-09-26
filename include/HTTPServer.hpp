@@ -24,7 +24,7 @@ class HTTPServer
 {
   private:
 	void setupServerSocket(const ServerBlock &server_block);
-	void handleConnection(const pollfd &fd);
+	void handleConnection(pollfd &fd);
 	void acceptConnection(const pollfd &fd);
 	void logPollfd(const pollfd &fd) const;
 
