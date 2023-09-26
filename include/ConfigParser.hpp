@@ -9,6 +9,8 @@ enum class GlobalSetting
 {
 	Threads,
 	DefaultErrorPages,
+	ReadSize,
+	WriteSize,
 };
 
 enum class ServerSetting
