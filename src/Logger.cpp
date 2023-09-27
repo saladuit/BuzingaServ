@@ -4,8 +4,10 @@
 
 Logger::Logger()
 	: _current_level(LogLevel::DEBUG),
-	  _log_file("log.txt", std::ios::trunc | std::ios::out)
+	  _log_file("build/log.txt", std::ios::trunc | std::ios::out)
 {
+	if (!_log_file.is_open())
+		log(ERROR, "Failed to open log file");
 }
 
 Logger::~Logger()
@@ -19,30 +21,12 @@ Logger &Logger::getInstance()
 	return (instance);
 }
 
-void Logger::setLogLevel(LogLevel lvl)
+void Logger::setLogLevel(const LogLevel lvl)
 {
 	_current_level = lvl;
 }
 
-std::string Logger::logLevelToString(LogLevel lvl)
-{
-	switch (lvl)
-	{
-	case LogLevel::DEBUG:
-		return Color::cyan + "DEBUG";
-	case LogLevel::INFO:
-		return "INFO";
-	case LogLevel::WARNING:
-		return Color::yellow + "WARNING";
-	case LogLevel::ERROR:
-		return Color::red + "ERROR";
-	case LogLevel::FATAL:
-		return Color::magenta + "FATAL";
-	default:
-		throw std::invalid_argument("Invalid log level");
-	}
-}
-std::string Logger::logLevelToStringFile(LogLevel lvl)
+const std::string Logger::logLevelToString(const LogLevel lvl)
 {
 	switch (lvl)
 	{
@@ -53,14 +37,15 @@ std::string Logger::logLevelToStringFile(LogLevel lvl)
 	case LogLevel::WARNING:
 		return "WARNING";
 	case LogLevel::ERROR:
-		return "ERROR ";
+		return "ERROR";
 	case LogLevel::FATAL:
 		return "FATAL";
 	default:
 		throw std::invalid_argument("Invalid log level");
 	}
 }
-std::string Logger::getTimestamp()
+
+const std::string Logger::getTimestamp()
 {
 	auto now = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(now);

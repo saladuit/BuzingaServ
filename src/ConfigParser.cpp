@@ -9,15 +9,13 @@ ConfigParser::ConfigParser(const std::string &file_path)
 	readConfig();
 }
 
-std::string ConfigParser::getGlobalSettings(GlobalSetting setting) const
+const std::string &
+ConfigParser::getGlobalSettings(const GlobalSetting setting) const
 {
-	auto it = _global_settings.find(setting);
-	if (it != _global_settings.end())
-		return (it->second);
-	return ("");
+	return (_global_settings.at(setting));
 }
 
-std::vector<ServerBlock> ConfigParser::getServerBlocks() const
+const std::vector<ServerBlock> &ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
 }
