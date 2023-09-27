@@ -2,11 +2,13 @@
 #include "Logger.hpp"
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 ConfigParser::ConfigParser(const std::string &file_path)
-	: _file_path(file_path), _global_settings(), _server_blocks()
+	: _config_file(file_path), _global_settings(), _server_blocks()
 {
-	readConfig();
+	readConfigFile(_config_file);
 }
 
 const std::string &
@@ -28,7 +30,7 @@ std::string stripInlineComments(const std::string &line)
 	return (line);
 }
 
-void ConfigParser::parseLocationBlock(std::istream &stream,
+void ConfigParser::parseLocationBlock(std::ifstream &stream,
 									  const std::string &prefix)
 {
 	Logger &logger = Logger::getInstance();
@@ -92,7 +94,7 @@ void ConfigParser::parseLocationBlock(std::istream &stream,
 	}
 }
 
-void ConfigParser::parseServerBlock(std::istream &stream)
+void ConfigParser::parseServerBlock(std::ifstream &stream)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(LogLevel::DEBUG, "Parsing server block");
@@ -159,7 +161,7 @@ void ConfigParser::parseServerBlock(std::istream &stream)
 	logger.log(LogLevel::DEBUG, "Added server block\n");
 }
 
-void ConfigParser::parseGlobalBlock(std::istream &stream)
+void ConfigParser::parseGlobalBlock(std::ifstream &stream)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(LogLevel::DEBUG, "Parsing global block");
@@ -215,10 +217,36 @@ bool ConfigParser::isCommentOrEmpty(const std::string &line)
 	return (line.empty() || line[0] == '#');
 }
 
-void ConfigParser::readConfigFile(std::istream &config_file)
+std::vector<std::string>
+ConfigParser::tokenizeConfigFile(std::ifstream &config_file)
+{
+	Logger &logger = Logger::getInstance();
+	std::vector<std::string> res;
+	std::string line;
+
+	logger.log(LogLevel::INFO,
+			   "ConfigParser: Tokenization: Start reading Lines");
+	while (std::getline(config_file, line))
+	{
+		logger.log(LogLevel::INFO, "%|", line);
+		if (isCommentOrEmpty(line))
+			continue;
+		size_t position_hash = line.find('#');
+		if (position_hash != std::string::npos)
+			line.erase(position_hash);
+
+		logger.log(LogLevel::INFO, "%|", line);
+	}
+	return (res);
+}
+
+void ConfigParser::readConfigFile(std::ifstream &config_file)
 {
 	Logger &logger = Logger::getInstance();
 	std::string line;
+	logger.log(LogLevel::INFO, "ConfigParser: Start Tokenization");
+	std::vector<std::string> token = tokenizeConfigFile(config_file);
+	logger.log(LogLevel::INFO, "ConfigParser: Start Parsing");
 
 	while (std::getline(config_file, line))
 	{
@@ -236,26 +264,4 @@ void ConfigParser::readConfigFile(std::istream &config_file)
 		else
 			logger.log(LogLevel::WARNING, "Unkown block type: " + first_word);
 	}
-}
-
-std::ifstream ConfigParser::openConfigFile(const std::string &file_path)
-{
-	Logger &logger = Logger::getInstance();
-	std::ifstream config_file(file_path);
-
-	if (!config_file.is_open())
-	{
-		logger.log(LogLevel::FATAL, "Could not open config file: " + file_path);
-		throw std::runtime_error("Config file could not be opened");
-	}
-
-	logger.log(LogLevel::INFO, "Opened config file: " + file_path);
-	return (config_file);
-}
-
-void ConfigParser::readConfig()
-{
-	std::ifstream config_file = openConfigFile(_file_path);
-	readConfigFile(config_file);
-	config_file.close();
 }

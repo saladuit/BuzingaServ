@@ -1,6 +1,7 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -46,17 +47,18 @@ struct ServerBlock
 class ConfigParser
 {
   private:
-	const std::string _file_path;
+	std::ifstream _config_file;
 	std::map<GlobalSetting, std::string> _global_settings;
 	std::vector<ServerBlock> _server_blocks;
 
 	void parseBlock(std::ifstream &config_file, ServerBlock &current_server);
-	void parseServerBlock(std::istream &stream);
-	void parseGlobalBlock(std::istream &stream);
-	void parseLocationBlock(std::istream &stream, const std::string &URI);
+	void parseServerBlock(std::ifstream &stream);
+	void parseGlobalBlock(std::ifstream &stream);
+	void parseLocationBlock(std::ifstream &stream, const std::string &URI);
 
-	std::ifstream openConfigFile(const std::string &file_path);
-	void readConfigFile(std::istream &config_file);
+	std::vector<std::string> tokenizeConfigFile(std::ifstream &config_file);
+	void trimComment(std::string &line);
+	void readConfigFile(std::ifstream &config_file);
 	bool isCommentOrEmpty(const std::string &line);
 	void validateConfig();
 
@@ -67,10 +69,10 @@ class ConfigParser
 	ConfigParser(const ConfigParser &src) = delete;
 	ConfigParser &operator=(const ConfigParser &rhs) = delete;
 
-	void readConfig();
-
 	const std::string &getGlobalSettings(const GlobalSetting setting) const;
 	const std::vector<ServerBlock> &getServerBlocks() const;
+
+	void readConfig();
 };
 
 #endif
