@@ -6,14 +6,16 @@
 ConfigParser::ConfigParser(const std::string &file_path)
 	: _file_path(file_path), _global_settings(), _server_blocks()
 {
+	readConfig();
 }
 
-std::map<GlobalSetting, std::string> ConfigParser::getGlobalSettings() const
+const std::string &
+ConfigParser::getGlobalSettings(const GlobalSetting setting) const
 {
-	return (_global_settings);
+	return (_global_settings.at(setting));
 }
 
-std::vector<ServerBlock> ConfigParser::getServerBlocks() const
+const std::vector<ServerBlock> &ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
 }
@@ -187,6 +189,20 @@ void ConfigParser::parseGlobalBlock(std::istream &stream)
 				default_error_pages;
 			logger.log(LogLevel::DEBUG, "log_level: " + default_error_pages);
 		}
+		else if (first_word == "read_size")
+		{
+			std::string read_size;
+			line_stream >> read_size;
+			_global_settings[GlobalSetting::ReadSize] = read_size;
+			logger.log(LogLevel::DEBUG, "read_size: " + read_size);
+		}
+		else if (first_word == "write_size")
+		{
+			std::string write_size;
+			line_stream >> write_size;
+			_global_settings[GlobalSetting::ReadSize] = write_size;
+			logger.log(LogLevel::DEBUG, "write_size: " + write_size);
+		}
 		else
 			logger.log(LogLevel::WARNING,
 					   "Unkown global setting: " + first_word);
@@ -241,6 +257,5 @@ void ConfigParser::readConfig()
 {
 	std::ifstream config_file = openConfigFile(_file_path);
 	readConfigFile(config_file);
-	// validateConfig();
 	config_file.close();
 }

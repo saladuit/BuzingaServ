@@ -1,12 +1,18 @@
 #include "Logger.hpp"
+#include <chrono>
 #include <iomanip>
 
-Logger::Logger() : _current_level(LogLevel::DEBUG)
+Logger::Logger()
+	: _current_level(LogLevel::DEBUG),
+	  _log_file("build/log.txt", std::ios::trunc | std::ios::out)
 {
+	if (!_log_file.is_open())
+		log(ERROR, "Failed to open log file");
 }
 
 Logger::~Logger()
 {
+	_log_file.close();
 }
 
 Logger &Logger::getInstance()
@@ -15,31 +21,31 @@ Logger &Logger::getInstance()
 	return (instance);
 }
 
-void Logger::setLogLevel(LogLevel lvl)
+void Logger::setLogLevel(const LogLevel lvl)
 {
 	_current_level = lvl;
 }
 
-std::string Logger::logLevelToString(LogLevel lvl)
+const std::string Logger::logLevelToString(const LogLevel lvl)
 {
 	switch (lvl)
 	{
 	case LogLevel::DEBUG:
-		return Color::cyan + "DEBUG";
+		return "DEBUG";
 	case LogLevel::INFO:
 		return "INFO";
 	case LogLevel::WARNING:
-		return Color::yellow + "WARNING";
+		return "WARNING";
 	case LogLevel::ERROR:
-		return Color::red + "ERROR";
+		return "ERROR";
 	case LogLevel::FATAL:
-		return Color::magenta + "FATAL";
+		return "FATAL";
 	default:
 		throw std::invalid_argument("Invalid log level");
 	}
 }
 
-std::string Logger::getTimestamp()
+const std::string Logger::getTimestamp()
 {
 	auto now = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(now);

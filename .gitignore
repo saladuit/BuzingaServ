@@ -1,7 +1,12 @@
+tests/log/
+
 # Bullshit
 .*
 !.gitignore
 compile_commands.json
+
+# Logger
+log.txt
 
 # Prerequisites
 *.d
