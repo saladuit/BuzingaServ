@@ -14,4 +14,8 @@ SERVER_LOG_DIR=../build/log/
 echo "GET REQUEST on localhost at port $SERVER_PORT"
 echo ""
 
-curl $SERVER_HOST:$SERVER_PORT --$HTTP_VERSION -s -o $SERVER_LOG_DIR/GET_${1}_body.log -D $SERVER_LOG_DIR/GET_${1}_header.log
+echo "Script ran:"
+echo curl $SERVER_HOST:$SERVER_PORT --$HTTP_VERSION -s -o $SERVER_LOG_DIR/GET_${SERVER_HOST}:${SERVER_PORT}_body.log -D $SERVER_LOG_DIR/GET_${SERVER_HOST}:${SERVER_PORT}_header.log
+echo ""
+
+curl $SERVER_HOST:$SERVER_PORT --$HTTP_VERSION -s -o $SERVER_LOG_DIR/GET_${SERVER_HOST}:${SERVER_PORT}_body.log -D $SERVER_LOG_DIR/GET_${SERVER_HOST}:${SERVER_PORT}_header.log
