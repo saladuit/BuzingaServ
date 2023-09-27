@@ -217,6 +217,13 @@ bool ConfigParser::isCommentOrEmpty(const std::string &line)
 	return (line.empty() || line[0] == '#');
 }
 
+bool add_token(std::vector<std::string> list, std::string line)
+{
+	(void)list;
+	(void)line;
+	return (false);
+}
+
 std::vector<std::string>
 ConfigParser::tokenizeConfigFile(std::ifstream &config_file)
 {
@@ -224,18 +231,16 @@ ConfigParser::tokenizeConfigFile(std::ifstream &config_file)
 	std::vector<std::string> res;
 	std::string line;
 
-	logger.log(LogLevel::INFO,
-			   "ConfigParser: Tokenization: Start reading Lines");
 	while (std::getline(config_file, line))
 	{
-		logger.log(LogLevel::INFO, "%|", line);
+		logger.log(LogLevel::DEBUG, "%|", line);
 		if (isCommentOrEmpty(line))
 			continue;
 		size_t position_hash = line.find('#');
 		if (position_hash != std::string::npos)
 			line.erase(position_hash);
-
-		logger.log(LogLevel::INFO, "%|", line);
+		//	if (add_tokens(res, line))
+		//	Make tokens in add_tokens.
 	}
 	return (res);
 }
