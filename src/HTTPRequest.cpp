@@ -3,6 +3,12 @@
 #include <string>
 
 HTTPRequest::HTTPRequest() {
+	// initialize variables for handleConnection
+
+	_content_length = 0;
+	_content_length_cpy = 0;
+	_post_method = false;
+	_pos = 0;
 }
 
 HTTPRequest::~HTTPRequest() {
@@ -80,8 +86,8 @@ const std::string&	HTTPRequest::getBody(void) const {
 	return (_body);
 }
 
-void HTTPRequest::parse(const std::string& HTTPRequestString) {
-	std::string inputString = HTTPRequestString;
+void HTTPRequest::parse(void) {
+	std::string inputString = _http_request_str;
 	bool		bodyLine = false;
 	bool		firstLine = true;
 	size_t		startPos = 0;

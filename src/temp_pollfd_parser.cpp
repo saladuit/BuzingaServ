@@ -86,11 +86,13 @@ bool	handle_connection(pollfd &poll_fd, std::string &_HTTPRequestString, int &co
 	if (poll_fd.revents && POLLIN) 
 	{
 		if (body && content_length <= 0)
+		// fd.events |= POLLOUT;
 			return (true);
         read_count = read(poll_fd.fd, buffer, buffer_size);
         if (read_count == -1) 
 		{
             logger.log(ERROR, "Error: read failed on: " + std::to_string(poll_fd.fd));
+			// return ;			
 			return (false);
 		}
 		for (int i = 0; i < buffer_size; i++)
@@ -108,6 +110,8 @@ bool	handle_connection(pollfd &poll_fd, std::string &_HTTPRequestString, int &co
 		{
 			int	body_length = get_content_length(_HTTPRequestString);
 			if (body_length == -1)
+			// set error status to 404 BAD REQUEST?
+			// and output applicable log message
 				logger.log(ERROR, "404: BAD REQUEST");
 			else
 			{
@@ -115,8 +119,10 @@ bool	handle_connection(pollfd &poll_fd, std::string &_HTTPRequestString, int &co
 				content_length_cpy = content_length + 4;
 				body = true;
 			}
+			/ return l
 			return (false);
 		}
+		// fd.events |= POLLOUT;
 		return (true);
 	}
 	return (false);
@@ -134,7 +140,6 @@ int main(void)
 	bool		body = false;
 	size_t		pos = 0;
 	
-	// body = false;
     fd = open("tests/request/delete.txt", O_RDONLY);
     if (fd == -1)
         return (1);

@@ -60,7 +60,15 @@ public:
 	const std::string& 	getBody(void) const;
 
 	// parser
-	void	parse(const std::string& HTTPRequestString);
+	void	parse(void);
+
+	// public variables -- just for now
+	std::string 						_http_request_str;
+	// size_t try out
+	int									_content_length;
+	int									_content_length_cpy;
+	bool								_post_method;
+	size_t								_pos;
 };
 
 #endif

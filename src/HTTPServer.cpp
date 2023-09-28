@@ -79,32 +79,106 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	}
 }
 
-void HTTPServer::handleConnection(pollfd &fd)
+// make this const?
+bool	HTTPServer::is_print(char c)
 {
-	Logger &logger = Logger::getInstance();
-	std::string response = "HTTP/1.1 200 OK\r\n\r\nHello World!";
-	static std::string tmp;
-	char _buffer[1];
+	return ((c >= 32 && c <= 126) || c >= '\n' || c == '\r');
+}
 
-	if (fd.revents & POLLIN)
+int	HTTPServer::get_content_length(std::string search_string) 
+{
+	const std::string	search_header = "Content-length: ";
+	const std::string	end_of_line_delimiter = "\r\n";
+	size_t	pos = search_string.find(search_header);
+	
+
+	if (pos != std::string::npos) 
 	{
-		logger.log(INFO, "Handling connection of client fd: " +
-							 std::to_string(fd.fd));
-		read(fd.fd, _buffer, 1);
-		tmp += _buffer[0];
-		logger.log(DEBUG, "Received: " + tmp);
-		if (tmp.find("\r\n\r\n") != std::string::npos)
+		std::string	content_length_value = search_string.substr(pos + search_header.length());
+		size_t	end_of_line_pos = content_length_value.find(end_of_line_delimiter);
 
-			fd.events |= POLLOUT;
+		if (end_of_line_pos != std::string::npos) 
+		{
+			std::string	content_value_str = content_length_value.substr(0, end_of_line_pos);
+			int	value = std::stoi(content_value_str);
+			return (value);
+		}
 	}
-	if (fd.revents & POLLOUT)
+	return (-1);
+}
+
+// call read on the fd for a specified byte_size
+// add these bytes to the _HTTPRequestString of the HTTPRequest class
+// check if everything of the http request has been read
+// 		reached /r/n/r/n
+//		optionally has read the body (POST request)
+// if so, call http parser, file_manager and response
+// if not, exit 
+void HTTPServer::handleConnection(pollfd &poll_fd)
+{
+	Logger  	&logger = Logger::getInstance();
+    int32_t 	read_count = 0;
+	const int	buffer_size = 20000;
+    char    	buffer[buffer_size];
+	HTTPRequest	client;
+
+	client = _client_request[poll_fd.fd];
+
+	if (poll_fd.revents && POLLIN) 
 	{
-		write(fd.fd, response.c_str(), response.size());
-		close(fd.fd);
-		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
-								  [&](const pollfd &pfd)
-								  { return (pfd.fd == fd.fd); }),
-				   _fds.end());
+		if (client._post_method && client._content_length <= 0)
+			poll_fd.events |= POLLOUT;
+			// return (true);
+        read_count = read(poll_fd.fd, buffer, buffer_size);
+        if (read_count == -1) 
+		{
+            logger.log(ERROR, "Error: read failed on: " + std::to_string(poll_fd.fd));
+			return ;			
+			// return (false);
+		}
+		for (int i = 0; i < buffer_size; i++)
+		{
+			if (is_print(buffer[i]))
+				client._http_request_str += buffer[i];
+			if (client._content_length > 0)
+				client._content_length -= read_count;
+				// content_length -= buffer_size;
+		}
+    }
+	client._pos = client._http_request_str.find("\r\n\r\n");
+	if (!client._post_method && client._pos != std::string::npos)
+	{
+		if (client._http_request_str.substr(0, 4) == "POST") 
+		{
+			int	body_length = get_content_length(client._http_request_str);
+			if (body_length == -1)
+			// set error status to 404 BAD REQUEST?
+			// and output applicable log message
+				logger.log(ERROR, "404: BAD REQUEST");
+			else
+			{
+				client._content_length = body_length - 1;
+				client._content_length_cpy = client._content_length + 4;
+				client._post_method = true;
+			}
+			return ; 
+			// return (false);
+		}
+		poll_fd.events |= POLLOUT;
+		// return (true);
+	}
+	if (poll_fd.revents & POLLOUT)
+	{
+		logger.log(INFO, client._http_request_str);
+		logger.log(INFO, "HTTP parser");
+		logger.log(INFO, "HTTP file manager");
+		logger.log(INFO, "HTTP response");
+		// write(fd.fd, response.c_str(), response.size());
+		// close(fd.fd);
+		// _fds.erase(std::remove_if(_fds.begin(), _fds.end(),
+		// 						  [&](const pollfd &pfd)
+		// 						  { return (pfd.fd == fd.fd); }),
+		// 		   _fds.end());
 	}
 }
 
@@ -177,6 +251,7 @@ int HTTPServer::run()
 				acceptConnection(fd);
 			else
 				handleConnection(fd);
+			//_clietns[fd].handleConnection(fd);
 		}
 	}
 	return (EXIT_SUCCESS);
