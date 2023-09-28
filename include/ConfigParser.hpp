@@ -33,6 +33,27 @@ enum class LocationSetting
 	CgiPass,
 };
 
+enum class TokenValue
+{
+	Semicolon,
+	BracketOpen,
+	BracketClose,
+	Path,
+	Word,
+};
+
+class ConfigToken
+{
+  private:
+	const std::string _token_string;
+
+  public:
+	ConfigToken(std::string);
+	ConfigToken() = delete;
+	ConfigToken(const ConfigToken &src) = delete;
+	ConfigToken &operator=(const ConfigToken &src) = delete;
+};
+
 struct LocationBlock
 {
 	std::map<LocationSetting, std::string> settings;
@@ -60,6 +81,7 @@ class ConfigParser
 	void trimComment(std::string &line);
 	void readConfigFile(std::ifstream &config_file);
 	bool isCommentOrEmpty(const std::string &line);
+	void stripCommentofLine(std::string &line);
 	void validateConfig();
 
   public:

@@ -217,6 +217,13 @@ bool ConfigParser::isCommentOrEmpty(const std::string &line)
 	return (line.empty() || line[0] == '#');
 }
 
+void ConfigParser::stripCommentofLine(std::string &line)
+{
+	size_t position_hash = line.find('#');
+	if (position_hash != std::string::npos)
+		line.erase(position_hash);
+}
+
 bool add_token(std::vector<std::string> list, std::string line)
 {
 	(void)list;
@@ -236,10 +243,9 @@ ConfigParser::tokenizeConfigFile(std::ifstream &config_file)
 		logger.log(LogLevel::DEBUG, "%|", line);
 		if (isCommentOrEmpty(line))
 			continue;
-		size_t position_hash = line.find('#');
-		if (position_hash != std::string::npos)
-			line.erase(position_hash);
-		//	if (add_tokens(res, line))
+		stripCommentofLine(line);
+		logger.log(LogLevel::DEBUG, "%|", line);
+
 		//	Make tokens in add_tokens.
 	}
 	return (res);
@@ -250,23 +256,17 @@ void ConfigParser::readConfigFile(std::ifstream &config_file)
 	Logger &logger = Logger::getInstance();
 	std::string line;
 	logger.log(LogLevel::INFO, "ConfigParser: Start Tokenization");
-	std::vector<std::string> token = tokenizeConfigFile(config_file);
+	std::vector<std::string> token_list = tokenizeConfigFile(config_file);
 	logger.log(LogLevel::INFO, "ConfigParser: Start Parsing");
+	std::vector<std::string>::iterator itr;
 
-	while (std::getline(config_file, line))
+	for (itr = token_list.begin(); itr < token_list.end(); itr++)
 	{
-		if (isCommentOrEmpty(line))
-			continue;
-
-		std::istringstream line_stream(line);
-		std::string first_word;
-		line_stream >> first_word;
-
-		if (first_word == "server")
+		if (*itr == "server")
 			parseServerBlock(config_file);
-		else if (first_word == "global")
+		else if (*itr == "global")
 			parseGlobalBlock(config_file);
 		else
-			logger.log(LogLevel::WARNING, "Unkown block type: " + first_word);
+			logger.log(LogLevel::WARNING, "Unkown block type: " + *itr);
 	}
 }
