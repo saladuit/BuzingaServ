@@ -116,33 +116,31 @@ int	HTTPServer::get_content_length(std::string search_string)
 // if not, exit 
 void HTTPServer::handleConnection(pollfd &poll_fd)
 {
-	Logger  	&logger = Logger::getInstance();
-    int32_t 	read_count = 0;
-	const int	buffer_size = 1;
-    char    	buffer[buffer_size];
-	HTTPRequest	client;
+	Logger  		&logger = Logger::getInstance();
+    int32_t 		read_count = 0;
+	const int		buffer_size = 10;
+    char    		buffer[buffer_size];
+	HTTPRequest&	client(_client_request[poll_fd.fd]);
 
-	client = _client_request[poll_fd.fd];
-
-	if (poll_fd.revents && POLLIN) 
+	if (poll_fd.revents & POLLIN) 
 	{
 		if (client._post_method && client._content_length <= 0)
 			poll_fd.events |= POLLOUT;
-			// return (true);
         read_count = read(poll_fd.fd, buffer, buffer_size);
         if (read_count == -1) 
 		{
             logger.log(ERROR, "Error: read failed on: " + std::to_string(poll_fd.fd));
 			return ;			
-			// return (false);
 		}
-		for (int i = 0; i < buffer_size; i++)
+		logger.log(DEBUG, "bytes read: %", buffer);
+		logger.log(INFO, std::to_string(read_count) + " bytes are read from fd: " + std::to_string(poll_fd.fd));
+		for (int i = 0; i < read_count; i++)
 		{
 			if (is_print(buffer[i]))
 				client._http_request_str += buffer[i];
 			if (client._content_length > 0)
 				client._content_length -= read_count;
-				// content_length -= buffer_size;
+			logger.log(DEBUG, "http request str: " + client._http_request_str);
 		}
     }
 	client._pos = client._http_request_str.find("\r\n\r\n");
@@ -162,23 +160,21 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 				client._post_method = true;
 			}
 			return ; 
-			// return (false);
 		}
 		poll_fd.events |= POLLOUT;
-		// return (true);
 	}
 	if (poll_fd.revents & POLLOUT)
 	{
-		logger.log(INFO, client._http_request_str);
+		logger.log(INFO, "request: " + client._http_request_str);
 		logger.log(INFO, "HTTP parser");
 		logger.log(INFO, "HTTP file manager");
 		logger.log(INFO, "HTTP response");
-		// write(fd.fd, response.c_str(), response.size());
-		// close(fd.fd);
-		// _fds.erase(std::remove_if(_fds.begin(), _fds.end(),
-		// 						  [&](const pollfd &pfd)
-		// 						  { return (pfd.fd == fd.fd); }),
-		// 		   _fds.end());
+		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
+		close(poll_fd.fd);
+		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
+								  [&](const pollfd &pfd)
+								  { return (pfd.fd == poll_fd.fd); }),
+				   _fds.end());
 	}
 }
 
@@ -249,8 +245,11 @@ int HTTPServer::run()
 			if (std::find(_server_fds.begin(), _server_fds.end(), fd.fd) !=
 				_server_fds.end())
 				acceptConnection(fd);
-			else
+			else {
+				// logger.log(INFO, "call handleConnection");
 				handleConnection(fd);
+			}
+				
 			//_clietns[fd].handleConnection(fd);
 		}
 	}
