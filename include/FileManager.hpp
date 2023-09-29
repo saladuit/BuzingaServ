@@ -31,8 +31,8 @@ class FileManager {
 	void	manageDelete(const std::string& filename);
 
 	// getters
-	std::string getContent();
-	int 		getStatusCode();
+	const std::string&	getContent() const;
+	const int& 			getStatusCode() const;
 
 };
 

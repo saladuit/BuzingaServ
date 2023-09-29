@@ -7,7 +7,7 @@
 
 namespace fs = std::filesystem;
 
-FileManager::FileManager() {
+FileManager::FileManager(): _statusCode(0) {
 }
 
 FileManager::~FileManager() {
@@ -33,9 +33,11 @@ void	FileManager::manageGet(const std::string& filename) {
 }
 
 void	FileManager::managePost(const std::string& filename, const std::string& body) {
+	Logger &logger = Logger::getInstance();
 	std::ofstream	newFile(filename);
+
 	if (!newFile) {
-		std::cerr << "Error opening file." << std::endl;
+		logger.log(ERROR, "Error opening file.");
 		_statusCode = 400;
     }
 	else {
@@ -65,12 +67,12 @@ void	FileManager::manage(HTTPMethod method, const std::string &filename, const s
 		manageDelete(filename);
 }
 
-std::string FileManager::getContent()
+const std::string& FileManager::getContent() const
 {
 	return (_content);
 }
 
-int FileManager::getStatusCode()
+const int& FileManager::getStatusCode() const
 {
 	return (_statusCode);
 }
