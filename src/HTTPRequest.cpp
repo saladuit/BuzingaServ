@@ -1,6 +1,7 @@
 #include "../include/HTTPRequest.hpp"
 #include <sstream>
 #include <string>
+#include <Logger.hpp>
 
 HTTPRequest::HTTPRequest(): _methodType(HTTPMethod::GET), _content_length(0), 
 		_content_length_cpy(0), _post_method(false), _pos(0) {
@@ -97,18 +98,20 @@ const std::string&	HTTPRequest::getBody(void) const {
 }
 
 void HTTPRequest::parse(void) {
-	std::string inputString = _http_request_str;
+	Logger 		&logger = Logger::getInstance();
 	bool		bodyLine = false;
 	bool		firstLine = true;
 	size_t		startPos = 0;
 
+	// logger.log(DEBUG, "_http_request_str: %", _http_request_str);
 	while (startPos != std::string::npos)
 	{
-		size_t	foundPos = inputString.find("\r\n", startPos);
+		size_t	foundPos = _http_request_str.find("\r\n", startPos);
 		if (foundPos != std::string::npos)
 		{
 			size_t length = foundPos - startPos;
-			std::string substring = inputString.substr(startPos, length);
+			std::string substring = _http_request_str.substr(startPos, length);
+			logger.log(DEBUG, "substring: %", substring);
 			if (substring == "" && bodyLine)
 				break ;
 			if (substring == "")

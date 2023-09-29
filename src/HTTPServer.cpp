@@ -167,6 +167,13 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 	{
 		logger.log(INFO, "request: " + client._http_request_str);
 		logger.log(INFO, "HTTP parser");
+		client.parse();
+		// logger.log(DEBUG, "Request line -- method_type: " + (int) client.getMethodType());
+		logger.log(DEBUG, "path: " + client.getPath());
+		logger.log(DEBUG, "version " + client.getVersion());
+		logger.log(DEBUG, "Header[0]: " + client.getValue("Host"));
+		logger.log(DEBUG, "Body: " + client.getBody());
+
 		logger.log(INFO, "HTTP file manager");
 		logger.log(INFO, "HTTP response");
 		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
