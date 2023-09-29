@@ -2,13 +2,23 @@
 #include <sstream>
 #include <string>
 
-HTTPRequest::HTTPRequest() {
-	// initialize variables for handleConnection
+HTTPRequest::HTTPRequest(): _methodType(HTTPMethod::GET), _content_length(0), 
+		_content_length_cpy(0), _post_method(false), _pos(0) {
+}
 
-	_content_length = 0;
-	_content_length_cpy = 0;
-	_post_method = false;
-	_pos = 0;
+HTTPRequest::HTTPRequest(const HTTPRequest& other) {
+	*this = other;	
+}
+
+HTTPRequest&	HTTPRequest::operator=(const HTTPRequest& other) {
+	if (this != &other)
+	{
+		this->_content_length = other._content_length;
+		this->_content_length_cpy = other._content_length_cpy;
+		this->_post_method = other._post_method;
+		this->_pos = other._pos;
+	}
+	return (*this);
 }
 
 HTTPRequest::~HTTPRequest() {

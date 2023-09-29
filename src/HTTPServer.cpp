@@ -1,4 +1,4 @@
-#include <HTTPServer.hpp>
+#include "HTTPServer.hpp"
 #include <Logger.hpp>
 #include <algorithm>
 #include <cstring>
@@ -118,7 +118,7 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 {
 	Logger  	&logger = Logger::getInstance();
     int32_t 	read_count = 0;
-	const int	buffer_size = 20000;
+	const int	buffer_size = 1;
     char    	buffer[buffer_size];
 	HTTPRequest	client;
 

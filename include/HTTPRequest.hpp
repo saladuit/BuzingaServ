@@ -35,8 +35,8 @@ private:
 public:
 	// canonical form: constructors, operator and destructor
 	HTTPRequest();
-	HTTPRequest(const HTTPRequest& other) = delete;
-	HTTPRequest&	operator=(const HTTPRequest& other) = delete;
+	HTTPRequest(const HTTPRequest& other);
+	HTTPRequest&	operator=(const HTTPRequest& other);
 	~HTTPRequest();
 
 	// methodType methods
