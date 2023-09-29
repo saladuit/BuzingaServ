@@ -121,6 +121,8 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 	const int		buffer_size = 10;
     char    		buffer[buffer_size];
 	HTTPRequest&	client(_client_request[poll_fd.fd]);
+	FileManager		file_manager;
+	int				status_code = 0;
 
 	if (poll_fd.revents & POLLIN) 
 	{
@@ -171,10 +173,13 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		// logger.log(DEBUG, "Request line -- method_type: " + (int) client.getMethodType());
 		logger.log(DEBUG, "path: " + client.getPath());
 		logger.log(DEBUG, "version " + client.getVersion());
-		logger.log(DEBUG, "Header[0]: " + client.getValue("Host"));
+		logger.log(DEBUG, "Header[\"Host\"]: " + client.getValue("Host"));
 		logger.log(DEBUG, "Body: " + client.getBody());
 
 		logger.log(INFO, "HTTP file manager");
+		file_manager.manage(client.getMethodType(), client.getPath(), client.getBody());
+		status_code = file_manager.getStatusCode();
+		logger.log(DEBUG, "status code after calling file manager is: ", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
 		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
 		close(poll_fd.fd);

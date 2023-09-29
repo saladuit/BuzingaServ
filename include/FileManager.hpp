@@ -3,13 +3,14 @@
 
 // INCLUDES
 #include <string>
+#include <HTTPRequest.hpp>
 
-// ENUM
-enum class HTTPMethod {
-	GET,
-	POST,
-	DELETE,
-};
+// // ENUM
+// enum class HTTPMethod {
+// 	GET,
+// 	POST,
+// 	DELETE,
+// };
 
 // CLASS
 class FileManager {
