@@ -1,9 +1,14 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
+#include "Token.hpp"
+
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 enum class GlobalSetting
@@ -33,27 +38,6 @@ enum class LocationSetting
 	CgiPass,
 };
 
-enum class TokenValue
-{
-	Semicolon,
-	BracketOpen,
-	BracketClose,
-	Path,
-	Word,
-};
-
-class ConfigToken
-{
-  private:
-	const std::string _token_string;
-
-  public:
-	ConfigToken(std::string);
-	ConfigToken() = delete;
-	ConfigToken(const ConfigToken &src) = delete;
-	ConfigToken &operator=(const ConfigToken &src) = delete;
-};
-
 struct LocationBlock
 {
 	std::map<LocationSetting, std::string> settings;
@@ -69,20 +53,11 @@ class ConfigParser
 {
   private:
 	std::ifstream _config_file;
-	std::map<GlobalSetting, std::string> _global_settings;
+	std::unordered_map<GlobalSetting, std::string> _global_settings;
 	std::vector<ServerBlock> _server_blocks;
+	std::vector<Token> _tokens;
 
-	void parseBlock(std::ifstream &config_file, ServerBlock &current_server);
-	void parseServerBlock(std::ifstream &stream);
-	void parseGlobalBlock(std::ifstream &stream);
-	void parseLocationBlock(std::ifstream &stream, const std::string &URI);
-
-	std::vector<std::string> tokenizeConfigFile(std::ifstream &config_file);
-	void trimComment(std::string &line);
-	void readConfigFile(std::ifstream &config_file);
-	bool isCommentOrEmpty(const std::string &line);
-	void stripCommentofLine(std::string &line);
-	void validateConfig();
+	void tokenizeConfigfile(std::ifstream &stream);
 
   public:
 	ConfigParser(const std::string &file_path);
@@ -93,8 +68,6 @@ class ConfigParser
 
 	const std::string &getGlobalSettings(const GlobalSetting setting) const;
 	const std::vector<ServerBlock> &getServerBlocks() const;
-
-	void readConfig();
 };
 
 #endif

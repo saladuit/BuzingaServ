@@ -1,39 +1,39 @@
 GRAMMER
 
-'WORD'          :
+--------------------------------------------------------------------------------------
 
-                |       server_BLOCK
 
- global_BLOCK   :       'global' '{' g_SETTING '}'
- g_SETTING      :       g_SETTING g_OPTION ';'
-                |       g_OPTION ';'
- g_OPTION       :       g_Key g_Value
- g_Key          :       WORD
- g_Value        :       g_Value path
-                |       g_Value WORD
-                |       path
+'WORD'          |
+
+Configfile      |       BLOCK
+                ;
+BLOCK           |       BLOCK identifier '{' Body '}'
+                |       identifier '{' Body '}'
+                ;
+Body            |       global
+                |       server location_BLOCK
+                ;
+identifier      |       'server'
+                |       'global'
+                ;
+global          |       Setting
+                ;
+server          |       Setting
+                ;
+location_BLOCK  |       location_BLOCK 'location' path '{' Setting '}'
+                |       'location' path '{' Setting '}'
+                ;
+Setting         |       Setting Option ';'
+                |       Option ';'
+                ;
+Option          |       Key Value
+                ;
+Key             |       WORD
+                ;
+Value           |       Value WORD 
                 |       WORD
+                ;
+path            |       WORD
+                ;
 
-
- server_BLOCK   :       'server' {' s_SETTING location_BLOCK '}'
- s_SETTING      :       s_SETTING s_OPTION ';'
-                |       s_OPTION ';'
- s_OPTION       :       s_Key s_Value
- s_Key          :       WORD
- s_Value        :       s_Value path
-                |       s_Value WORD
-                |       path
-                |       WORD
-
-
- location_BLOCK :       'location' path '{' l_SETTING '}'
- l_SETTING      :       l_SETTING l_OPTION ';'
-                |       l_OPTION ';'
- l_OPTION       :       l_Key l_Value
- l_Key          :       WORD
- l_Value        :       l_Value path
-                |       l_Value WORD
-                |       path
-                |       WORD
-  
- path           :       WORD
+--------------------------------------------------------------------------------------
