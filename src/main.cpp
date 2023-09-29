@@ -1,58 +1,14 @@
-#include <ConfigParser.hpp>
+#include <HTTPServer.hpp>
 #include <Logger.hpp>
-#include <FileManager.hpp>
-// #include <HTTPServer.hpp>
-// #include <cstdlib>
-#include "../include/FileManager.hpp"
 
-#define PATH "data/upload/something.kip"
-std::string manage(const std::string& filename);
-
-int main() {
-	Logger	&logger = Logger::getInstance();
-	FileManager	file;
-
-	file.manage(HTTPMethod::POST, PATH, "this is een kip man");
-	if (file.getContent().empty()) {
-		if (file.getStatusCode() == 401) {
-			logger.log(ERROR, "Status_code: %, UNAUTHORIZED", file.getStatusCode());
-			return (0);
-		}
-		if (file.getStatusCode() == 404) {
-			logger.log(ERROR, "Status_code: %, NOT FOUND", file.getStatusCode());
-			return (0);
-		}
+int main(int argc, char **argv)
+{
+	Logger &logger = Logger::getInstance();
+	if (argc != 1 && argc != 2)
+	{
+		logger.log(LogLevel::ERROR, "Usage: % [config_path]", argv[0]);
+		return (EXIT_FAILURE);
 	}
-
-	logger.log(INFO, "Status_code: %, OK\n\n%", file.getStatusCode(), file.getContent());
-	return 0;
+	HTTPServer server(argc == 2 ? argv[1] : "config/default.conf");
+	return (server.run());
 }
-
-// ###################################################################
-
-//int main(int argc, char **argv)
-//{
-//	Logger &logger = Logger::getInstance();
-//	if (argc != 1 && argc != 2)
-//	{
-//		logger.log(LogLevel::ERROR, "Usage: % [config_path]", argv[0]);
-//		return (EXIT_FAILURE);
-//	}
-//	ConfigParser parser(argc == 2 ? argv[1] : "config/default.conf");
-//
-//	parser.readConfig();
-//}
-// int main(int argc, char **argv)
-// {
-// 	return (EXIT_FAILURE);
-// 	try
-// 	{
-// 		HTTPServer server(argc == 2 ? argv[1] : DEFAULT_CONFIG_PATH);
-// 		return (server.run());
-// 	}
-// 	catch (const std::exception &e)
-// 	{
-// 		Logger::log(LOG_ERROR, e.what());
-// 	}
-// 	return (EXIT_FAILURE);
-// }

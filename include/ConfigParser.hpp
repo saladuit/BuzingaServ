@@ -9,6 +9,8 @@ enum class GlobalSetting
 {
 	Threads,
 	DefaultErrorPages,
+	ReadSize,
+	WriteSize,
 };
 
 enum class ServerSetting
@@ -67,8 +69,8 @@ class ConfigParser
 
 	void readConfig();
 
-	std::map<GlobalSetting, std::string> getGlobalSettings() const;
-	std::vector<ServerBlock> getServerBlocks() const;
+	const std::string &getGlobalSettings(const GlobalSetting setting) const;
+	const std::vector<ServerBlock> &getServerBlocks() const;
 };
 
 #endif
