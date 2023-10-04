@@ -7,6 +7,7 @@
 #include <Defines.hpp>
 // #include <ThreadPool.hpp>
 #include <HTTPRequest.hpp>
+#include <HTTPResponse.hpp>
 #include <FileManager.hpp>
 
 #include <arpa/inet.h>

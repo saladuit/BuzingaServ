@@ -187,6 +187,9 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(DEBUG, "_content: " + file_manager.getContent());
 		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
+		
+		// this does not work apparently, optional: solve with copy constructor and assignment operator
+		HTTPResponse&	response(client.getVersion(), file_manager.getStatusCode(), file_manager.getContent());
 		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
 		close(poll_fd.fd);
 		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
