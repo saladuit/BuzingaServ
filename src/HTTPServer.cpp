@@ -146,8 +146,10 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		}
     }
 	client._pos = client._http_request_str.find("\r\n\r\n");
+	logger.log(DEBUG, "1");
 	if (!client._post_method && client._pos != std::string::npos)
 	{
+		logger.log(DEBUG, "2");
 		if (client._http_request_str.substr(0, 4) == "POST") 
 		{
 			int	body_length = get_content_length(client._http_request_str);
@@ -165,12 +167,13 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		}
 		poll_fd.events |= POLLOUT;
 	}
+	logger.log(DEBUG, "3");
 	if (poll_fd.revents & POLLOUT)
 	{
 		logger.log(INFO, "request: " + client._http_request_str);
 		logger.log(INFO, "HTTP parser");
 		client.parse();
-		// logger.log(DEBUG, "Request line -- method_type: " + (int) client.getMethodType());
+		// logger.log(DEBUG, "Request line -- method_type: %", client.getMethodType());
 		logger.log(DEBUG, "path: " + client.getPath());
 		logger.log(DEBUG, "version " + client.getVersion());
 		logger.log(DEBUG, "Header[\"Host\"]: " + client.getValue("Host"));
@@ -179,7 +182,7 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(INFO, "HTTP file manager");
 		file_manager.manage(client.getMethodType(), client.getPath(), client.getBody());
 		status_code = file_manager.getStatusCode();
-		logger.log(DEBUG, "status code after calling file manager is: ", std::to_string(status_code));
+		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
 		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
 		close(poll_fd.fd);

@@ -8,7 +8,7 @@
 
 namespace fs = std::filesystem;
 
-FileManager::FileManager(): _statusCode(0) {
+FileManager::FileManager(): _status_code(0) {
 }
 
 FileManager::~FileManager() {
@@ -25,48 +25,75 @@ void	FileManager::manageGet(const std::string& filename) {
 	{
 		if (!file.is_open()) 
 		{
-		_statusCode = 401;
-		return ;
+			_status_code = 401;
+			return ;
 		}
 		while (std::getline(file, line)) 
 			_content += line + "\n";
-		_statusCode = 200;
+		_status_code = 200;
 	}
 	else
-		_statusCode = 404;
-	logger.log(DEBUG, "_statusCode in the manageGet method is: ", _statusCode);
+		_status_code = 404;
+	logger.log(DEBUG, "_status_code in the manageGet method is: %", _status_code);
 }
+
+// bool	save_data(const std::string post_message, const std::string content, 
+// 			const std::string content_type)
+// {
+// 	std::ifstream	image_content(content);
+// 	std::string		line;
+
+// 	if (!image_content)
+// 	{
+// 		std::cerr << "Error opening files." << std::endl;
+// 		return (false);
+// 	}
+// 	// std::cout << "data/" + content_type + "/" + post_message + "\n";
+// 	std::ofstream	new_image("data/" + content_type + "/" + post_message);
+// 	while (std::getline(image_content, line)) {
+//     	new_image << line << '\n';
+//     }
+// 	return (true);
+// }
 
 void	FileManager::managePost(const std::string& filename, const std::string& body) {
 	Logger &logger = Logger::getInstance();
-	std::ofstream	newFile(filename);
+	std::ofstream	newFile("data/upload/" + filename);
 
 	logger.log(DEBUG, "managePost method is called");
 
 	if (!newFile) {
 		logger.log(ERROR, "Error opening file.");
-		_statusCode = 400;
+		_status_code = 400;
     }
 	else {
 		newFile << body;
-		_statusCode = 201;
+		_status_code = 201;
 	}
-	logger.log(DEBUG, "_statusCode in the managePost method is: ", _statusCode);
+	logger.log(DEBUG, "_status_code in the managePost method is: %", _status_code);
 }
 
 void	FileManager::manageDelete(const std::string& filename) {
 	Logger  		&logger = Logger::getInstance();
-	std::ifstream		inputFile(filename);
+	const std::string file_path("data/www/"+filename);
+	std::ifstream		inputFile(file_path);
 
 	logger.log(DEBUG, "manageDelete method is called");
+	logger.log(DEBUG, "inputFile: " + file_path);
 
-	if (!inputFile)
-		_statusCode = 404;
-	else if (std::remove(filename.c_str()) != 0) 
-		_statusCode = 403;
-	else
-		_statusCode = 204;
-	logger.log(DEBUG, "_statusCode in the manageDelete method is: ", _statusCode);
+	if (!inputFile.is_open()) {
+		logger.log(WARNING, "404 NOT FOUND");
+		_status_code = 404;
+	}
+	else if (std::remove(file_path.c_str()) != 0) {
+		logger.log(WARNING, "FORBIDDEN");
+		_status_code = 403;
+	}
+	else {
+		logger.log(INFO, "NO CONTENT");
+		_status_code = 204;
+	}
+	logger.log(DEBUG, "_status_code in the manageDelete method is: %", _status_code);
 }
 
 void	FileManager::manage(HTTPMethod method, const std::string &filename, const std::string& body)
@@ -79,7 +106,7 @@ void	FileManager::manage(HTTPMethod method, const std::string &filename, const s
 		managePost(filename, body);
 	else
 		manageDelete(filename);
-	logger.log(DEBUG, "_statusCode in the manage method is: ", _statusCode);
+	logger.log(DEBUG, "_status_code in the manage method is: %", _status_code);
 }
 
 const std::string& FileManager::getContent() const
@@ -89,5 +116,5 @@ const std::string& FileManager::getContent() const
 
 const int& FileManager::getStatusCode() const
 {
-	return (_statusCode);
+	return (_status_code);
 }

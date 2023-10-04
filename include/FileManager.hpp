@@ -15,7 +15,7 @@
 // CLASS
 class FileManager {
   private:
-	int			_statusCode;
+	int			_status_code;
 	std::string	_content;
 
   public:

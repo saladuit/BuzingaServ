@@ -1,4 +1,4 @@
-POST /index_example.html HTTP/1.1
+POST test.html HTTP/1.1
 User-Agent: custom-client
 Host: webserv
 Accept-Language: en-US

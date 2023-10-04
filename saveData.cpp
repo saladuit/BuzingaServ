@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 		std::cout << "Invalid number of parameters.\n";
 		return 0;
 	}
-	const std::string	filename = "data/www/index.html";
+	// const std::string	filename = "data/www/index.html";
     const std::string   post_message = argv[2];
 	const std::string	content_type = argv[1];
 	if (save_data(post_message, argv[3], content_type) == false) {
@@ -130,16 +130,16 @@ int main(int argc, char **argv)
 	}
 
 	// post functionality is optional I guess
-	if (content_type == "images") {
-		if (post_image(filename, post_message) == 204) {
-			std::cout << "204 NO CONTENT\n";
-			return (204);
-		}
-	} else if (content_type == "text") {
-		if (post_text(filename, post_message) == 204) {
-			std::cout << "204 NO CONTENT\n";
-			return (204);
-		}
-	}
+	// if (content_type == "images") {
+	// 	if (post_image(filename, post_message) == 204) {
+	// 		std::cout << "204 NO CONTENT\n";
+	// 		return (204);
+	// 	}
+	// } else if (content_type == "text") {
+	// 	if (post_text(filename, post_message) == 204) {
+	// 		std::cout << "204 NO CONTENT\n";
+	// 		return (204);
+	// 	}
+	// }
 	return 0;
 }
