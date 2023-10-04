@@ -85,7 +85,6 @@ void	HTTPRequest::setHeader(const std::string& headerLine) {
 }
 
 std::string&	HTTPRequest::getValue(const std::string& key) {
-	// what if the key or value does not exist??
 	return (_headers[key]);
 }
 
@@ -105,19 +104,14 @@ void HTTPRequest::parse(void) {
 
 	logger.log(DEBUG, "_http_request_str: %", _http_request_str);
 	logger.log(INFO, "HTTPRequest::parse is called");
-	// loop till end of string
 	while (startPos != std::string::npos)
 	{
-		// locate eol
 		size_t	foundPos = _http_request_str.find("\r\n", startPos);
 		if (foundPos != std::string::npos)
 		{
-			// when found and not at the end
 			size_t length = foundPos - startPos;
 			std::string substring = _http_request_str.substr(startPos, length);
 			logger.log(DEBUG, "substring: %", substring);
-			// if (substring == "" && bodyLine)
-			// 	break ;
 			if (substring == "")
 			{
 				bodyLine = true;
@@ -135,7 +129,7 @@ void HTTPRequest::parse(void) {
 			{
 				substring = _http_request_str.substr(startPos, _content_length_cpy + 1);
 				setBody(substring);
-				// break ;
+				break ;
 			}
 			else
 			{

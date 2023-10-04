@@ -151,7 +151,7 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 	if (!client._post_method && client._pos != std::string::npos)
 	{
 		logger.log(DEBUG, "2");
-		if (client._http_request_str.substr(0, 4) == "POST") 
+		if (client._http_request_str.substr(0, 4) == "POST")
 		{
 			int	body_length = get_content_length(client._http_request_str);
 			if (body_length == -1)
