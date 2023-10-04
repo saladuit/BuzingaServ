@@ -41,48 +41,45 @@ void CGI::execute()
 		{
 			logger.log(ERROR, "close in[WRITE_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		if (close(out[READ_END]) == G_ERROR)
 		{
 			logger.log(ERROR, "close out[READ_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		if (dup2(in[READ_END], STDIN_FILENO) == G_ERROR)
 		{
 			logger.log(ERROR, "dup2 in[READ_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		if (close(in[READ_END]) == G_ERROR)
 		{
 			logger.log(ERROR, "close in[READ_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		if (dup2(out[WRITE_END], STDOUT_FILENO) == G_ERROR)
 		{
 			logger.log(ERROR, "dup2 out[WRITE_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		if (close(out[WRITE_END]) == G_ERROR)
 		{
 			logger.log(ERROR, "close out[WRITE_END] error" +
 								  std::string(strerror(errno)));
-			return;
+			_exit(127);
 		}
 		std::string bin = "python3";
 		std::string script = "./cgi-bin/print.py";
 		const char *const argv[] = {bin.c_str(), script.c_str(), NULL};
-		// std::string
 		char *const envp[] = {NULL};
 		const char *path = "/usr/bin/python3";
-		if (execve(path, (char *const *)argv, envp))
-		{
-			logger.log(ERROR, "execve error" + std::string(strerror(errno)));
-		}
+		execve(path, (char *const *)argv, envp);
+		logger.log(ERROR, "execve error" + std::string(strerror(errno)));
 		_exit(127);
 	}
 	close(in[READ_END]);
