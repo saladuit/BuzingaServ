@@ -61,6 +61,7 @@ void	FileManager::managePost(const std::string& filename, const std::string& bod
 	std::ofstream	newFile("data/upload/" + filename);
 
 	logger.log(DEBUG, "managePost method is called");
+	logger.log(DEBUG, "body is: " + body);
 
 	if (!newFile) {
 		logger.log(ERROR, "Error opening file.");

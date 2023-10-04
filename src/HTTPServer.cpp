@@ -118,12 +118,13 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 {
 	Logger  		&logger = Logger::getInstance();
     int32_t 		read_count = 0;
-	const int		buffer_size = 10;
+	const int		buffer_size = 1;
     char    		buffer[buffer_size];
 	HTTPRequest&	client(_client_request[poll_fd.fd]);
 	FileManager		file_manager;
 	int				status_code = 0;
 
+	logger.log(DEBUG, "remaining content length: %", std::to_string(client._content_length));
 	if (poll_fd.revents & POLLIN) 
 	{
 		if (client._post_method && client._content_length <= 0)
@@ -159,8 +160,9 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 				logger.log(ERROR, "404: BAD REQUEST");
 			else
 			{
-				client._content_length = body_length - 1;
-				client._content_length_cpy = client._content_length + 4;
+				// body_length + 2 works 
+				client._content_length = body_length - 2;
+				client._content_length_cpy = client._content_length;
 				client._post_method = true;
 			}
 			return ; 
