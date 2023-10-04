@@ -55,9 +55,15 @@ class ConfigParser
 	std::ifstream _config_file;
 	std::unordered_map<GlobalSetting, std::string> _global_settings;
 	std::vector<ServerBlock> _server_blocks;
+
 	std::vector<Token> _tokens;
 
 	void tokenizeConfigfile(std::ifstream &stream);
+	void TokenValidator(void);
+
+	void TokenParser(void);
+	void ParseGlobalBlock(size_t &i);
+	void ParseServerBlock(size_t &i);
 
   public:
 	ConfigParser(const std::string &file_path);

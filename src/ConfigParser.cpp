@@ -16,6 +16,9 @@ ConfigParser::ConfigParser(const std::string &file_path)
 
 	logger.log(INFO, "ConfigParser: Start Tokenzier");
 	tokenizeConfigfile(_config_file);
+	TokenValidator();
+	TokenParser();
+
 	logger.log(INFO, "ConfigParser: ");
 }
 
@@ -28,6 +31,70 @@ ConfigParser::getGlobalSettings(const GlobalSetting setting) const
 const std::vector<ServerBlock> &ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
+}
+
+void ConfigParser::ParseServerBlock(size_t &i)
+{
+	Logger &logger = Logger::getInstance();
+
+	logger.log(INFO, "ParseServerBlock: " + _tokens.at(i).getString());
+	(void)i;
+}
+
+void ConfigParser::ParseGlobalBlock(size_t &i)
+{
+	Logger &logger = Logger::getInstance();
+
+	logger.log(INFO, "ParseGlobalBlock: " + _tokens.at(i).getString());
+	i += 2;
+	do
+	{
+		Token &key = _tokens.at(i);
+		Token &value = _tokens.at(i + 1);
+		logger.log(DEBUG, "Found GlobalSetting: KEY:\t" + key.getString() +
+							  "\tVAL:" + value.getString());
+		if (key.getString() == "threads")
+			_global_settings[GlobalSetting::Threads] = value.getString();
+		else if (key.getString() == "default_error_pages")
+			_global_settings[GlobalSetting::DefaultErrorPages] =
+				value.getString();
+		else if (key.getString() == "read_size")
+			_global_settings[GlobalSetting::ReadSize] = value.getString();
+		else if (key.getString() == "write_size")
+			_global_settings[GlobalSetting::WriteSize] = value.getString();
+		else
+			logger.log(WARNING, "Unknown GlobalSetting");
+		while (_tokens.at(i).getType() != TokenType::SEMICOLON)
+			i++;
+		logger.log(DEBUG, "Token is Semi: " + _tokens.at(i).getString());
+		i++;
+		logger.log(DEBUG, "Token is closing: " + _tokens.at(i).getString());
+	} while (_tokens.at(i).getType() != TokenType::CLOSE_BRACKET);
+	logger.log(DEBUG, "Leaving GlobalSetting ");
+}
+
+void ConfigParser::TokenParser()
+{
+	Logger &logger = Logger::getInstance();
+
+	logger.log(INFO, "ConfigParser: TokenParser:");
+
+	for (size_t i = 0; i < _tokens.size(); i++)
+	{
+		Token &token = _tokens.at(i);
+		if (token.getString() == "global" && _global_settings.empty())
+		{
+			ParseGlobalBlock(i);
+		}
+		else if (token.getString() == "server")
+			ParseServerBlock(i);
+		else
+			logger.log(WARNING, "ConfigParser: Unknown Block ConfigFile");
+	}
+}
+
+void ConfigParser::TokenValidator(void)
+{
 }
 
 bool skip_comments(std::ifstream &stream, std::string &token)
@@ -50,16 +117,16 @@ void ConfigParser::tokenizeConfigfile(std::ifstream &stream)
 	std::string token;
 	while (stream >> token)
 	{
-		logger.log(DEBUG, "Tokenizer: pre - %", token);
+		logger.log(DEBUG, "Tokenizer: pre - " + token);
 		if (skip_comments(stream, token))
 			continue;
 		else if (token == "{")
-			_tokens.push_back(Token(TokenType::OPEN_BRACKET, "{"));
+			_tokens.push_back(Token(TokenType::OPEN_BRACKET, token));
 		else if (token == "}")
-			_tokens.push_back(Token(TokenType::CLOSE_BRACKET, "}"));
+			_tokens.push_back(Token(TokenType::CLOSE_BRACKET, token));
 		else if (token == ";")
-			_tokens.push_back(Token(TokenType::SEMICOLON, ";"));
+			_tokens.push_back(Token(TokenType::SEMICOLON, token));
 		else
-			_tokens.push_back(Token(TokenType::WORD, std::string(token)));
+			_tokens.push_back(Token(TokenType::WORD, token));
 	}
 }
