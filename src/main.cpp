@@ -2,6 +2,8 @@
 #include "Logger.hpp"
 #include "HTTPServer.hpp"
 
+#include <filesystem>
+
 int main(int argc, char **argv)
 {
 	Logger &logger = Logger::getInstance();

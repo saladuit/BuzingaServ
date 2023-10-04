@@ -184,6 +184,7 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(INFO, "HTTP file manager");
 		file_manager.manage(client.getMethodType(), client.getPath(), client.getBody());
 		status_code = file_manager.getStatusCode();
+		logger.log(DEBUG, "_content: " + file_manager.getContent());
 		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
 		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());

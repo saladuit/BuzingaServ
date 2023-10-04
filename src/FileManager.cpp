@@ -16,14 +16,15 @@ FileManager::~FileManager() {
 
 void	FileManager::manageGet(const std::string& filename) {
 	Logger  		&logger = Logger::getInstance();
-	std::ifstream	file(filename);
+	std::ifstream	file("data/" + filename);
 	std::string 	line;
 
 	logger.log(DEBUG, "manageGet method is called");
+	logger.log(DEBUG, "filename: data/" + filename);
 
-	if (fs::exists(filename)) 
+	if (fs::exists("data/" + filename))
 	{
-		if (!file.is_open()) 
+		if (!file.is_open())
 		{
 			_status_code = 401;
 			return ;
@@ -36,25 +37,6 @@ void	FileManager::manageGet(const std::string& filename) {
 		_status_code = 404;
 	logger.log(DEBUG, "_status_code in the manageGet method is: %", _status_code);
 }
-
-// bool	save_data(const std::string post_message, const std::string content, 
-// 			const std::string content_type)
-// {
-// 	std::ifstream	image_content(content);
-// 	std::string		line;
-
-// 	if (!image_content)
-// 	{
-// 		std::cerr << "Error opening files." << std::endl;
-// 		return (false);
-// 	}
-// 	// std::cout << "data/" + content_type + "/" + post_message + "\n";
-// 	std::ofstream	new_image("data/" + content_type + "/" + post_message);
-// 	while (std::getline(image_content, line)) {
-//     	new_image << line << '\n';
-//     }
-// 	return (true);
-// }
 
 void	FileManager::managePost(const std::string& filename, const std::string& body) {
 	Logger &logger = Logger::getInstance();
