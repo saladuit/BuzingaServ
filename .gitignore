@@ -1,5 +1,6 @@
 tests/log/
 
+*.txt
 # Bullshit
 .*
 !.gitignore
