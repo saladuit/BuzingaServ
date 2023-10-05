@@ -37,22 +37,24 @@ void ConfigParser::ParseServerBlock(size_t &i)
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(INFO, "ParseServerBlock: " + _tokens.at(i).getString());
-	(void)i;
+	logger.log(INFO, "Parse" + _tokens.at(i).getString() + "Block ");
+	while (_tokens.at(i).getType() != TokenType::CLOSE_BRACKET)
+	{
+	}
 }
 
 void ConfigParser::ParseGlobalBlock(size_t &i)
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(INFO, "ParseGlobalBlock: " + _tokens.at(i).getString());
+	logger.log(INFO, "Parse" + _tokens.at(i).getString() + "Block ");
 	i += 2;
 	do
 	{
 		Token &key = _tokens.at(i);
 		Token &value = _tokens.at(i + 1);
 		logger.log(DEBUG, "Found GlobalSetting: KEY:\t" + key.getString() +
-							  "\tVAL:" + value.getString());
+							  "\tVAL:\t" + value.getString());
 		if (key.getString() == "threads")
 			_global_settings[GlobalSetting::Threads] = value.getString();
 		else if (key.getString() == "default_error_pages")
@@ -66,11 +68,8 @@ void ConfigParser::ParseGlobalBlock(size_t &i)
 			logger.log(WARNING, "Unknown GlobalSetting");
 		while (_tokens.at(i).getType() != TokenType::SEMICOLON)
 			i++;
-		logger.log(DEBUG, "Token is Semi: " + _tokens.at(i).getString());
 		i++;
-		logger.log(DEBUG, "Token is closing: " + _tokens.at(i).getString());
 	} while (_tokens.at(i).getType() != TokenType::CLOSE_BRACKET);
-	logger.log(DEBUG, "Leaving GlobalSetting ");
 }
 
 void ConfigParser::TokenParser()
@@ -83,9 +82,7 @@ void ConfigParser::TokenParser()
 	{
 		Token &token = _tokens.at(i);
 		if (token.getString() == "global" && _global_settings.empty())
-		{
 			ParseGlobalBlock(i);
-		}
 		else if (token.getString() == "server")
 			ParseServerBlock(i);
 		else
@@ -115,9 +112,9 @@ void ConfigParser::tokenizeConfigfile(std::ifstream &stream)
 {
 	Logger &logger = Logger::getInstance();
 	std::string token;
+	logger.log(DEBUG, "Tokenizing Configfile" + token);
 	while (stream >> token)
 	{
-		logger.log(DEBUG, "Tokenizer: pre - " + token);
 		if (skip_comments(stream, token))
 			continue;
 		else if (token == "{")
