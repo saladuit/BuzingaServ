@@ -9,6 +9,7 @@
 // CLASS
 class HTTPResponse {
 private:
+	std::string							_http_response_str;
 	std::string						    _version;
     int                                 _status_code;
     std::string                         _response_phrase;
@@ -26,15 +27,17 @@ public:
 	const std::string& 	getVersion(void) const;
 
 	// header methods
-	void				setHeader(const std::string& headerLine);
+	void				setHeader(const std::string& key, const std::string& value);
 	std::string&		getValue(const std::string& key);
 
 	// body methods
 	void				setBody(const std::string& body);
 	const std::string& 	getBody(void) const;
 
-    int 	getStatusCode(void) const;
+    int 				getStatusCode(void) const;
 
+	std::string			getHTTPResponse(void) const;
+	std::string			getResponsePhrase(void) const;
     void                createHTTPResponse();
 };
 

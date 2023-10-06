@@ -188,9 +188,22 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
 		
-		// this does not work apparently, optional: solve with copy constructor and assignment operator
-		HTTPResponse&	response(client.getVersion(), file_manager.getStatusCode(), file_manager.getContent());
-		write(poll_fd.fd, client._http_request_str.c_str(), client._http_request_str.size());
+		HTTPResponse	response(client.getVersion(), file_manager.getStatusCode(), file_manager.getContent());
+		logger.log(INFO, "Version: " + response.getVersion());
+		logger.log(INFO, "Status code: %", response.getStatusCode());
+		logger.log(INFO, "Body: " + response.getBody());
+
+		// content-type does not work
+		
+		response.setHeader("Content-type", client.getValue("Content-type"));
+		logger.log(INFO, "Content-type: " + response.getValue("Content-type"));
+		if (client.getMethodType() == HTTPMethod::GET) {
+			response.setHeader("Content-length", std::to_string(response.getBody().length()));
+			logger.log(INFO, "Content-length: " + response.getValue("Content-length"));
+		}
+		response.createHTTPResponse();
+
+		write(poll_fd.fd, response.getHTTPResponse().c_str(), response.getHTTPResponse().size());
 		close(poll_fd.fd);
 		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
 								  [&](const pollfd &pfd)
