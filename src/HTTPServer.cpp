@@ -173,14 +173,16 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 	if (poll_fd.revents & POLLOUT)
 	{
 		logger.log(INFO, "request: " + client._http_request_str);
+
+		// HTTPRequest class
 		logger.log(INFO, "HTTP parser");
 		client.parse();
-		// logger.log(DEBUG, "Request line -- method_type: %", client.getMethodType());
 		logger.log(DEBUG, "path: " + client.getPath());
 		logger.log(DEBUG, "version " + client.getVersion());
 		logger.log(DEBUG, "Header[\"Host\"]: " + client.getValue("Host"));
 		logger.log(DEBUG, "Body: " + client.getBody());
 
+		// FileManager class
 		logger.log(INFO, "HTTP file manager");
 		file_manager.manage(client.getMethodType(), client.getPath(), client.getBody());
 		status_code = file_manager.getStatusCode();
@@ -188,13 +190,11 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
 		
+		// HTTPResponse class
 		HTTPResponse	response(client.getVersion(), file_manager.getStatusCode(), file_manager.getContent());
 		logger.log(INFO, "Version: " + response.getVersion());
 		logger.log(INFO, "Status code: %", response.getStatusCode());
 		logger.log(INFO, "Body: " + response.getBody());
-
-		// content-type does not work
-		
 		response.setHeader("Content-type", client.getValue("Content-type"));
 		logger.log(INFO, "Content-type: " + response.getValue("Content-type"));
 		if (client.getMethodType() == HTTPMethod::GET) {
