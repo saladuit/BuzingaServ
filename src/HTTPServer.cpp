@@ -80,27 +80,29 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 }
 
 // make this const?
-bool	HTTPServer::is_print(char c)
+bool HTTPServer::is_print(char c)
 {
 	return ((c >= 32 && c <= 126) || c >= '\n' || c == '\r');
 }
 
-int	HTTPServer::get_content_length(std::string search_string) 
+int HTTPServer::get_content_length(std::string search_string)
 {
-	const std::string	search_header = "Content-length: ";
-	const std::string	end_of_line_delimiter = "\r\n";
-	size_t	pos = search_string.find(search_header);
-	
+	const std::string search_header = "Content-length: ";
+	const std::string end_of_line_delimiter = "\r\n";
+	size_t pos = search_string.find(search_header);
 
-	if (pos != std::string::npos) 
+	if (pos != std::string::npos)
 	{
-		std::string	content_length_value = search_string.substr(pos + search_header.length());
-		size_t	end_of_line_pos = content_length_value.find(end_of_line_delimiter);
+		std::string content_length_value =
+			search_string.substr(pos + search_header.length());
+		size_t end_of_line_pos =
+			content_length_value.find(end_of_line_delimiter);
 
-		if (end_of_line_pos != std::string::npos) 
+		if (end_of_line_pos != std::string::npos)
 		{
-			std::string	content_value_str = content_length_value.substr(0, end_of_line_pos);
-			int	value = std::stoi(content_value_str);
+			std::string content_value_str =
+				content_length_value.substr(0, end_of_line_pos);
+			int value = std::stoi(content_value_str);
 			return (value);
 		}
 	}
@@ -113,30 +115,34 @@ int	HTTPServer::get_content_length(std::string search_string)
 // 		reached /r/n/r/n
 //		optionally has read the body (POST request)
 // if so, call http parser, file_manager and response
-// if not, exit 
+// if not, exit
 void HTTPServer::handleConnection(pollfd &poll_fd)
 {
-	Logger  		&logger = Logger::getInstance();
-    int32_t 		read_count = 0;
-	const int		buffer_size = 1;
-    char    		buffer[buffer_size];
-	HTTPRequest&	client(_client_request[poll_fd.fd]);
-	FileManager		file_manager;
-	int				status_code = 0;
+	Logger &logger = Logger::getInstance();
+	int32_t read_count = 0;
+	const int buffer_size = 1;
+	char buffer[buffer_size];
+	HTTPRequest &client(_client_request[poll_fd.fd]);
+	FileManager file_manager;
+	int status_code = 0;
 
-	logger.log(DEBUG, "remaining content length: %", std::to_string(client._content_length));
-	if (poll_fd.revents & POLLIN) 
+	logger.log(DEBUG, "remaining content length: %",
+			   std::to_string(client._content_length));
+	if (poll_fd.revents & POLLIN)
 	{
 		if (client._post_method && client._content_length <= 0)
 			poll_fd.events |= POLLOUT;
-        read_count = read(poll_fd.fd, buffer, buffer_size);
-        if (read_count == -1) 
+		read_count = read(poll_fd.fd, buffer, buffer_size);
+		if (read_count == -1)
 		{
-            logger.log(ERROR, "Error: read failed on: " + std::to_string(poll_fd.fd));
-			return ;			
+			logger.log(ERROR,
+					   "Error: read failed on: " + std::to_string(poll_fd.fd));
+			return;
 		}
 		logger.log(DEBUG, "bytes read: %", buffer);
-		logger.log(INFO, std::to_string(read_count) + " bytes are read from fd: " + std::to_string(poll_fd.fd));
+		logger.log(
+			INFO, std::to_string(read_count) +
+					  " bytes are read from fd: " + std::to_string(poll_fd.fd));
 		for (int i = 0; i < read_count; i++)
 		{
 			if (is_print(buffer[i]))
@@ -145,7 +151,7 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 				client._content_length -= read_count;
 			logger.log(DEBUG, "http request str: " + client._http_request_str);
 		}
-    }
+	}
 	client._pos = client._http_request_str.find("\r\n\r\n");
 	logger.log(DEBUG, "1");
 	if (!client._post_method && client._pos != std::string::npos)
@@ -153,19 +159,19 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 		logger.log(DEBUG, "2");
 		if (client._http_request_str.substr(0, 4) == "POST")
 		{
-			int	body_length = get_content_length(client._http_request_str);
+			int body_length = get_content_length(client._http_request_str);
 			if (body_length == -1)
-			// set error status to 404 BAD REQUEST?
-			// and output applicable log message
+				// set error status to 404 BAD REQUEST?
+				// and output applicable log message
 				logger.log(ERROR, "404: BAD REQUEST");
 			else
 			{
-				// body_length + 2 works 
+				// body_length + 2 works
 				client._content_length = body_length - 2;
 				client._content_length_cpy = client._content_length;
 				client._post_method = true;
 			}
-			return ; 
+			return;
 		}
 		poll_fd.events |= POLLOUT;
 	}
@@ -184,26 +190,33 @@ void HTTPServer::handleConnection(pollfd &poll_fd)
 
 		// FileManager class
 		logger.log(INFO, "HTTP file manager");
-		file_manager.manage(client.getMethodType(), client.getPath(), client.getBody());
+		file_manager.manage(client.getMethodType(), client.getPath(),
+							client.getBody());
 		status_code = file_manager.getStatusCode();
 		logger.log(DEBUG, "_content: " + file_manager.getContent());
-		logger.log(DEBUG, "_status_code after calling file manager is: %", std::to_string(status_code));
+		logger.log(DEBUG, "_status_code after calling file manager is: %",
+				   std::to_string(status_code));
 		logger.log(INFO, "HTTP response");
-		
+
 		// HTTPResponse class
-		HTTPResponse	response(client.getVersion(), file_manager.getStatusCode(), file_manager.getContent());
+		HTTPResponse response(client.getVersion(), file_manager.getStatusCode(),
+							  file_manager.getContent());
 		logger.log(INFO, "Version: " + response.getVersion());
 		logger.log(INFO, "Status code: %", response.getStatusCode());
 		logger.log(INFO, "Body: " + response.getBody());
 		response.setHeader("Content-type", client.getValue("Content-type"));
 		logger.log(INFO, "Content-type: " + response.getValue("Content-type"));
-		if (client.getMethodType() == HTTPMethod::GET) {
-			response.setHeader("Content-length", std::to_string(response.getBody().length()));
-			logger.log(INFO, "Content-length: " + response.getValue("Content-length"));
+		if (client.getMethodType() == HTTPMethod::GET)
+		{
+			response.setHeader("Content-length",
+							   std::to_string(response.getBody().length()));
+			logger.log(INFO, "Content-length: " +
+								 response.getValue("Content-length"));
 		}
 		response.createHTTPResponse();
 
-		write(poll_fd.fd, response.getHTTPResponse().c_str(), response.getHTTPResponse().size());
+		write(poll_fd.fd, response.getHTTPResponse().c_str(),
+			  response.getHTTPResponse().size());
 		close(poll_fd.fd);
 		_fds.erase(std::remove_if(_fds.begin(), _fds.end(),
 								  [&](const pollfd &pfd)
@@ -279,11 +292,12 @@ int HTTPServer::run()
 			if (std::find(_server_fds.begin(), _server_fds.end(), fd.fd) !=
 				_server_fds.end())
 				acceptConnection(fd);
-			else {
+			else
+			{
 				// logger.log(INFO, "call handleConnection");
 				handleConnection(fd);
 			}
-				
+
 			//_clietns[fd].handleConnection(fd);
 		}
 	}
