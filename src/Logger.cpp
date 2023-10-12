@@ -4,7 +4,7 @@
 
 Logger::Logger()
 	: _current_level(LogLevel::DEBUG),
-	  _log_file("build/log.txt", std::ios::trunc | std::ios::out)
+	  _log_file("build/log/webserver.log", std::ios::trunc | std::ios::out)
 {
 	if (!_log_file.is_open())
 		log(ERROR, "Failed to open log file");

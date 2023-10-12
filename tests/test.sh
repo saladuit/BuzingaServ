@@ -62,7 +62,7 @@ fi
 if [[ $1 == "GET" ]]; then
 	echo "$1 REQUEST"
 	echo ""
-	curl -X $1 $2 -s -o $HTTP_LOG_DIR/${1}_${2#www.}_body.log -D $HTTP_LOG_DIR/${1}_${2#www.}_header.log
+	curl -X $1 $2 --http1.1 -s -o $HTTP_LOG_DIR/${1}_${2#www.}_body.log -D $HTTP_LOG_DIR/${1}_${2#www.}_header.log
 
 elif [[ $1 == "POST" ]]; then
 	echo "$1 REQUEST"

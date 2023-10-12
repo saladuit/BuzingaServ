@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <chrono>
 
 #include "Color.hpp"
 
@@ -41,7 +42,7 @@ class Logger
 			return;
 		if (lvl == LogLevel::DEBUG)
 			std::cout << Color::cyan << ss << Color::reset << std::endl;
-		if (lvl == LogLevel::INFO)
+		else if (lvl == LogLevel::INFO)
 			std::cout << ss << std::endl;
 		else if (lvl == LogLevel::WARNING)
 			std::cerr << Color::yellow << ss << Color::reset << std::endl;

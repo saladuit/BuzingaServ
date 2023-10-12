@@ -1,8 +1,5 @@
 include makerc/definitions.mk
 include makerc/options.mk
-# -include $(DEPS)
-
-
 
 # ************************************Rules*********************************** #
 
@@ -10,6 +7,7 @@ all: $(NAME)
 .PHONY: all
 
 $(NAME): $(OBJS)
+	@mkdir -p $(BUILD_DIR)/log
 	$(CC) $(CFLAGS) $^ $(INCLUDE_FLAGS) -o $(NAME)
 
 -include $(DEPENDS)

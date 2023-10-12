@@ -7,7 +7,7 @@ tests/log/
 compile_commands.json
 
 # Logger
-log.txt
+*.log
 
 # Prerequisites
 *.d
