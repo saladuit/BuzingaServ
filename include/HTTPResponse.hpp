@@ -17,7 +17,7 @@ class HTTPResponse
 	HTTPResponse(const HTTPRequest &request);
 	~HTTPResponse();
 
-	HTTPResponse() = delete;
+	HTTPResponse();
 	HTTPResponse(const HTTPResponse &other) = delete;
 	HTTPResponse &operator=(const HTTPResponse &other) = delete;
 
