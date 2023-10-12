@@ -1,8 +1,5 @@
 include makerc/definitions.mk
 include makerc/options.mk
-# -include $(DEPS)
-
-
 
 # ************************************Rules*********************************** #
 
