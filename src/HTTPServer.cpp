@@ -76,11 +76,6 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	}
 }
 
-bool HTTPServer::is_print(char c)
-{
-	return ((c >= 32 && c <= 126) || c >= '\n' || c == '\r');
-}
-
 int HTTPServer::get_content_length(std::string search_string)
 {
 	const std::string search_header = "Content-length: ";

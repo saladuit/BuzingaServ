@@ -7,6 +7,7 @@
 #include <HTTPResponse.hpp>
 #include <Logger.hpp>
 #include <sys/poll.h>
+#include <unistd.h>
 
 class Client
 {

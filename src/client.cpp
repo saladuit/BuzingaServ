@@ -41,7 +41,8 @@ void Client::handle_connection(pollfd &poll_fd)
 					  " bytes are read from fd: " + std::to_string(poll_fd.fd));
 		for (int i = 0; i < read_count; i++)
 		{
-			if (is_print(buffer[i]))
+			if (std::isprint(buffer[i]) ||
+				buffer[i] == '\n' | buffer[i] == '\r')
 				client._http_request_str += buffer[i];
 			if (client._content_length > 0)
 				client._content_length -= read_count;
@@ -97,17 +98,11 @@ void Client::handle_connection(pollfd &poll_fd)
 		// HTTPResponse class
 		HTTPResponse response(client.getVersion(), file_manager.getStatusCode(),
 							  file_manager.getContent());
-		logger.log(INFO, "Version: " + response.getVersion());
-		logger.log(INFO, "Status code: %", response.getStatusCode());
-		logger.log(INFO, "Body: " + response.getBody());
 		response.setHeader("Content-type", client.getValue("Content-type"));
-		logger.log(INFO, "Content-type: " + response.getValue("Content-type"));
 		if (client.getMethodType() == HTTPMethod::GET)
 		{
 			response.setHeader("Content-length",
 							   std::to_string(response.getBody().length()));
-			logger.log(INFO, "Content-length: " +
-								 response.getValue("Content-length"));
 		}
 		response.createHTTPResponse();
 
