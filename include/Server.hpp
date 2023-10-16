@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include <Client.hpp>
 #include <ConfigParser.hpp>
 #include <Defines.hpp>
 #include <Socket.hpp>
@@ -17,7 +18,7 @@ class Server
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
 	int getFD() const;
-	int acceptConnection(const pollfd &fd);
+	Client acceptConnection(const pollfd &fd);
 
   private:
 	const std::string &_host;

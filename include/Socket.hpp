@@ -15,12 +15,11 @@ class Socket
 	socklen_t _addr_len;
 	t_sockaddr_in _addr;
 	const int _fd;
-	char _address[INET_ADDRSTRLEN];
 	void _init_sockaddr_in(t_sockaddr_in &addr, const std::string &_port);
 
   public:
 	Socket();
-	Socket(int fd);
+	Socket(const int fd);
 	Socket(const Socket &other) = delete;
 	Socket &operator=(const Socket &other) = delete;
 	~Socket();

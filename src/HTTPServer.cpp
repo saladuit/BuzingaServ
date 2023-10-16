@@ -10,8 +10,8 @@ HTTPServer::~HTTPServer()
 }
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
-	: _parser(config_file_path), _poll_fds(0), _active_servers(0),
-	  _active_clients(0)
+	: _parser(config_file_path), _poll_fds(0), _active_servers(),
+	  _active_clients()
 {
 	Logger &logger = Logger::getInstance();
 	try
@@ -60,11 +60,8 @@ int HTTPServer::run()
 	{
 		logger.log(INFO, "Polling % file descriptors", _poll_fds.size());
 		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
-		if (poll_count == G_ERROR)
-		{
-			logger.log(ERROR, strerror(errno));
-			continue;
-		}
+		if (poll_count == SYSTEM_ERROR)
+			throw SystemException("poll");
 		if (poll_count == 0)
 		{
 			logger.log(WARNING, "poll() timed out");
@@ -77,16 +74,12 @@ int HTTPServer::run()
 			logPollfd(pollfd);
 			if (_active_servers.find(pollfd.fd) != _active_servers.end())
 			{
-				const int fd =
-					_active_servers[pollfd.fd].acceptConnection(pollfd);
-				_active_clients.emplace(fd, Client(pollfd));
-				//				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
+				Client client(pollfd.fd);
+				_active_clients.emplace(client.getFD(), client);
+				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
 			}
-			else if (_active_clients.find(pollfd.fd) != _active_clients.end())
-				_active_clients[pollfd.fd].handleConnection(pollfd);
 			else
-				logger.log(ERROR, "pollfd.fd not found in _active_servers or "
-								  "_active_clients");
+				_active_clients.at(pollfd.fd).handleConnection(pollfd);
 		}
 	}
 	return (EXIT_SUCCESS);

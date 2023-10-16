@@ -20,8 +20,8 @@ class HTTPServer
 
 	ConfigParser _parser;
 	std::vector<pollfd> _poll_fds;
-	std::unordered_map<int, Server> _active_servers;
-	std::unordered_map<int, Client> _active_clients;
+	std::unordered_map<const int, Server> _active_servers;
+	std::unordered_map<const int, Client> _active_clients;
 
   public:
 	HTTPServer(const std::string &config_file_path);

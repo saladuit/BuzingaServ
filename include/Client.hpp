@@ -6,13 +6,14 @@
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
 #include <Logger.hpp>
+#include <Socket.hpp>
 
 #include <sys/poll.h>
 
 class Client
 {
   public:
-	Client(pollfd &poll_fd);
+	Client(const int &fd);
 
 	Client() = delete;
 	Client(const Client &other) = delete;
@@ -20,13 +21,14 @@ class Client
 	~Client();
 
 	void handleConnection(pollfd &poll_fd);
+	int getFD(void) const;
 
   private:
 	HTTPRequest _request;
 	HTTPResponse _response;
 	FileManager _file_manager;
 	CGI _cgi;
-	const int _fd;
+	Socket _socket;
 };
 
 #endif
