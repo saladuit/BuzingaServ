@@ -6,20 +6,11 @@
 #include <Client.hpp>
 #include <ConfigParser.hpp>
 #include <Defines.hpp>
+#include <Server.hpp>
 
 #include <arpa/inet.h>
 #include <poll.h>
 #include <unordered_map>
-
-typedef struct sockaddr_in t_sockaddr_in;
-typedef struct sockaddr t_sockaddr;
-
-typedef struct s_socket
-{
-	int fd;
-	t_sockaddr_in addr;
-	socklen_t addr_len;
-} t_socket;
 
 class HTTPServer
 {
@@ -32,8 +23,8 @@ class HTTPServer
 	int get_content_length(std::string search_string);
 
 	ConfigParser _parser;
-	std::vector<pollfd> _fds;
-	std::vector<int> _server_fds;
+	std::vector<pollfd> _poll_fds;
+	std::unordered_map<int, Server> _active_servers;
 	std::unordered_map<int, Client> _active_clients;
 
   public:
