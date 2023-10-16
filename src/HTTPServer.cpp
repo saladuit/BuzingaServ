@@ -80,7 +80,7 @@ int HTTPServer::run()
 				const int fd =
 					_active_servers[pollfd.fd].acceptConnection(pollfd);
 				_active_clients.emplace(fd, Client(pollfd));
-				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
+				//				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
 			}
 			else if (_active_clients.find(pollfd.fd) != _active_clients.end())
 				_active_clients[pollfd.fd].handleConnection(pollfd);

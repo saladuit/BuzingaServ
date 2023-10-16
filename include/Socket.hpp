@@ -2,21 +2,30 @@
 #define SOCKET_HPP
 
 #include <netinet/in.h>
+#include <string>
+
+#define MAX_PENDING_CONNECTIONS 10
+
+typedef struct sockaddr_in t_sockaddr_in;
+typedef struct sockaddr t_sockaddr;
 
 class Socket
 {
   private:
-	int _fd;
+	socklen_t _addr_len;
+	t_sockaddr_in _addr;
+	const int _fd;
 	char _address[INET_ADDRSTRLEN];
+	void _init_sockaddr_in(t_sockaddr_in &addr, const std::string &_port);
 
   public:
-	Socket(int domain, int type);
+	Socket();
 	Socket(int fd);
-	Socket() = delete;
 	Socket(const Socket &other) = delete;
 	Socket &operator=(const Socket &other) = delete;
 	~Socket();
 	int getFD() const;
+	void setupServer(const std::string &port);
 };
 
 #endif
