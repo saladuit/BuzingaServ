@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <string>
 
+#define SYSTEM_ERROR (-1)
+
 class SystemException : public std::runtime_error
 {
   public:

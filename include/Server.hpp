@@ -13,10 +13,12 @@
 
 typedef struct sockaddr_in t_sockaddr_in;
 typedef struct sockaddr t_sockaddr;
+
 typedef struct s_socket
 {
 	int fd;
 	t_sockaddr_in addr;
+	size_t addr_len;
 } t_socket;
 
 class Server

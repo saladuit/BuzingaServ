@@ -1,5 +1,6 @@
 #include <Logger.hpp>
 #include <Server.hpp>
+#include <arpa/inet.h>
 
 Server::~Server()
 {
@@ -47,19 +48,17 @@ int Server::acceptConnection(const pollfd &fd)
 	Logger &logger = Logger::getInstance();
 	char address[INET_ADDRSTRLEN];
 
-	logger.log(INFO,
-			   "Accepting connection on server fd: " + std::to_string(fd.fd));
+	logger.log(INFO, "Accepting connection on server fd: " +
+						 std::to_string(_socket.fd));
 	client.addr_len = sizeof(client.addr);
 	client.fd = accept(fd.fd, (t_sockaddr *)&client.addr,
 					   (socklen_t *)&client.addr_len);
 	if (client.fd == G_ERROR)
-	{
-		logger.log(ERROR, strerror(errno));
-		return;
-	}
+		throw SystemException("Accept");
 	inet_ntop(AF_INET, &client.addr.sin_addr, address, sizeof(address));
 	logger.log(INFO, "Connection received from " + std::string(address) +
 						 " to client fd: " + std::to_string(client.fd));
+	return (client.fd);
 }
 
 int Server::getFD(void) const

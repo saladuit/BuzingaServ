@@ -10,7 +10,8 @@ HTTPServer::~HTTPServer()
 }
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
-	: _parser(config_file_path)
+	: _parser(config_file_path), _poll_fds(0), _active_servers(0),
+	  _active_clients(0)
 {
 	Logger &logger = Logger::getInstance();
 	try
@@ -30,30 +31,6 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 		logger.log(FATAL, e.what());
 		exit(EXIT_FAILURE);
 	}
-}
-
-int HTTPServer::get_content_length(std::string search_string)
-{
-	const std::string search_header = "Content-length: ";
-	const std::string end_of_line_delimiter = "\r\n";
-	size_t pos = search_string.find(search_header);
-
-	if (pos != std::string::npos)
-	{
-		std::string content_length_value =
-			search_string.substr(pos + search_header.length());
-		size_t end_of_line_pos =
-			content_length_value.find(end_of_line_delimiter);
-
-		if (end_of_line_pos != std::string::npos)
-		{
-			std::string content_value_str =
-				content_length_value.substr(0, end_of_line_pos);
-			int value = std::stoi(content_value_str);
-			return (value);
-		}
-	}
-	return (-1);
 }
 
 void HTTPServer::logPollfd(const pollfd &fd) const
@@ -102,10 +79,14 @@ int HTTPServer::run()
 			{
 				const int fd =
 					_active_servers[pollfd.fd].acceptConnection(pollfd);
+				_active_clients.emplace(fd, Client(pollfd));
 				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
 			}
-			else
+			else if (_active_clients.find(pollfd.fd) != _active_clients.end())
 				_active_clients[pollfd.fd].handleConnection(pollfd);
+			else
+				logger.log(ERROR, "pollfd.fd not found in _active_servers or "
+								  "_active_clients");
 		}
 	}
 	return (EXIT_SUCCESS);

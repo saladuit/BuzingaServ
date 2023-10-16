@@ -12,7 +12,7 @@ Client::Client(pollfd &poll_fd) : _fd(poll_fd.fd)
 // if so, call http parser, file_manager and response
 // if not, exit
 
-void Client::handle_connection(pollfd &poll_fd)
+void Client::handleConnection(pollfd &poll_fd)
 {
 	Logger &logger = Logger::getInstance();
 	int32_t read_count = 0;
@@ -72,13 +72,8 @@ void Client::handle_connection(pollfd &poll_fd)
 		}
 		poll_fd.events |= POLLOUT;
 	}
-	logger.log(DEBUG, "3");
 	if (poll_fd.revents & POLLOUT)
 	{
-		logger.log(INFO, "request: " + client._http_request_str);
-
-		// HTTPRequest class
-		logger.log(INFO, "HTTP parser");
 		client.parse();
 		logger.log(DEBUG, "path: " + client.getPath());
 		logger.log(DEBUG, "version " + client.getVersion());

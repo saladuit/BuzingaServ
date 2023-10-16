@@ -5,10 +5,12 @@
 int main(int argc, char **argv)
 {
 	Logger &logger = Logger::getInstance();
+	const std::string program_name(argv[0]);
+
 	logger.log(LogLevel::INFO, "Launching server");
 	if (argc != 1 && argc != 2)
 	{
-		logger.log(LogLevel::ERROR, "Usage: % [config_path]", argv[0]);
+		logger.log(LogLevel::ERROR, "Usage: " + program_name + "[config_path]");
 		return (EXIT_FAILURE);
 	}
 	HTTPServer server(argc == 2 ? argv[1] : "config/default.conf");

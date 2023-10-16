@@ -6,19 +6,20 @@
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
 #include <Logger.hpp>
+
 #include <sys/poll.h>
-#include <unistd.h>
 
 class Client
 {
   public:
-	Client() = delete;
 	Client(pollfd &poll_fd);
+
+	Client() = delete;
 	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	void handle_connection(pollfd &poll_fd);
+	void handleConnection(pollfd &poll_fd);
 
   private:
 	HTTPRequest _request;
