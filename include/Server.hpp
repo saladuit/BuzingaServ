@@ -6,9 +6,11 @@
 #include <SystemException.hpp>
 
 #include <netinet/in.h>
+#include <sys/poll.h>
 #include <unistd.h>
 
 #define SYSTEM_ERROR (-1)
+
 typedef struct sockaddr_in t_sockaddr_in;
 typedef struct sockaddr t_sockaddr;
 typedef struct s_socket
@@ -26,6 +28,7 @@ class Server
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
 	int getFD() const;
+	int acceptConnection(const pollfd &fd);
 
   private:
 	void _init_sockaddr_in(t_sockaddr_in &addr);

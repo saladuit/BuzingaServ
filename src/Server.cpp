@@ -41,6 +41,27 @@ Server::Server(const ServerBlock &server_block)
 						  " on fd: " + std::to_string(_socket.fd));
 }
 
+int Server::acceptConnection(const pollfd &fd)
+{
+	t_socket client;
+	Logger &logger = Logger::getInstance();
+	char address[INET_ADDRSTRLEN];
+
+	logger.log(INFO,
+			   "Accepting connection on server fd: " + std::to_string(fd.fd));
+	client.addr_len = sizeof(client.addr);
+	client.fd = accept(fd.fd, (t_sockaddr *)&client.addr,
+					   (socklen_t *)&client.addr_len);
+	if (client.fd == G_ERROR)
+	{
+		logger.log(ERROR, strerror(errno));
+		return;
+	}
+	inet_ntop(AF_INET, &client.addr.sin_addr, address, sizeof(address));
+	logger.log(INFO, "Connection received from " + std::string(address) +
+						 " to client fd: " + std::to_string(client.fd));
+}
+
 int Server::getFD(void) const
 {
 	return (_socket.fd);

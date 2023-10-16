@@ -35,6 +35,7 @@ class HTTPRequest
 	HTTPRequest &operator=(const HTTPRequest &other);
 	~HTTPRequest();
 
+	int get_content_length(std::string search_string);
 	void setMethodType(const std::string &requestLine);
 	HTTPMethod getMethodType(void) const;
 

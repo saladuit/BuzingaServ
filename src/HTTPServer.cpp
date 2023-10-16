@@ -56,28 +56,6 @@ int HTTPServer::get_content_length(std::string search_string)
 	return (-1);
 }
 
-void HTTPServer::acceptConnection(const pollfd &fd)
-{
-	t_socket client;
-	Logger &logger = Logger::getInstance();
-	char address[INET_ADDRSTRLEN];
-
-	logger.log(INFO,
-			   "Accepting connection on server fd: " + std::to_string(fd.fd));
-	client.addr_len = sizeof(client.addr);
-	client.fd = accept(fd.fd, (t_sockaddr *)&client.addr,
-					   (socklen_t *)&client.addr_len);
-	if (client.fd == G_ERROR)
-	{
-		logger.log(ERROR, strerror(errno));
-		return;
-	}
-	inet_ntop(AF_INET, &client.addr.sin_addr, address, sizeof(address));
-	logger.log(INFO, "Connection received from " + std::string(address) +
-						 " to client fd: " + std::to_string(client.fd));
-	_fds.push_back(pollfd{client.fd, POLLIN, 0});
-}
-
 void HTTPServer::logPollfd(const pollfd &fd) const
 {
 	Logger &logger = Logger::getInstance();
@@ -115,22 +93,19 @@ int HTTPServer::run()
 			logger.log(WARNING, "poll() timed out");
 			continue;
 		}
-		for (auto &fd : _poll_fds)
+		for (auto &pollfd : _poll_fds)
 		{
-			if (fd.revents == 0)
+			if (pollfd.revents == 0)
 				continue;
-			logPollfd(fd);
-			if (std::find(_server_fds.begin(), _server_fds.end(), fd.fd) !=
-				_server_fds.end())
-				acceptConnection(fd);
-			else
+			logPollfd(pollfd);
+			if (_active_servers.find(pollfd.fd) != _active_servers.end())
 			{
-				if (poll_fd.revents & POLLIN)
-					if (poll_fd.revents & POLLOUT)
-						handleConnection(fd);
+				const int fd =
+					_active_servers[pollfd.fd].acceptConnection(pollfd);
+				_poll_fds.push_back(pollfd{fd, POLLIN, 0});
 			}
-
-			//_clietns[fd].handleConnection(fd);
+			else
+				_active_clients[pollfd.fd].handleConnection(pollfd);
 		}
 	}
 	return (EXIT_SUCCESS);
