@@ -11,14 +11,31 @@ Socket::Socket(const int fd)
 	: _addr_len(sizeof(_addr)),
 	  _fd(accept(fd, (t_sockaddr *)&_addr, &_addr_len))
 {
-	char address[INET_ADDRSTRLEN];
 	if (_fd == SYSTEM_ERROR)
 		throw SystemException("Accept");
+	char address[INET_ADDRSTRLEN];
 	Logger &logger = Logger::getInstance();
-	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, _addr_len) != NULL);
+	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) !=
+		   NULL);
 	logger.log(INFO,
 			   "Connection received from " + std::string(address) +
 				   " created client socket on fd: " + std::to_string(getFD()));
+}
+
+Socket::Socket(const Socket &other)
+	: _addr_len(other._addr_len), _addr(other._addr), _fd(other._fd)
+{
+}
+
+Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
+{
+	if (_fd == SYSTEM_ERROR)
+		throw SystemException("socket creation failed");
+}
+
+Socket::~Socket()
+{
+	close(_fd);
 }
 
 void Socket::_init_sockaddr_in(t_sockaddr_in &addr, const std::string &_port)
@@ -42,18 +59,8 @@ void Socket::setupServer(const std::string &port)
 	if (listen(_fd, MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)
 		throw SystemException("Listen");
 }
-Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
-{
-	if (_fd == SYSTEM_ERROR)
-		throw SystemException("socket creation failed");
-}
 
 int Socket::getFD() const
 {
 	return (_fd);
-}
-
-Socket::~Socket()
-{
-	close(_fd);
 }

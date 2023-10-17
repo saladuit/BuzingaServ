@@ -2,10 +2,6 @@
 #include <Server.hpp>
 #include <arpa/inet.h>
 
-Server::~Server()
-{
-}
-
 Server::Server(const ServerBlock &server_block)
 	: _host(server_block.settings.at(ServerSetting::Host)),
 	  _port(server_block.settings.at(ServerSetting::Port)),
@@ -21,14 +17,14 @@ Server::Server(const ServerBlock &server_block)
 						  " on fd: " + std::to_string(_socket.getFD()));
 }
 
-Client Server::acceptConnection(const pollfd &pollfd)
+Server::Server(const Server &src)
+	: _host(src._host), _port(src._port), _server_name(src._server_name),
+	  _client_max_body_size(src._client_max_body_size), _socket(src._socket)
 {
-	Client client(pollfd.fd);
-	Logger &logger = Logger::getInstance();
+}
 
-	logger.log(INFO, "Accepted connection on server fd: " +
-						 std::to_string(_socket.getFD()));
-	return (client);
+Server::~Server()
+{
 }
 
 int Server::getFD(void) const

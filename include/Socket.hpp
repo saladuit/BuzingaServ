@@ -19,8 +19,8 @@ class Socket
 
   public:
 	Socket();
-	Socket(const int fd);
-	Socket(const Socket &other) = delete;
+	Socket(const int server_fd);
+	Socket(const Socket &other);
 	Socket &operator=(const Socket &other) = delete;
 	~Socket();
 	int getFD() const;

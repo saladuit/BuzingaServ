@@ -123,7 +123,7 @@ const std::string &FileManager::getContent() const
 	return (_content);
 }
 
-const int &FileManager::getStatusCode() const
+int FileManager::getStatusCode() const
 {
 	return (_status_code);
 }

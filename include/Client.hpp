@@ -13,10 +13,10 @@
 class Client
 {
   public:
-	Client(const int &fd);
+	Client(const int &server_fd);
 
 	Client() = delete;
-	Client(const Client &other) = delete;
+	Client(const Client &other);
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 

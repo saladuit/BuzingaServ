@@ -1,6 +1,14 @@
 #include <Client.hpp>
 
-Client::Client(const int &fd) : _socket(fd)
+Client::Client(const int &server_fd) : _socket(server_fd)
+{
+}
+
+Client::Client(const Client &other) : _socket(other._socket)
+{
+}
+
+Client::~Client()
 {
 }
 

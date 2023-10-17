@@ -14,11 +14,10 @@ class Server
   public:
 	Server(const ServerBlock &server_block);
 	Server() = delete;
-	Server(const Server &src) = delete;
+	Server(const Server &src);
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
 	int getFD() const;
-	Client acceptConnection(const pollfd &fd);
 
   private:
 	const std::string &_host;
@@ -26,7 +25,6 @@ class Server
 	const std::string &_server_name;
 	const std::string &_client_max_body_size;
 	Socket _socket;
-	void _init_sockaddr_in(t_sockaddr_in &addr);
 };
 
 #endif
