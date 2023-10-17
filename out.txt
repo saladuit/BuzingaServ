@@ -1,0 +1,2 @@
+['hello world!\n', 'goodbye world!\n']
+Content-type: text/html

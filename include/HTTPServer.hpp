@@ -6,9 +6,13 @@
 #include <ConfigParser.hpp>
 #include <Defines.hpp>
 // #include <ThreadPool.hpp>
+#include <FileManager.hpp>
+#include <HTTPRequest.hpp>
+#include <HTTPResponse.hpp>
 
 #include <arpa/inet.h>
 #include <poll.h>
+#include <unordered_map>
 
 typedef struct sockaddr_in t_sockaddr_in;
 typedef struct sockaddr t_sockaddr;
@@ -28,10 +32,14 @@ class HTTPServer
 	void acceptConnection(const pollfd &fd);
 	void logPollfd(const pollfd &fd) const;
 
+	bool is_print(char c);
+	int get_content_length(std::string search_string);
+
 	ConfigParser _parser;
 	// ThreadPool _thread_pool;
 	std::vector<pollfd> _fds;
 	std::vector<int> _server_fds;
+	std::unordered_map<int, HTTPRequest> _client_request;
 
   public:
 	HTTPServer(const std::string &config_file_path);
