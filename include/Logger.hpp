@@ -2,12 +2,12 @@
 #define LOGGER_HPP
 
 #include <array>
+#include <chrono>
 #include <cstdarg>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <chrono>
 
 #include "Color.hpp"
 

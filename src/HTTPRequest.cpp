@@ -9,21 +9,10 @@ HTTPRequest::HTTPRequest()
 {
 }
 
-HTTPRequest::HTTPRequest(const HTTPRequest &other)
+HTTPRequest::HTTPRequest(const HTTPRequest &rhs)
+	: _methodType(rhs._methodType), _path(rhs._path), _version(rhs._version),
+	  _headers(rhs._headers), _body(rhs._body)
 {
-	*this = other;
-}
-
-HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
-{
-	if (this != &other)
-	{
-		this->_content_length = other._content_length;
-		this->_content_length_cpy = other._content_length_cpy;
-		this->_post_method = other._post_method;
-		this->_pos = other._pos;
-	}
-	return (*this);
 }
 
 HTTPRequest::~HTTPRequest()

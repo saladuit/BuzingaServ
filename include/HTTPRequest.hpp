@@ -31,8 +31,8 @@ class HTTPRequest
 
   public:
 	HTTPRequest();
-	HTTPRequest(const HTTPRequest &other);
-	HTTPRequest &operator=(const HTTPRequest &other);
+	HTTPRequest(const HTTPRequest &rhs);
+	HTTPRequest &operator=(const HTTPRequest &other) = delete;
 	~HTTPRequest();
 
 	int get_content_length(std::string search_string);

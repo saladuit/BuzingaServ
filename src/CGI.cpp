@@ -10,12 +10,14 @@ CGI::CGI()
 {
 }
 
+CGI::CGI(const CGI &src)
+{
+	(void)src;
+}
+
 CGI::~CGI()
 {
 }
-
-#define READ_END 0
-#define WRITE_END 1
 
 void CGI::execute()
 {

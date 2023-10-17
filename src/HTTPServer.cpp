@@ -3,6 +3,7 @@
 #include <SystemException.hpp>
 #include <algorithm>
 #include <cstring>
+#include <memory>
 #include <unistd.h>
 
 HTTPServer::~HTTPServer()
@@ -20,9 +21,10 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 			_parser.getServerBlocks();
 		for (const auto &server_block : server_blocks)
 		{
-			Server server(server_block);
-			//			_active_servers.emplace(server.getFD(), server);
-			_poll_fds.emplace_back(pollfd{server.getFD(), POLLIN, 0});
+			std::shared_ptr<Server> server =
+				std::make_shared<Server>(server_block);
+			_active_servers.emplace(server->getFD(), server);
+			_poll_fds.emplace_back(pollfd{server->getFD(), POLLIN, 0});
 		}
 	}
 	catch (const std::exception &e)
@@ -73,13 +75,14 @@ int HTTPServer::run()
 			logPollfd(pollfd);
 			if (_active_servers.find(pollfd.fd) != _active_servers.end())
 			{
-				Client client(pollfd.fd);
-				_active_clients.emplace(client.getFD(), client);
-				struct pollfd client_pollfd = {client.getFD(), POLLIN, 0};
+				std::shared_ptr<Client> client =
+					std::make_shared<Client>(pollfd.fd);
+				_active_clients.emplace(client->getFD(), client);
+				struct pollfd client_pollfd = {client->getFD(), POLLIN, 0};
 				_poll_fds.emplace_back(client_pollfd);
 			}
 			else
-				_active_clients.at(pollfd.fd).handleConnection(pollfd);
+				_active_clients.at(pollfd.fd)->handleConnection(pollfd);
 		}
 	}
 	return (EXIT_SUCCESS);

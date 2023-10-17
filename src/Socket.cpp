@@ -11,10 +11,13 @@ Socket::Socket(const int fd)
 	: _addr_len(sizeof(_addr)),
 	  _fd(accept(fd, (t_sockaddr *)&_addr, &_addr_len))
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "Accepting connection on fd: " + std::to_string(fd));
+	logger.log(DEBUG, "New _fd: " + std::to_string(_fd));
 	if (_fd == SYSTEM_ERROR)
 		throw SystemException("Accept");
 	char address[INET_ADDRSTRLEN];
-	Logger &logger = Logger::getInstance();
 	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) !=
 		   NULL);
 	logger.log(INFO,

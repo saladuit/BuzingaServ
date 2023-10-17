@@ -18,7 +18,7 @@ class HTTPResponse
 	~HTTPResponse();
 
 	HTTPResponse();
-	HTTPResponse(const HTTPResponse &other) = delete;
+	HTTPResponse(const HTTPResponse &other);
 	HTTPResponse &operator=(const HTTPResponse &other) = delete;
 
 	int getStatusCode(void) const;
