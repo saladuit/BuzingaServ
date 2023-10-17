@@ -15,8 +15,13 @@
 
 // DEFINES
 
+#ifndef HTTP_READ_SIZE
+#define HTTP_READ_SIZE 1024
+#endif
+
 // ENUM
-enum class HTTPMethod {
+enum class HTTPMethod
+{
 	GET,
 	POST,
 	DELETE,
@@ -24,51 +29,52 @@ enum class HTTPMethod {
 };
 
 // CLASS
-class HTTPRequest {
-private:
-	HTTPMethod							_methodType;
-	std::string							_path;
-	std::string							_version;
-	std::map<std::string, std::string>	_headers;
-	std::string							_body;
+class HTTPRequest
+{
+  private:
+	HTTPMethod _methodType;
+	std::string _path;
+	std::string _version;
+	std::map<std::string, std::string> _headers;
+	std::string _body;
 
-public:
+  public:
 	// canonical form: constructors, operator and destructor
 	HTTPRequest();
-	HTTPRequest(const HTTPRequest& other);
-	HTTPRequest&	operator=(const HTTPRequest& other);
+	HTTPRequest(const HTTPRequest &other);
+	HTTPRequest &operator=(const HTTPRequest &other);
 	~HTTPRequest();
 
 	// methodType methods
-	void		setMethodType(const std::string& requestLine);
-	HTTPMethod	getMethodType(void) const;
+	void setMethodType(const std::string &requestLine);
+	HTTPMethod getMethodType(void) const;
 
 	// path methods
-	void				setPath(const std::string& requestLine);
-	const std::string& 	getPath(void) const;
+	void setPath(const std::string &requestLine);
+	const std::string &getPath(void) const;
 
 	// version methods
-	void				setVersion(const std::string& requestLine);
-	const std::string& 	getVersion(void) const;
+	void setVersion(const std::string &requestLine);
+	const std::string &getVersion(void) const;
 
 	// header methods
-	void				setHeader(const std::string& headerLine);
-	std::string&		getValue(const std::string& key);
+	void setHeader(const std::string &headerLine);
+	std::string &getValue(const std::string &key);
 
 	// body methods
-	void				setBody(const std::string& body);
-	const std::string& 	getBody(void) const;
+	void setBody(const std::string &body);
+	const std::string &getBody(void) const;
 
 	// parser
-	void	parse(void);
+	void parse(void);
 
 	// public variables -- just for now
-	std::string 						_http_request_str;
+	std::string _http_request_str;
 	// size_t try out
-	int									_content_length;
-	int									_content_length_cpy;
-	bool								_post_method;
-	size_t								_pos;
+	int _content_length;
+	int _content_length_cpy;
+	bool _post_method;
+	size_t _pos;
 };
 
 #endif

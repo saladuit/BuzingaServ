@@ -6,6 +6,12 @@
 #include <iostream>
 #include <map>
 
+// DEFINES
+
+#ifndef HTTP_WRITE_SIZE
+#define HTTP_WRITE_SIZE 1024
+#endif
+
 // CLASS
 class HTTPResponse
 {
