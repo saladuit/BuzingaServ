@@ -58,7 +58,6 @@ class ConfigParser
 {
   private:
 	std::string &_configfile_path;
-	std::unordered_map<GlobalSettingOption, std::string> _global_settings;
 	std::vector<ServerBlock> _server_blocks;
 
 	std::vector<Token> _tokens;
@@ -77,8 +76,6 @@ class ConfigParser
 	ConfigParser(const ConfigParser &src) = delete;
 	ConfigParser &operator=(const ConfigParser &rhs) = delete;
 
-	const std::string &
-	getGlobalSettings(const GlobalSettingOption setting) const;
 	const std::vector<ServerBlock> &getServerBlocks() const;
 };
 

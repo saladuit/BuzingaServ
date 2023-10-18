@@ -9,7 +9,6 @@
 // 2) parse headers --> map						done
 // 3) parse body --> ??							done (as string)
 
-// INCLUDE
 #include <iostream>
 #include <map>
 
@@ -39,37 +38,32 @@ class HTTPRequest
 	std::string _body;
 
   public:
-	// canonical form: constructors, operator and destructor
 	HTTPRequest();
-	HTTPRequest(const HTTPRequest &other);
-	HTTPRequest &operator=(const HTTPRequest &other);
+	HTTPRequest(const HTTPRequest &rhs);
+	HTTPRequest &operator=(const HTTPRequest &other) = delete;
 	~HTTPRequest();
 
-	// methodType methods
+	int get_content_length(std::string search_string);
 	void setMethodType(const std::string &requestLine);
 	HTTPMethod getMethodType(void) const;
 
-	// path methods
 	void setPath(const std::string &requestLine);
 	const std::string &getPath(void) const;
 
-	// version methods
 	void setVersion(const std::string &requestLine);
 	const std::string &getVersion(void) const;
 
-	// header methods
 	void setHeader(const std::string &headerLine);
 	std::string &getValue(const std::string &key);
 
-	// body methods
 	void setBody(const std::string &body);
 	const std::string &getBody(void) const;
 
-	// parser
 	void parse(void);
 
 	// public variables -- just for now
 	std::string _http_request_str;
+
 	// size_t try out
 	int _content_length;
 	int _content_length_cpy;
