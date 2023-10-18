@@ -20,12 +20,6 @@ ConfigParser::ConfigParser(const std::string &file_path)
 	logger.log(INFO, "ConfigParser: ");
 }
 
-const std::string &
-ConfigParser::getGlobalSettings(const GlobalSetting setting) const
-{
-	return (_global_settings.at(setting));
-}
-
 const std::vector<ServerBlock> &ConfigParser::getServerBlocks() const
 {
 	return (_server_blocks);
