@@ -8,7 +8,12 @@
 #include <Logger.hpp>
 #include <Socket.hpp>
 
-#include <sys/poll.h>
+enum class ClientState
+{
+	READ,
+	WRITE,
+	DONE,
+};
 
 class Client
 {
@@ -20,7 +25,7 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	void handleConnection(const pollfd &poll_fd);
+	ClientState handleConnection(short events);
 	int getFD(void) const;
 
   private:

@@ -1,5 +1,7 @@
 #include <Client.hpp>
 
+#include <sys/poll.h>
+
 Client::Client(const int &server_fd) : _socket(server_fd)
 {
 }
@@ -13,10 +15,22 @@ int Client::getFD(void) const
 	return (_socket.getFD());
 }
 
-void Client::handleConnection(const pollfd &poll_fd)
+ClientState Client::handleConnection(short events)
 {
-	(void)poll_fd;
-	/* Logger &logger = Logger::getInstance(); */
+	Logger &logger = Logger::getInstance();
+	(void)events;
+	logger.log(INFO, "Handling client connection on fd: " +
+						 std::to_string(_socket.getFD()));
+	if (events & POLLIN)
+	{
+		_request.receive(_socket.getFD());
+		return (ClientState::WRITE);
+	}
+	if (events & POLLOUT)
+	{
+		_response.send(_socket.getFD());
+		return (ClientState::DONE);
+	}
 	/* int32_t read_count = 0; */
 	/* const int buffer_size = 1; */
 	/* char buffer[buffer_size]; */
