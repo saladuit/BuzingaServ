@@ -4,13 +4,6 @@ Client::Client(const int &server_fd) : _socket(server_fd)
 {
 }
 
-Client::Client(const Client &other)
-	: _request(other._request), _response(other._response),
-	  _file_manager(other._file_manager), _cgi(other._cgi),
-	  _socket(other._socket)
-{
-}
-
 Client::~Client()
 {
 }

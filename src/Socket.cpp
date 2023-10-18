@@ -4,7 +4,6 @@
 
 #include <arpa/inet.h>
 #include <cassert>
-#include <sys/socket.h>
 #include <unistd.h>
 
 Socket::Socket(const int fd)
@@ -14,6 +13,7 @@ Socket::Socket(const int fd)
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "Accepting connection on fd: " + std::to_string(fd));
+	logger.log(DEBUG, "New _fd: " + std::to_string(_fd));
 	if (_fd == SYSTEM_ERROR)
 		throw SystemException("Accept");
 	char address[INET_ADDRSTRLEN];
@@ -40,7 +40,7 @@ Socket::~Socket()
 	close(_fd);
 }
 
-void Socket::_init_sockaddr_in(t_sockaddr_in &addr, const std::string &_port)
+void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
 {
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -55,7 +55,7 @@ void Socket::setupServer(const std::string &port)
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) ==
 		SYSTEM_ERROR)
 		throw SystemException("setsockopt failed");
-	_init_sockaddr_in(_addr, port);
+	initSockaddrIn(_addr, port);
 	if (bind(_fd, (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) == SYSTEM_ERROR)
 		throw SystemException("Bind");
 	if (listen(_fd, MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)

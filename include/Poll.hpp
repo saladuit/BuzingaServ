@@ -6,7 +6,6 @@
 #include <sys/poll.h>
 
 #include <algorithm>
-#include <ostream>
 #include <vector>
 
 #define NO_TIMEOUT (-1)

@@ -1,18 +1,13 @@
-#include "CGI.hpp"
-#include "Defines.hpp"
-#include "Logger.hpp"
-#include <cstring>
+#include <CGI.hpp>
+#include <Logger.hpp>
+#include <SystemException.hpp>
+
+#include <cassert>
 #include <fcntl.h>
-#include <stdio.h>
 #include <unistd.h>
 
 CGI::CGI()
 {
-}
-
-CGI::CGI(const CGI &src)
-{
-	(void)src;
 }
 
 CGI::~CGI()
@@ -24,52 +19,52 @@ void CGI::execute()
 	int infile = open("in.txt", O_RDONLY, 0666);
 	int outfile = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "launcging CGI");
 	int in[2];
 	int out[2];
 	pid_t pid;
 
-	if (pipe(in) == G_ERROR)
-		logger.log(ERROR, "pipe in error");
-	if (pipe(out) == G_ERROR)
-		logger.log(ERROR, "pipe out error");
+	logger.log(INFO, "launcging CGI");
+	if (pipe(in) == SYSTEM_ERROR)
+		throw SystemException("Pipe");
+	if (pipe(out) == SYSTEM_ERROR)
+		throw SystemException("Pipe");
 
 	pid = fork();
-	if (pid == G_ERROR)
-		logger.log(ERROR, "fork error");
+	if (pid == SYSTEM_ERROR)
+		throw SystemException("Fork");
 	else if (pid == 0)
 	{
-		if (close(in[WRITE_END]) == G_ERROR)
+		if (close(in[WRITE_END]) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "close in[WRITE_END] error" +
 								  std::string(strerror(errno)));
 			_exit(127);
 		}
-		if (close(out[READ_END]) == G_ERROR)
+		if (close(out[READ_END]) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "close out[READ_END] error" +
 								  std::string(strerror(errno)));
 			_exit(127);
 		}
-		if (dup2(in[READ_END], STDIN_FILENO) == G_ERROR)
+		if (dup2(in[READ_END], STDIN_FILENO) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "dup2 in[READ_END] error" +
 								  std::string(strerror(errno)));
 			_exit(127);
 		}
-		if (close(in[READ_END]) == G_ERROR)
+		if (close(in[READ_END]) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "close in[READ_END] error" +
 								  std::string(strerror(errno)));
 			_exit(127);
 		}
-		if (dup2(out[WRITE_END], STDOUT_FILENO) == G_ERROR)
+		if (dup2(out[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "dup2 out[WRITE_END] error" +
 								  std::string(strerror(errno)));
 			_exit(127);
 		}
-		if (close(out[WRITE_END]) == G_ERROR)
+		if (close(out[WRITE_END]) == SYSTEM_ERROR)
 		{
 			logger.log(ERROR, "close out[WRITE_END] error" +
 								  std::string(strerror(errno)));
@@ -84,8 +79,8 @@ void CGI::execute()
 		logger.log(ERROR, "execve error" + std::string(strerror(errno)));
 		_exit(127);
 	}
-	close(in[READ_END]);
-	close(out[WRITE_END]);
+	assert(close(in[READ_END]) && "close in[READ_END] error");
+	assert(close(out[WRITE_END]) && "close out[WRITE_END] error");
 
 	char buffer_out[1024];
 	char buffer_in[1024];
@@ -95,17 +90,17 @@ void CGI::execute()
 
 	read_bytes = read(infile, buffer_in, sizeof(buffer_in));
 	logger.log(INFO, "buffer_in: " + std::string(buffer_in));
-	if (write(in[WRITE_END], buffer_in, read_bytes) == G_ERROR)
+	if (write(in[WRITE_END], buffer_in, read_bytes) == SYSTEM_ERROR)
 		logger.log(ERROR, "write error" + std::string(strerror(errno)));
 
-	close(in[WRITE_END]);
+	assert(close(in[WRITE_END]) && "close in[WRITE_END] error");
 	if ((read_bytes = read(out[READ_END], buffer_out, sizeof(buffer_out))) ==
-		G_ERROR)
+		SYSTEM_ERROR)
 		logger.log(ERROR, "read error" + std::string(strerror(errno)));
 	logger.log(INFO, "buffer_out: " + std::string(buffer_out));
 	write(outfile, buffer_out, read_bytes);
 	close(out[READ_END]);
 
-	close(infile);
-	close(outfile);
+	assert(close(infile) && "close infile error");
+	assert(close(outfile) && "close outfile error");
 }
