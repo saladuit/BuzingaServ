@@ -11,7 +11,7 @@ HTTPServer::~HTTPServer()
 }
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
-	: _parser(config_file_path), _poll_fds(0)
+	: _parser(config_file_path), _poll()
 {
 	Logger &logger = Logger::getInstance();
 	try
@@ -24,7 +24,7 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 			std::shared_ptr<Server> server =
 				std::make_shared<Server>(server_block);
 			_active_servers.emplace(server->getFD(), server);
-			_poll_fds.emplace_back(pollfd{server->getFD(), POLLIN, 0});
+			_poll.addFD(server->getFD(), POLLIN);
 		}
 	}
 	catch (const std::exception &e)
@@ -34,24 +34,6 @@ HTTPServer::HTTPServer(const std::string &config_file_path)
 	}
 }
 
-void HTTPServer::logPollfd(const pollfd &fd) const
-{
-	Logger &logger = Logger::getInstance();
-	std::stringstream ss;
-	ss << "  fd: " << fd.fd
-	   << ", revents:" << ((fd.revents & POLLIN) ? " POLLIN" : "")
-	   << ((fd.revents & POLLOUT) ? " POLLOUT" : "")
-	   << ((fd.revents & POLLHUP) ? " POLLHUP" : "")
-	   << ((fd.revents & POLLNVAL) ? " POLLNVAL" : "")
-	   << ((fd.revents & POLLPRI) ? " POLLPRI" : "")
-	   << ((fd.revents & POLLRDBAND) ? " POLLRDBAND" : "")
-	   << ((fd.revents & POLLRDNORM) ? " POLLRDNORM" : "")
-	   << ((fd.revents & POLLWRBAND) ? " POLLWRBAND" : "")
-	   << ((fd.revents & POLLWRNORM) ? " POLLWRNORM" : "")
-	   << ((fd.revents & POLLERR) ? " POLLERR" : "") << std::endl;
-	logger.log(DEBUG, ss.str());
-}
-
 int HTTPServer::run()
 {
 	Logger &logger = Logger::getInstance();
@@ -59,30 +41,26 @@ int HTTPServer::run()
 	logger.log(INFO, "Server started");
 	while (true)
 	{
-		logger.log(INFO, "Polling % file descriptors", _poll_fds.size());
-		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
-		if (poll_count == SYSTEM_ERROR)
-			throw SystemException("poll");
-		if (poll_count == 0)
+		_poll.pollFDs();
+		for (auto &poll_fd : _poll.getFds())
 		{
-			logger.log(WARNING, "poll() timed out");
-			continue;
-		}
-		for (auto &pollfd : _poll_fds)
-		{
-			if (pollfd.revents == 0)
+			if (poll_fd.revents == 0)
 				continue;
-			logPollfd(pollfd);
-			if (_active_servers.find(pollfd.fd) != _active_servers.end())
+			logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
+								  " revents: " +
+								  _poll.pollEventsToString(poll_fd.revents));
+			if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			{
 				std::shared_ptr<Client> client =
-					std::make_shared<Client>(pollfd.fd);
+					std::make_shared<Client>(poll_fd.fd);
 				_active_clients.emplace(client->getFD(), client);
-				struct pollfd client_pollfd = {client->getFD(), POLLIN, 0};
-				_poll_fds.emplace_back(client_pollfd);
+				_poll.addFD(client->getFD(), POLLIN);
 			}
 			else
-				_active_clients.at(pollfd.fd)->handleConnection(pollfd);
+			{
+				_active_clients.at(poll_fd.fd)->handleConnection(poll_fd);
+				_poll.removeFD(poll_fd.fd);
+			}
 		}
 	}
 	return (EXIT_SUCCESS);

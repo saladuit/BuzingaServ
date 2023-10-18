@@ -20,7 +20,7 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	void handleConnection(pollfd &poll_fd);
+	void handleConnection(const pollfd &poll_fd);
 	int getFD(void) const;
 
   private:

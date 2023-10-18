@@ -125,6 +125,14 @@ const std::string &HTTPRequest::getBody(void) const
 	return (_body);
 }
 
+// call read on the fd for a specified byte_size
+// add these bytes to the _HTTPRequestString of the HTTPRequest class
+// check if everything of the http request has been read
+// 		reached /r/n/r/n
+//		optionally has read the body (POST request)
+// if so, call http parser, file_manager and response
+// if not, exit
+
 void HTTPRequest::parse(void)
 {
 	Logger &logger = Logger::getInstance();
