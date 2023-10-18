@@ -9,7 +9,7 @@
 #include <ostream>
 #include <vector>
 
-#define NO_TIMEOUT -1
+#define NO_TIMEOUT (-1)
 
 class Poll
 {
@@ -21,14 +21,13 @@ class Poll
 
 	void addFD(const int fd, const short events);
 	void removeFD(const int fd);
-	void setEvents(pollfd &pollfd, const short events);
+	void setEvents(const int fd, const short events);
 	void pollFDs(void);
 	const std::string pollEventsToString(const short events) const;
-	const std::vector<pollfd> &getFds(void) const;
+	const std::vector<pollfd> getFds(void) const;
 
   private:
 	std::vector<pollfd> _poll_fds;
-	void logPollfd(const pollfd &fd) const;
 };
 
 #endif

@@ -60,6 +60,7 @@ int HTTPServer::run()
 			{
 				_active_clients.at(poll_fd.fd)->handleConnection(poll_fd);
 				_poll.removeFD(poll_fd.fd);
+				_poll.setEvents(poll_fd.fd, POLLIN);
 			}
 		}
 	}

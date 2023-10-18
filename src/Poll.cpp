@@ -14,9 +14,13 @@ void Poll::addFD(const int fd, const short events)
 	_poll_fds.emplace_back(pollfd{fd, events, 0});
 }
 
-void Poll::setEvents(pollfd &pollfd, const short events)
+void Poll::setEvents(const int fd, const short events)
 {
-	pollfd.events = events;
+	auto it =
+		std::find(_poll_fds.begin(), _poll_fds.end(),
+				  [fd](const pollfd &poll_fd) { return (poll_fd.fd == fd); });
+	if (it != _poll_fds.end())
+		it->events = events;
 }
 
 void Poll::removeFD(const int fd)
@@ -27,7 +31,7 @@ void Poll::removeFD(const int fd)
 					_poll_fds.end());
 }
 
-const std::vector<pollfd> &Poll::getFds(void) const
+const std::vector<pollfd> Poll::getFds(void) const
 {
 	return (_poll_fds);
 }
