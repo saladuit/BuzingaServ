@@ -3,12 +3,8 @@
 
 #include <Client.hpp>
 #include <ConfigParser.hpp>
-#include <Defines.hpp>
 #include <Poll.hpp>
 #include <Server.hpp>
-
-#include <arpa/inet.h>
-#include <poll.h>
 
 #include <memory>
 #include <unordered_map>
@@ -22,7 +18,6 @@ class HTTPServer
 	HTTPServer &operator=(const HTTPServer &rhs) = delete;
 	~HTTPServer();
 
-	int setup(void);
 	int run(void);
 
   private:
@@ -30,6 +25,10 @@ class HTTPServer
 	Poll _poll;
 	std::unordered_map<int, std::shared_ptr<Server>> _active_servers;
 	std::unordered_map<int, std::shared_ptr<Client>> _active_clients;
+
+	void setupServers(void);
+	void handleActivePollFDs();
+	void handleNewConnection(int fd);
 };
 
 #endif

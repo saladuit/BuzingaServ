@@ -19,12 +19,12 @@ class Poll
 	Poll &operator=(const Poll &rhs) = delete;
 	~Poll();
 
-	void addFD(const int fd, const short events);
-	void removeFD(const int fd);
-	void setEvents(const int fd, const short events);
+	void addFD(int fd, short events);
+	void removeFD(int fd);
+	void setEvents(int fd, short events);
 	void pollFDs(void);
-	const std::string pollEventsToString(const short events) const;
-	const std::vector<pollfd> getFds(void) const;
+	std::string pollEventsToString(short events) const;
+	std::vector<pollfd> getFds(void) const;
 
   private:
 	std::vector<pollfd> _poll_fds;

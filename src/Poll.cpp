@@ -1,5 +1,6 @@
 #include <Logger.hpp>
 #include <Poll.hpp>
+#include <stdexcept>
 
 Poll::Poll() : _poll_fds()
 {
@@ -9,21 +10,21 @@ Poll::~Poll()
 {
 }
 
-void Poll::addFD(const int fd, const short events)
+void Poll::addFD(int fd, short events)
 {
 	_poll_fds.emplace_back(pollfd{fd, events, 0});
 }
 
-void Poll::setEvents(const int fd, const short events)
+void Poll::setEvents(int fd, short events)
 {
-	auto it =
-		std::find(_poll_fds.begin(), _poll_fds.end(),
-				  [fd](const pollfd &poll_fd) { return (poll_fd.fd == fd); });
+	auto it = std::find_if(_poll_fds.begin(), _poll_fds.end(),
+						   [fd](const pollfd &poll_fd)
+						   { return (poll_fd.fd == fd); });
 	if (it != _poll_fds.end())
 		it->events = events;
 }
 
-void Poll::removeFD(const int fd)
+void Poll::removeFD(int fd)
 {
 	_poll_fds.erase(std::remove_if(_poll_fds.begin(), _poll_fds.end(),
 								   [fd](const pollfd &poll_fd)
@@ -31,7 +32,7 @@ void Poll::removeFD(const int fd)
 					_poll_fds.end());
 }
 
-const std::vector<pollfd> Poll::getFds(void) const
+std::vector<pollfd> Poll::getFds(void) const
 {
 	return (_poll_fds);
 }
@@ -46,7 +47,7 @@ void Poll::pollFDs(void)
 		throw SystemException("poll");
 }
 
-const std::string Poll::pollEventsToString(const short events) const
+std::string Poll::pollEventsToString(short events) const
 {
 	std::string events_string;
 	if (events & POLLIN)

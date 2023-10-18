@@ -244,10 +244,7 @@ std::ifstream ConfigParser::openConfigFile(const std::string &file_path)
 	std::ifstream config_file(file_path);
 
 	if (!config_file.is_open())
-	{
-		logger.log(LogLevel::FATAL, "Could not open config file: " + file_path);
-		throw std::runtime_error("Config file could not be opened");
-	}
+		throw std::runtime_error("Could not open config file: " + file_path);
 
 	logger.log(LogLevel::INFO, "Opened config file: " + file_path);
 	return (config_file);
