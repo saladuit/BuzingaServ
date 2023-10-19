@@ -47,12 +47,16 @@ std::ostream &operator<<(std::ostream &os, Token &token)
 	{
 	case TokenType::SEMICOLON:
 		os << ";";
+		break;
 	case TokenType::OPEN_BRACKET:
 		os << "{";
+		break;
 	case TokenType::CLOSE_BRACKET:
 		os << "}";
+		break;
 	case TokenType::WORD:
 		os << "WORD";
+		break;
 	}
 	return (os);
 }
