@@ -8,19 +8,16 @@
 #include <Logger.hpp>
 #include <Socket.hpp>
 
-#include <sys/poll.h>
-
 class Client
 {
   public:
 	Client(const int &server_fd);
-
 	Client() = delete;
 	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	void handleConnection(const pollfd &poll_fd);
+	ClientState handleConnection(short events);
 	int getFD(void) const;
 
   private:

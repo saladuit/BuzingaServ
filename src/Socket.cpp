@@ -3,8 +3,9 @@
 #include <SystemException.hpp>
 
 #include <arpa/inet.h>
-#include <cassert>
 #include <unistd.h>
+
+#include <cassert>
 
 Socket::Socket(const int fd)
 	: _addr_len(sizeof(_addr)),
@@ -13,7 +14,6 @@ Socket::Socket(const int fd)
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "Accepting connection on fd: " + std::to_string(fd));
-	logger.log(DEBUG, "New _fd: " + std::to_string(_fd));
 	if (_fd == SYSTEM_ERROR)
 		throw SystemException("Accept");
 	char address[INET_ADDRSTRLEN];

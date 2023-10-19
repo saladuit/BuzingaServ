@@ -1,10 +1,8 @@
 #ifndef HTTP_RESPONSE_HPP
 #define HTTP_RESPONSE_HPP
 
+#include <ClientState.hpp>
 #include <HTTPRequest.hpp>
-#include <iostream>
-#include <map>
-#include <sstream>
 #include <string>
 
 // DEFINES
@@ -18,6 +16,7 @@ class HTTPResponse
 {
   private:
 	int _status_code;
+	ssize_t _bytes_sent;
 	std::string _response;
 
   public:
@@ -25,12 +24,10 @@ class HTTPResponse
 	~HTTPResponse();
 
 	HTTPResponse();
-	HTTPResponse(const HTTPResponse &other);
-	HTTPResponse &operator=(const HTTPResponse &other) = delete;
+	HTTPResponse(const HTTPResponse &other) = delete;
+	HTTPResponse &operator=(const HTTPResponse &rhs) = delete;
 
-	int getStatusCode(void) const;
-	std::string getHTTPResponse(void) const;
-	void createHTTPResponse();
+	ClientState send(int client_fd);
 };
 
 #endif
