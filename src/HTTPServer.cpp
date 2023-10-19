@@ -41,7 +41,7 @@ int HTTPServer::run()
 void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "Setting up server sockets");
+	logger.log(INFO, "Setting up Servers");
 	const std::vector<ServerBlock> &server_blocks = _parser.getServerBlocks();
 	for (const auto &server_block : server_blocks)
 	{
@@ -62,14 +62,9 @@ void HTTPServer::handleActivePollFDs()
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
-		{
 			handleNewConnection(poll_fd.fd);
-		}
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
-		{
-			_active_clients.at(poll_fd.fd)->handleConnection(poll_fd);
-			_poll.removeFD(poll_fd.fd);
-		}
+			handleExistingConnection(poll_fd);
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
@@ -80,4 +75,24 @@ void HTTPServer::handleNewConnection(int fd)
 	std::shared_ptr<Client> client = std::make_shared<Client>(fd);
 	_active_clients.emplace(client->getFD(), client);
 	_poll.addFD(client->getFD(), POLLIN);
+}
+
+void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
+{
+	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
+	{
+	case ClientState::Read:
+		_poll.setEvents(poll_fd.fd, POLLIN);
+		break;
+	case ClientState::Write:
+		_poll.setEvents(poll_fd.fd, POLLOUT);
+		break;
+	case ClientState::Done:
+		_poll.removeFD(poll_fd.fd);
+		_active_clients.erase(poll_fd.fd);
+		break;
+	default:
+		throw std::runtime_error(
+			"Unknown client state"); // TODO custom exception
+	}
 }
