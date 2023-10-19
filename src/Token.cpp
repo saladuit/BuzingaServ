@@ -38,6 +38,7 @@ std::string Token::typeToString() const
 	case TokenType::WORD:
 		return ("WORD");
 	}
+	return ("INCORRECT CONVERTION");
 }
 
 std::ostream &operator<<(std::ostream &os, Token &token)
