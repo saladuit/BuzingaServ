@@ -1,7 +1,7 @@
 
-#include "ServerSetting.hpp"
 #include <ConfigParser.hpp>
 #include <Logger.hpp>
+#include <ServerSettings.hpp>
 #include <Token.hpp>
 
 #include <filesystem>
@@ -22,7 +22,7 @@ ConfigParser::~ConfigParser()
 {
 }
 
-const std::vector<ServerSetting> &ConfigParser::getServerSettings()
+const std::vector<ServerSettings> &ConfigParser::getServerSettings()
 {
 	return (_server_settings);
 }

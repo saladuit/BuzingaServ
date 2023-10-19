@@ -15,17 +15,16 @@ enum class LocationSettingOption
 	CgiPass,
 };
 
-class LocationSetting
+class LocationSettings
 {
   public:
-	LocationSetting();
-	~LocationSetting();
-	LocationSetting(const LocationSetting &src) = delete;
-	LocationSetting &operator=(const LocationSetting &src) = delete;
+	LocationSettings();
+	~LocationSettings();
+	LocationSettings(const LocationSettings &src) = delete;
+	LocationSettings &operator=(const LocationSettings &src) = delete;
 
-	const std::string &
-	getLocationSetting(const LocationSettingOption setting) const;
-	void setLocationSetting(const LocationSettingOption key,
+	const std::string &getLocationSetting(LocationSettingOption setting) const;
+	void setLocationSetting(LocationSettingOption key,
 							const std::string &value);
 
   private:

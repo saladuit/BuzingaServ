@@ -1,8 +1,8 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
-#include <LocationSetting.hpp>
-#include <ServerSetting.hpp>
+#include <LocationSettings.hpp>
+#include <ServerSettings.hpp>
 #include <Tokenlist.hpp>
 
 #include <string>
@@ -14,7 +14,7 @@ class ConfigParser
   private:
 	const std::string _config_file_path;
 	Tokenlist _tokenlist;
-	std::vector<ServerSetting> _server_settings;
+	std::vector<ServerSettings> _server_settings;
 
 	std::stringstream OpenFile();
 
@@ -28,7 +28,7 @@ class ConfigParser
 
 	void ParseConfig();
 
-	const std::vector<ServerSetting> &getServerSettings();
+	const std::vector<ServerSettings> &getServerSettings();
 };
 
 #endif

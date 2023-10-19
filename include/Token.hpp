@@ -16,14 +16,15 @@ enum class TokenType
 class Token
 {
   public:
-	Token(const TokenType type, const std::string &string);
+	Token(TokenType type, const std::string &string);
 	~Token();
+	Token(const Token &rhs);
 	Token() = delete;
-	Token(const Token &src);
+	const Token &operator=(const Token &rhs) = delete;
 
 	TokenType getType() const;
 	const std::string &getString() const;
-	std::string showTokenType() const;
+	std::string typeToString() const;
 
   private:
 	const TokenType _type;

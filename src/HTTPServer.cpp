@@ -1,6 +1,6 @@
-#include "ServerSetting.hpp"
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <ServerSettings.hpp>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
@@ -43,7 +43,7 @@ void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Setting up server sockets");
-	const std::vector<ServerSetting> &server_settings =
+	const std::vector<ServerSettings> &server_settings =
 		_parser.getServerSettings(); // Comented to Compile and test ServerBlock
 									 // needs to chang to ServerSetting
 	for (const auto &server_block : server_settings)

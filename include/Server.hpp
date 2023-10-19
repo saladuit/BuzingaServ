@@ -7,9 +7,9 @@
 class Server
 {
   public:
-	Server(const ServerSetting &server_block);
+	Server(const ServerSettings &settings);
 	Server() = delete;
-	Server(const Server &src) = delete;
+	Server(const Server &rhs) = delete;
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
 	int getFD(void) const;

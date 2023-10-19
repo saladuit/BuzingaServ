@@ -15,7 +15,7 @@ Tokenlist::~Tokenlist()
 {
 }
 
-bool static SkipComments(std::stringstream &stream, std::string &str)
+bool SkipComments(std::stringstream &stream, std::string &str)
 {
 	size_t pos = str.find('#');
 	if (pos != std::string::npos)
@@ -27,7 +27,9 @@ bool static SkipComments(std::stringstream &stream, std::string &str)
 	return (str.empty());
 }
 
-TokenType static identifyToken(std::string str)
+// TODO: const std::vector<Token> &getTokens();
+
+TokenType identifyToken(std::string str)
 {
 	if (str == "}")
 		return (TokenType::CLOSE_BRACKET);
@@ -71,7 +73,7 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 			continue;
 		Token token(identifyToken(tmp), tmp);
 		logger.log(DEBUG, "\n\tToken:\t\t|" + token.getString() +
-							  "|\n\tTokenType:\t" + token.showTokenType());
+							  "|\n\tTokenType:\t" + token.typeToString());
 		_tokens.push_back(token);
 		/* std::vector<Token> list; */
 		/* list = splitStringToList(tmp); */

@@ -12,6 +12,11 @@ class Tokenlist
 	Tokenlist();
 	~Tokenlist();
 
+	Tokenlist(const Tokenlist &rhs) = delete;
+	const Tokenlist &operator=(const Tokenlist &rhs) = delete;
+
+	const std::vector<Token> &getTokens();
+
 	void tokenizeSstream(const std::stringstream sstream);
 
   private:

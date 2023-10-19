@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-Token::Token(const TokenType type, const std::string &string)
+Token::Token(TokenType type, const std::string &string)
 	: _type(type), _string(string)
 {
 }
@@ -25,7 +25,7 @@ TokenType Token::getType() const
 	return (_type);
 }
 
-std::string Token::showTokenType() const
+std::string Token::typeToString() const
 {
 	switch (_type)
 	{
@@ -41,22 +41,6 @@ std::string Token::showTokenType() const
 }
 
 std::ostream &operator<<(std::ostream &os, Token &token)
-{
-	switch (token.getType())
-	{
-	case TokenType::SEMICOLON:
-		os << ";";
-	case TokenType::OPEN_BRACKET:
-		os << "{";
-	case TokenType::CLOSE_BRACKET:
-		os << "}";
-	case TokenType::WORD:
-		os << "WORD";
-	}
-	return (os);
-}
-
-std::ostringstream &operator<<(std::ostringstream &os, const Token &token)
 {
 	switch (token.getType())
 	{
