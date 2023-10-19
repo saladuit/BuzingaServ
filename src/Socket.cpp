@@ -3,8 +3,9 @@
 #include <SystemException.hpp>
 
 #include <arpa/inet.h>
-#include <cassert>
 #include <unistd.h>
+
+#include <cassert>
 
 Socket::Socket(const int fd)
 	: _addr_len(sizeof(_addr)),

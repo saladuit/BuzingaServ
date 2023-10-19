@@ -41,7 +41,7 @@ int HTTPServer::run()
 void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "Setting up server sockets");
+	logger.log(INFO, "Setting up Servers");
 	const std::vector<ServerBlock> &server_blocks = _parser.getServerBlocks();
 	for (const auto &server_block : server_blocks)
 	{
