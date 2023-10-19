@@ -5,7 +5,6 @@
 #include <HTTPRequest.hpp>
 #include <string>
 
-// CLASS
 class HTTPResponse
 {
   private:
