@@ -20,6 +20,12 @@ FileManager::~FileManager()
 {
 }
 
+void FileManager::openFile(std::string &request_target)
+{
+	(void)request_target;
+	/* _requested_file.open(request_target); // TODO throw exception if fail */
+}
+
 // the following line is hard code, need to fix this with input of the config
 // file std::ifstream	file("data/" + filename);
 void FileManager::manageGet(const std::string &filename)

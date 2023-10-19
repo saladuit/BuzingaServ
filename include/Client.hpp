@@ -26,6 +26,7 @@ class Client
 	FileManager _file_manager;
 	CGI _cgi;
 	Socket _socket;
+	ClientState _state;
 };
 
 #endif

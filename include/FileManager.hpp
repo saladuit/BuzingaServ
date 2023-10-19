@@ -27,6 +27,7 @@ class FileManager
 	~FileManager();
 
 	// manage methods
+	void openFile(std::string &request_target);
 	void manage(HTTPMethod method, const std::string &filename,
 				const std::string &body);
 	void manageGet(const std::string &filename);

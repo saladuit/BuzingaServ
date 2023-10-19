@@ -81,10 +81,11 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 {
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
 	{
-	case ClientState::Read:
+	case ClientState::Receiving:
 		_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
-	case ClientState::Write:
+	case ClientState::Loading:
+	case ClientState::Sending:
 		_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
 	case ClientState::Done:

@@ -119,8 +119,8 @@ ClientState HTTPRequest::receive(int client_fd)
 	{
 		header_end = _http_request.substr(pos - 2, 4);
 		if (header_end == "\r\n\r\n")
-			return (ClientState::Write);
+			return (ClientState::Loading);
 		pos = parseHeaders(i);
 	}
-	return (ClientState::Read);
+	return (ClientState::Receiving);
 }

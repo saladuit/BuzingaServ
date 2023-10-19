@@ -21,8 +21,20 @@ ClientState Client::handleConnection(short events)
 	logger.log(INFO, "Handling client connection on fd: " +
 						 std::to_string(_socket.getFD()));
 	if (events & POLLIN)
-		return (_request.receive(_socket.getFD()));
-	if (events & POLLOUT)
-		return (_response.send(_socket.getFD()));
+	{
+		_state = _request.receive(_socket.getFD());
+		if (_state == ClientState::Loading)
+			/* _file_manager.openFile(_request.getRequestTarget()); */
+			return (_state);
+	}
+	if (events & POLLOUT && _state == ClientState::Loading)
+	{
+		/* _response.append(_file_manager.loadFile()); */
+	}
+	if (events & POLLOUT && _state == ClientState::Sending)
+	{
+		_state = _response.send(_socket.getFD());
+		return (_state);
+	}
 	return (ClientState::Unkown);
 }

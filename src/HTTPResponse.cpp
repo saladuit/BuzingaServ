@@ -25,3 +25,8 @@ ClientState HTTPResponse::send(int client_fd)
 							  std::to_string(client_fd));
 	return (ClientState::Done);
 }
+
+void HTTPResponse::openFile(std::string &request_target)
+{
+	_requested_file.open(request_target); // TODO throw exception if fail
+}
