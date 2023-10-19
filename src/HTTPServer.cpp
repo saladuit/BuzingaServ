@@ -81,15 +81,18 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 {
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
 	{
-	case ClientState::READ:
+	case ClientState::Read:
 		_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
-	case ClientState::WRITE:
+	case ClientState::Write:
 		_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
-	case ClientState::DONE:
+	case ClientState::Done:
 		_poll.removeFD(poll_fd.fd);
 		_active_clients.erase(poll_fd.fd);
 		break;
+	default:
+		throw std::runtime_error(
+			"Unknown client state"); // TODO custom exception
 	}
 }

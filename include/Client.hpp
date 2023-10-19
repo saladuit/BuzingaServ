@@ -8,13 +8,6 @@
 #include <Logger.hpp>
 #include <Socket.hpp>
 
-enum class ClientState
-{
-	READ,
-	WRITE,
-	DONE,
-};
-
 class Client
 {
   public:
