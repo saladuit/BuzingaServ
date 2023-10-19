@@ -1,3 +1,4 @@
+#include "ServerSetting.hpp"
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
 
@@ -42,8 +43,10 @@ void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Setting up server sockets");
-	const std::vector<ServerBlock> &server_blocks = _parser.getServerBlocks();
-	for (const auto &server_block : server_blocks)
+	const std::vector<ServerSetting> &server_settings =
+		_parser.getServerSettings(); // Comented to Compile and test ServerBlock
+									 // needs to chang to ServerSetting
+	for (const auto &server_block : server_settings)
 	{
 		std::shared_ptr<Server> server = std::make_shared<Server>(server_block);
 		_active_servers.emplace(server->getFD(), server);

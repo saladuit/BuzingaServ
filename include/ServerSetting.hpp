@@ -13,7 +13,6 @@ enum class ServerSettingOption
 	Host,
 	ServerName,
 	ClientMaxBodySize,
-	DefaultErrorPages,
 	ErrorPages,
 };
 
@@ -22,7 +21,7 @@ class ServerSetting
   public:
 	ServerSetting();
 	~ServerSetting();
-	ServerSetting(const ServerSetting &src);
+	ServerSetting(const ServerSetting &src) = delete;
 	ServerSetting &operator=(const ServerSetting &src) = delete;
 
 	const std::string &

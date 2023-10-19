@@ -3,9 +3,8 @@
 
 #include <LocationSetting.hpp>
 #include <ServerSetting.hpp>
-#include <Token.hpp>
+#include <Tokenlist.hpp>
 
-#include <fstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,11 +12,11 @@
 class ConfigParser
 {
   private:
-	const std::string &_config_file_path;
+	const std::string _config_file_path;
+	Tokenlist _tokenlist;
 	std::vector<ServerSetting> _server_settings;
 
-	std::ifstream OpenFile(const std::string &file_path);
-	std::vector<Token> TokenizeStream(const std::ifstream stream);
+	std::stringstream OpenFile();
 
   public:
 	ConfigParser(const std::string &file_path);
@@ -28,6 +27,8 @@ class ConfigParser
 	ConfigParser &operator=(const ConfigParser &src) = delete;
 
 	void ParseConfig();
+
+	const std::vector<ServerSetting> &getServerSettings();
 };
 
 #endif

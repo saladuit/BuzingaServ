@@ -7,7 +7,15 @@ Token::Token(const TokenType type, const std::string &string)
 {
 }
 
-const std::string Token::getString() const
+Token::~Token()
+{
+}
+
+Token::Token(const Token &src) : _type(src._type), _string(src._string)
+{
+}
+
+const std::string &Token::getString() const
 {
 	return (_string);
 }
@@ -15,6 +23,21 @@ const std::string Token::getString() const
 TokenType Token::getType() const
 {
 	return (_type);
+}
+
+std::string Token::showTokenType() const
+{
+	switch (_type)
+	{
+	case TokenType::SEMICOLON:
+		return ("SEMICOLON");
+	case TokenType::OPEN_BRACKET:
+		return ("OPEN_BRACKET");
+	case TokenType::CLOSE_BRACKET:
+		return ("CLOSE_BRACKET");
+	case TokenType::WORD:
+		return ("WORD");
+	}
 }
 
 std::ostream &operator<<(std::ostream &os, Token &token)
@@ -26,9 +49,9 @@ std::ostream &operator<<(std::ostream &os, Token &token)
 	case TokenType::OPEN_BRACKET:
 		os << "{";
 	case TokenType::CLOSE_BRACKET:
-		os << "{";
+		os << "}";
 	case TokenType::WORD:
-		os << "{";
+		os << "WORD";
 	}
 	return (os);
 }

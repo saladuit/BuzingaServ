@@ -14,12 +14,6 @@ ServerSetting::~ServerSetting()
 {
 }
 
-ServerSetting::ServerSetting(const ServerSetting &src)
-{
-	_server_setting = src._server_setting;
-	_location_settings = src._location_settings;
-}
-
 const std::string &
 ServerSetting::getServerSetting(const ServerSettingOption setting) const
 {

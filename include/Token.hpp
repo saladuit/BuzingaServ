@@ -2,6 +2,7 @@
 #define TOKEN_HPP
 
 #include <ostream>
+#include <sstream>
 #include <vector>
 
 enum class TokenType
@@ -18,10 +19,11 @@ class Token
 	Token(const TokenType type, const std::string &string);
 	~Token();
 	Token() = delete;
-	Token(const Token &Token) = delete;
+	Token(const Token &src);
 
 	TokenType getType() const;
-	const std::string getString() const;
+	const std::string &getString() const;
+	std::string showTokenType() const;
 
   private:
 	const TokenType _type;

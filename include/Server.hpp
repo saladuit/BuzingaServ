@@ -7,7 +7,7 @@
 class Server
 {
   public:
-	Server(const ServerBlock &server_block);
+	Server(const ServerSetting &server_block);
 	Server() = delete;
 	Server(const Server &src) = delete;
 	Server &operator=(const Server &rhs) = delete;
@@ -19,6 +19,7 @@ class Server
 	const std::string &_port;
 	const std::string &_server_name;
 	const std::string &_client_max_body_size;
+	const std::string &_error_pages;
 	Socket _socket;
 };
 

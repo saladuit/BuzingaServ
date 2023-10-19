@@ -1,12 +1,16 @@
+#include "ServerSetting.hpp"
 #include <Logger.hpp>
 #include <Server.hpp>
 
-Server::Server(const ServerBlock &server_block)
-	: _host(server_block.settings.at(ServerSetting::Host)),
-	  _port(server_block.settings.at(ServerSetting::Port)),
-	  _server_name(server_block.settings.at(ServerSetting::ServerName)),
-	  _client_max_body_size(
-		  server_block.settings.at(ServerSetting::ClientMaxBodySize)),
+Server::Server(const ServerSetting &server_setting)
+	: _host(server_setting.getServerSetting(ServerSettingOption::Host)),
+	  _port(server_setting.getServerSetting(ServerSettingOption::Port)),
+	  _server_name(
+		  server_setting.getServerSetting(ServerSettingOption::ServerName)),
+	  _client_max_body_size(server_setting.getServerSetting(
+		  ServerSettingOption::ClientMaxBodySize)),
+	  _error_pages(
+		  server_setting.getServerSetting(ServerSettingOption::ErrorPages)),
 	  _socket()
 {
 	Logger &logger = Logger::getInstance();

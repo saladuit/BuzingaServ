@@ -1,51 +1,47 @@
 
+#include "ServerSetting.hpp"
 #include <ConfigParser.hpp>
 #include <Logger.hpp>
 #include <Token.hpp>
 
 #include <filesystem>
-#include <fstream>
+#include <ios>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 ConfigParser::ConfigParser(const std::string &file_path)
-	: _config_file_path(file_path), _server_settings()
+	: _config_file_path(file_path), _tokenlist(), _server_settings()
+{
+	Logger &logger = Logger::getInstance();
+	logger.log(INFO, "ConfigParser Constructor called " + _config_file_path);
+}
+
+ConfigParser::~ConfigParser()
 {
 }
 
-bool static SkipComments(std::ifstream &stream, std::string &token)
+const std::vector<ServerSetting> &ConfigParser::getServerSettings()
 {
-	size_t pos = token.find('#');
-	if (pos != std::string::npos)
-	{
-		std::string filler;
-		token.erase(pos);
-		getline(stream, filler);
-		return (true);
-	}
-	return (false);
+	return (_server_settings);
 }
 
-std::ifstream ConfigParser::OpenFile(const std::string &file_path)
+std::stringstream ConfigParser::OpenFile()
 {
-	if (std::filesystem::is_character_file(file_path))
+	if (std::filesystem::is_character_file(_config_file_path))
 		throw std::runtime_error(
-			"OpenFile: given file_path is not a character_file: " + file_path);
+			"OpenFile: given file_path is not a character_file: " +
+			_config_file_path);
 
-	std::ifstream file_fd;
-	file_fd.open(file_path, std::ios_base::in);
-	if (!file_fd.is_open())
-		throw std::runtime_error("OpenFile: given file_path can't be opened");
+	std::ifstream file_stream(_config_file_path);
+	if (!file_stream.is_open())
+		throw std::runtime_error("OpenFile: given file_path can't be opened: " +
+								 _config_file_path);
+	std::stringstream str_stream;
+	str_stream << file_stream.rdbuf();
 
-	return (file_fd);
-}
-
-std::vector<Token> ConfigParser::TokenizeStream(const std::ifstream stream)
-{
-	std::vector<Token> tokens;
-
-	return (tokens);
+	return (str_stream);
 }
 
 void ConfigParser::ParseConfig()
@@ -53,8 +49,6 @@ void ConfigParser::ParseConfig()
 	Logger &logger = Logger::getInstance();
 
 	logger.log(INFO, "Parsing Config File");
-	std::ifstream infile_stream = OpenFile(_config_file_path);
-	logger.log(INFO, "file_path succesfully opened");
-
-	std::vector<Token> tokens = TokenizeStream(infile_stream);
+	_tokenlist.tokenizeSstream(OpenFile());
+	logger.log(INFO, "tokenlist succesfully made");
 }

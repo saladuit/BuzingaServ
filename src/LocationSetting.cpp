@@ -14,11 +14,6 @@ LocationSetting::~LocationSetting()
 {
 }
 
-LocationSetting::LocationSetting(const LocationSetting &src)
-{
-	_setting = src._setting;
-}
-
 const std::string &
 LocationSetting::getLocationSetting(const LocationSettingOption setting) const
 {

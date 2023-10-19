@@ -20,7 +20,7 @@ class LocationSetting
   public:
 	LocationSetting();
 	~LocationSetting();
-	LocationSetting(const LocationSetting &src);
+	LocationSetting(const LocationSetting &src) = delete;
 	LocationSetting &operator=(const LocationSetting &src) = delete;
 
 	const std::string &
