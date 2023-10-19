@@ -1,8 +1,8 @@
-#include "ServerSetting.hpp"
 #include <Logger.hpp>
 #include <Server.hpp>
+#include <ServerSettings.hpp>
 
-Server::Server(const ServerSetting &server_setting)
+Server::Server(const ServerSettings &server_setting)
 	: _host(server_setting.getServerSetting(ServerSettingOption::Host)),
 	  _port(server_setting.getServerSetting(ServerSettingOption::Port)),
 	  _server_name(
