@@ -1,23 +1,18 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <Client.hpp>
 #include <ConfigParser.hpp>
-#include <Defines.hpp>
 #include <Socket.hpp>
-
-#include <sys/poll.h>
-#include <unistd.h>
 
 class Server
 {
   public:
 	Server(const ServerBlock &server_block);
 	Server() = delete;
-	Server(const Server &src);
+	Server(const Server &src) = delete;
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
-	int getFD() const;
+	int getFD(void) const;
 
   private:
 	const std::string &_host;

@@ -15,7 +15,7 @@ class Socket
 	socklen_t _addr_len;
 	t_sockaddr_in _addr;
 	const int _fd;
-	void _init_sockaddr_in(t_sockaddr_in &addr, const std::string &_port);
+	void initSockaddrIn(t_sockaddr_in &addr, const std::string &_port);
 
   public:
 	Socket();

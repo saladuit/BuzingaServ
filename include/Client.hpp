@@ -16,11 +16,11 @@ class Client
 	Client(const int &server_fd);
 
 	Client() = delete;
-	Client(const Client &other);
+	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	void handleConnection(pollfd &poll_fd);
+	void handleConnection(const pollfd &poll_fd);
 	int getFD(void) const;
 
   private:
