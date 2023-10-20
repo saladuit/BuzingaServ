@@ -24,11 +24,6 @@ Socket::Socket(const int fd)
 				   " created client socket on fd: " + std::to_string(getFD()));
 }
 
-Socket::Socket(const Socket &other)
-	: _addr_len(other._addr_len), _addr(other._addr), _fd(other._fd)
-{
-}
-
 Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if (_fd == SYSTEM_ERROR)
