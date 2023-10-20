@@ -31,6 +31,4 @@ class Token
 	const std::string _string;
 };
 
-std::ostream &operator<<(std::ostream &os, Token &token);
-std::ostringstream &operator<<(std::ostringstream &os, const Token &token);
 #endif

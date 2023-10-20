@@ -40,19 +40,3 @@ std::string Token::typeToString() const
 	}
 	return ("INCORRECT CONVERTION");
 }
-
-const std::string operator+(std::string &lhs, const Token &rhs)
-{
-	switch (rhs.getType())
-	{
-	case TokenType::SEMICOLON:
-		return (lhs += ";");
-	case TokenType::OPEN_BRACKET:
-		return (lhs += "{");
-	case TokenType::CLOSE_BRACKET:
-		return (lhs += "}");
-	case TokenType::WORD:
-		return (lhs += rhs.getString());
-	}
-	return ("INCORRECT CONVERTION");
-}
