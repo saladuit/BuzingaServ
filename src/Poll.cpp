@@ -60,14 +60,6 @@ std::string Poll::pollEventsToString(short events) const
 		events_string += " POLLNVAL";
 	if (events & POLLPRI)
 		events_string += " POLLPRI";
-	if (events & POLLRDBAND)
-		events_string += " POLLRDBAND";
-	if (events & POLLRDNORM)
-		events_string += " POLLRDNORM";
-	if (events & POLLWRBAND)
-		events_string += " POLLWRBAND";
-	if (events & POLLWRNORM)
-		events_string += " POLLWRNORM";
 	if (events & POLLERR)
 		events_string += " POLLERR";
 	return (events_string);
