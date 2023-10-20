@@ -14,8 +14,6 @@
 ConfigParser::ConfigParser(const std::string &file_path)
 	: _config_file_path(file_path), _tokenlist(), _server_settings()
 {
-	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "ConfigParser Constructor called " + _config_file_path);
 }
 
 ConfigParser::~ConfigParser()
@@ -48,7 +46,11 @@ void ConfigParser::ParseConfig()
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(INFO, "Parsing Config File");
 	_tokenlist.tokenizeSstream(OpenFile());
-	logger.log(INFO, "tokenlist succesfully made");
+	logger.log(INFO, "Tokenlist succesfully made");
+
+	for (auto &it : _tokenlist.getTokens())
+	{
+		_server_settings.addServerSettings(it);
+	}
 }

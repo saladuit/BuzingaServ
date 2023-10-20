@@ -1,6 +1,7 @@
 
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
+#include <Token.hpp>
 
 #include <string>
 #include <unordered_map>
