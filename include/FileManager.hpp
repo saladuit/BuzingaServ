@@ -1,18 +1,9 @@
 #ifndef FILE_MANAGER_HPP
 #define FILE_MANAGER_HPP
 
-// INCLUDES
 #include <HTTPRequest.hpp>
 #include <string>
 
-// // ENUM
-// enum class HTTPMethod {
-// 	GET,
-// 	POST,
-// 	DELETE,
-// };
-
-// CLASS
 class FileManager
 {
   private:
