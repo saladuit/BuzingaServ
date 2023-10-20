@@ -19,11 +19,21 @@ class Poll
 	~Poll();
 
 	void addFD(int fd, short events);
+	void pollFDs(void);
 	void removeFD(int fd);
 	void setEvents(int fd, short events);
-	void pollFDs(void);
+	void checkREvents(short revents) const;
+
 	std::string pollEventsToString(short events) const;
 	std::vector<pollfd> getFds(void) const;
+
+	class PollException : public std::runtime_error
+	{
+	  public:
+		PollException(const std::string &message) : std::runtime_error(message)
+		{
+		}
+	};
 
   private:
 	std::vector<pollfd> _poll_fds;
