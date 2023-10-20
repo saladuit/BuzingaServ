@@ -27,7 +27,10 @@ bool SkipComments(std::stringstream &stream, std::string &str)
 	return (str.empty());
 }
 
-// TODO:const std::vector<Token> &getTokens()
+const std::vector<Token> &Tokenlist::getTokens()
+{
+	return (_tokens);
+}
 
 TokenType identifyToken(std::string str)
 {
@@ -41,33 +44,21 @@ TokenType identifyToken(std::string str)
 		return (TokenType::WORD);
 }
 
-std::string breakString(const size_t pos, std::string &input)
-{
-	std::string token;
-	if (pos != 0)
-	{
-		token = input.substr(0, pos);
-		input = input.substr(pos);
-	}
-	else
-	{
-		token = input.substr(0, 1);
-		input = input.substr(1);
-	}
-	return (token);
-}
-
-#define CHAR_SET "{};"
+#ifndef TOKENLIST_SPECIAL_CHAR
+#define TOKENLIST_SPECIAL_CHAR "{};"
+#endif
 
 void Tokenlist::splitString(std::string input)
 {
-	size_t pos = input.find_first_of(CHAR_SET);
+	size_t pos = input.find_first_of(TOKENLIST_SPECIAL_CHAR);
 
 	while (pos != std::string::npos)
 	{
-		std::string item = breakString(pos, input);
-		_tokens.emplace_back(Token(identifyToken(item), item));
-		pos = input.find_first_of(CHAR_SET);
+		std::string token;
+		token = input.substr(0, (pos != 0 ? pos : 1));
+		input = input.substr(pos != 0 ? pos : 1);
+		_tokens.emplace_back(Token(identifyToken(token), token));
+		pos = input.find_first_of(TOKENLIST_SPECIAL_CHAR);
 	}
 }
 
@@ -81,10 +72,11 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 	{
 		if (SkipComments(sstream, tmp))
 			continue;
-		if (tmp.find_first_of(CHAR_SET) != std::string::npos)
+		if (tmp.find_first_of(TOKENLIST_SPECIAL_CHAR) != std::string::npos)
 			splitString(tmp);
 		else
 			_tokens.emplace_back(Token(identifyToken(tmp), tmp));
 	}
-	logger.log(DEBUG, "Tokenlist succesfully made");
+	for (auto &token : _tokens)
+		logger.log(DEBUG, "TOKEN: " + token.getString());
 }
