@@ -11,6 +11,11 @@ ServerSettings::ServerSettings() : _server_setting(), _location_settings()
 {
 }
 
+ServerSettings::ServerSettings(Token &token)
+	: _server_setting(), _location_settings()
+{
+}
+
 ServerSettings::~ServerSettings()
 {
 }

@@ -2,6 +2,7 @@
 #define SERVERSETTING_HPP
 
 #include <LocationSettings.hpp>
+#include <Token.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -20,6 +21,7 @@ class ServerSettings
 {
   public:
 	ServerSettings();
+	ServerSettings(Token &token);
 	~ServerSettings();
 	ServerSettings(const ServerSettings &src) = delete;
 	ServerSettings &operator=(const ServerSettings &src) = delete;
