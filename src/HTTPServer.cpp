@@ -1,11 +1,12 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <stdexcept>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
 {
 }
-catch (const std::exception &e)
+catch (const std::runtime_error &e)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(FATAL, e.what());
@@ -26,11 +27,10 @@ int HTTPServer::run()
 		logger.log(INFO, "Server started");
 		while (true)
 		{
-			_poll.pollFDs();
 			handleActivePollFDs();
 		}
 	}
-	catch (const std::exception &e)
+	catch (const std::runtime_error &e)
 	{
 		logger.log(FATAL, e.what());
 		return (EXIT_FAILURE);
