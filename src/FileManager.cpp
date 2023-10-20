@@ -30,7 +30,7 @@ void FileManager::manageGet(const std::string &filename)
 	logger.log(DEBUG, "manageGet method is called");
 	logger.log(DEBUG, "filename: data/" + filename);
 
-	if (fs::exists("data/" + filename))
+	if (std::filesystem::exists("data/" + filename))
 	{
 		if (!file.is_open())
 		{

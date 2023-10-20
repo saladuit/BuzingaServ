@@ -17,7 +17,8 @@ void HTTPResponse::composeStartLine(int status, const std::string &file_content)
 {
 	const std::string start_line("HTTP/1.1 " + std::to_string(status) +
 								 " OK\r\n\r\n");
-	_response = start_line + file_content;
+	_response.append(start_line);
+	_response.append(file_content);
 }
 
 ClientState HTTPResponse::send(int client_fd)
