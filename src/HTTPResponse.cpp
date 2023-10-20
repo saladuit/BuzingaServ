@@ -26,6 +26,7 @@ ClientState HTTPResponse::send(int client_fd)
 	Logger &logger = Logger::getInstance();
 	ssize_t bytes_to_send;
 	ssize_t w_size;
+
 	logger.log(INFO, "Sending response to client on fd: " +
 						 std::to_string(client_fd));
 	logger.log(DEBUG, "response: " + _response);
