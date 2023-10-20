@@ -41,22 +41,18 @@ std::string Token::typeToString() const
 	return ("INCORRECT CONVERTION");
 }
 
-std::ostream &operator<<(std::ostream &os, Token &token)
+const std::string operator+(std::string &lhs, const Token &rhs)
 {
-	switch (token.getType())
+	switch (rhs.getType())
 	{
 	case TokenType::SEMICOLON:
-		os << ";";
-		break;
+		return (lhs += ";");
 	case TokenType::OPEN_BRACKET:
-		os << "{";
-		break;
+		return (lhs += "{");
 	case TokenType::CLOSE_BRACKET:
-		os << "}";
-		break;
+		return (lhs += "}");
 	case TokenType::WORD:
-		os << "WORD";
-		break;
+		return (lhs += rhs.getString());
 	}
-	return (os);
+	return ("INCORRECT CONVERTION");
 }

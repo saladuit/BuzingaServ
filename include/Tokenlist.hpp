@@ -21,6 +21,8 @@ class Tokenlist
 
   private:
 	std::vector<Token> _tokens;
+
+	void splitString(std::string input);
 };
 
 #endif // !TOKENIZE_HPP

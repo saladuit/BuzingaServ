@@ -27,7 +27,7 @@ bool SkipComments(std::stringstream &stream, std::string &str)
 	return (str.empty());
 }
 
-// TODO: const std::vector<Token> &getTokens();
+// TODO:const std::vector<Token> &getTokens()
 
 TokenType identifyToken(std::string str)
 {
@@ -41,24 +41,36 @@ TokenType identifyToken(std::string str)
 		return (TokenType::WORD);
 }
 
-std::vector<Token> splitStringToList(std::string input)
+std::string breakString(const size_t pos, std::string &input)
+{
+	std::string token;
+	if (pos != 0)
+	{
+		token = input.substr(0, pos);
+		input = input.substr(pos);
+	}
+	else
+	{
+		token = input.substr(0, 1);
+		input = input.substr(1);
+	}
+	return (token);
+}
+
+#define CHAR_SET ";"
+
+void Tokenlist::splitString(std::string input)
 {
 	Logger &logger = Logger::getInstance();
-	std::vector<Token> list;
-	size_t pos = input.find_first_of("{};");
+	size_t pos = input.find_first_of(CHAR_SET);
 
 	while (pos != std::string::npos)
 	{
-
-		std::string item(input.substr(0, pos));
-		logger.log(DEBUG, "input: " + input);
+		std::string item = breakString(pos, input);
 		logger.log(DEBUG, "item: " + item);
-		logger.log(DEBUG, "pos: " + std::to_string(pos));
-		input.substr(pos);
-		list.push_back(Token(identifyToken(item), item));
-		pos = input.find_first_of("{};");
+		_tokens.emplace_back(Token(identifyToken(item), item));
+		pos = input.find_first_of(CHAR_SET);
 	}
-	return (list);
 }
 
 void Tokenlist::tokenizeSstream(std::stringstream sstream)
@@ -71,13 +83,15 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 	{
 		if (SkipComments(sstream, tmp))
 			continue;
-		Token token(identifyToken(tmp), tmp);
-		logger.log(DEBUG, "\n\tToken:\t\t|" + token.getString() +
-							  "|\n\tTokenType:\t" + token.typeToString());
-		_tokens.push_back(token);
-		/* std::vector<Token> list; */
-		/* list = splitStringToList(tmp); */
-		/* for (auto &item : list) */
-		/* 	_tokens.push_back(item); */
+		logger.log(DEBUG, "Token: " + tmp);
+		if (tmp.find_first_of(CHAR_SET) != std::string::npos)
+			splitString(tmp);
+		else
+			_tokens.emplace_back(Token(identifyToken(tmp), tmp));
 	}
+
+	logger.log(DEBUG, "PRINTING LIST OF TOKENS");
+
+	for (auto &token : _tokens)
+		logger.log(DEBUG, "Tokens: " + token.getString());
 }

@@ -28,7 +28,7 @@ class Token
 
   private:
 	const TokenType _type;
-	const std::string &_string;
+	const std::string _string;
 };
 
 std::ostream &operator<<(std::ostream &os, Token &token);

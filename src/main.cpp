@@ -1,6 +1,7 @@
-#include "ConfigParser.hpp"
+#include <ConfigParser.hpp>
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <stdexcept>
 
 int main(int argc, char **argv)
 {
@@ -13,8 +14,21 @@ int main(int argc, char **argv)
 		logger.log(LogLevel::ERROR, "Usage: " + program_name + "[config_path]");
 		return (EXIT_FAILURE);
 	}
-	HTTPServer server(argc == 2 ? argv[1] : "config/default.conf");
-	return (server.run());
+	ConfigParser configtest("config/simple.conf");
+	try
+	{
+		configtest.ParseConfig();
+	}
+	catch (const std::runtime_error &e)
+	{
+		Logger &logger = Logger::getInstance();
+		logger.log(FATAL, e.what());
+		exit(EXIT_FAILURE);
+	}
+
+	return (0);
+	/* HTTPServer server(argc == 2 ? argv[1] : "config/default.conf"); */
+	/* return (server.run()); */
 }
 
 // //#define REQUEST "GET /index HTTP/1.1 balllen \r\nHost:
