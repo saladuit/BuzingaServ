@@ -15,19 +15,7 @@ Tokenlist::~Tokenlist()
 {
 }
 
-bool SkipComments(std::stringstream &stream, std::string &str)
-{
-	size_t pos = str.find('#');
-	if (pos != std::string::npos)
-	{
-		std::string filler;
-		str.erase(pos);
-		getline(stream, filler);
-	}
-	return (str.empty());
-}
-
-const std::vector<Token> &Tokenlist::getTokens()
+std::vector<Token> &Tokenlist::getTokens()
 {
 	return (_tokens);
 }
@@ -47,6 +35,18 @@ TokenType identifyToken(std::string str)
 #ifndef TOKENLIST_SPECIAL_CHAR
 #define TOKENLIST_SPECIAL_CHAR "{};"
 #endif
+
+bool SkipComments(std::stringstream &stream, std::string &str)
+{
+	size_t pos = str.find('#');
+	if (pos != std::string::npos)
+	{
+		std::string filler;
+		str.erase(pos);
+		getline(stream, filler);
+	}
+	return (str.empty());
+}
 
 void Tokenlist::splitString(std::string input)
 {

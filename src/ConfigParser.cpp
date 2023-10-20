@@ -49,8 +49,9 @@ void ConfigParser::ParseConfig()
 	_tokenlist.tokenizeSstream(OpenFile());
 	logger.log(INFO, "Tokenlist succesfully made");
 
-	for (auto &it : _tokenlist.getTokens())
+	for (std::vector<Token>::iterator it = _tokenlist.getTokens().begin();
+		 it != _tokenlist.getTokens().end(); it++)
 	{
-		_server_settings.addServerSettings(it);
+		_server_settings.emplace_back(ServerSettings(it));
 	}
 }
