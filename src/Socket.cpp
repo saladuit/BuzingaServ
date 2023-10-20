@@ -32,7 +32,7 @@ Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
 
 Socket::~Socket()
 {
-	close(_fd);
+	assert(close(_fd) != SYSTEM_ERROR);
 }
 
 void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
