@@ -64,3 +64,15 @@ std::string Poll::pollEventsToString(short events) const
 		events_string += " POLLERR";
 	return (events_string);
 }
+
+void Poll::checkREvents(short revents) const
+{
+	if (revents & POLLHUP)
+		throw PollException("Poll wasn't closed properly");
+	if (revents & POLLNVAL)
+		throw PollException("Invalid file descriptor");
+	if (revents & POLLERR)
+		throw PollException("Error occurred on file descriptor");
+	if (revents & POLLPRI)
+		throw PollException("Exceptional condition on file descriptor");
+}

@@ -57,20 +57,12 @@ void HTTPServer::handleActivePollFDs()
 	_poll.pollFDs();
 	for (const auto &poll_fd : _poll.getFds())
 	{
+		if (poll_fd.revents == 0)
+			continue;
+		_poll.checkREvents(poll_fd.revents);
 		logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
-		if (poll_fd.revents == POLLHUP)
-			throw std::runtime_error("Poll wasn't closed properly");
-		if (poll_fd.revents == POLLNVAL)
-			throw std::runtime_error("Invalid file descriptor");
-		if (poll_fd.revents == POLLERR)
-			throw std::runtime_error("Error occurred on file descriptor");
-		if (poll_fd.revents == POLLPRI)
-			throw std::runtime_error(
-				"Exceptional condition on file descriptor");
-		if (poll_fd.revents == 0)
-			continue;
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(poll_fd.fd);
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
