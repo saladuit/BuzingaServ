@@ -5,14 +5,7 @@
 #include <iostream>
 #include <string>
 
-namespace fs = std::filesystem;
-
 FileManager::FileManager() : _status_code(0)
-{
-}
-
-FileManager::FileManager(const FileManager &rhs)
-	: _status_code(rhs._status_code), _content(rhs._content)
 {
 }
 

@@ -13,7 +13,7 @@ class FileManager
   public:
 	// canonical form: constructors, operator and destructor
 	FileManager();
-	FileManager(const FileManager &other);
+	FileManager(const FileManager &other) = delete;
 	void operator=(const FileManager &other) = delete;
 	~FileManager();
 
