@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 		logger.log(LogLevel::ERROR, "Usage: " + program_name + "[config_path]");
 		return (EXIT_FAILURE);
 	}
-	ConfigParser configtest("config/simple.conf");
+	ConfigParser configtest("config/default.conf");
 	try
 	{
 		configtest.ParseConfig();

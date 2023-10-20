@@ -57,17 +57,15 @@ std::string breakString(const size_t pos, std::string &input)
 	return (token);
 }
 
-#define CHAR_SET ";"
+#define CHAR_SET "{};"
 
 void Tokenlist::splitString(std::string input)
 {
-	Logger &logger = Logger::getInstance();
 	size_t pos = input.find_first_of(CHAR_SET);
 
 	while (pos != std::string::npos)
 	{
 		std::string item = breakString(pos, input);
-		logger.log(DEBUG, "item: " + item);
 		_tokens.emplace_back(Token(identifyToken(item), item));
 		pos = input.find_first_of(CHAR_SET);
 	}
@@ -83,15 +81,10 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 	{
 		if (SkipComments(sstream, tmp))
 			continue;
-		logger.log(DEBUG, "Token: " + tmp);
 		if (tmp.find_first_of(CHAR_SET) != std::string::npos)
 			splitString(tmp);
 		else
 			_tokens.emplace_back(Token(identifyToken(tmp), tmp));
 	}
-
-	logger.log(DEBUG, "PRINTING LIST OF TOKENS");
-
-	for (auto &token : _tokens)
-		logger.log(DEBUG, "Tokens: " + token.getString());
+	logger.log(DEBUG, "Tokenlist succesfully made");
 }
