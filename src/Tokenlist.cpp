@@ -3,6 +3,7 @@
 #include <Token.hpp>
 #include <Tokenlist.hpp>
 
+#include <cctype>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -35,6 +36,12 @@ TokenType identifyToken(std::string str)
 #ifndef TOKENLIST_SPECIAL_CHAR
 #define TOKENLIST_SPECIAL_CHAR "{};"
 #endif
+
+void stringToLower(std::string &str)
+{
+	for (size_t i = 0; i != str.size(); i++)
+		str.at(i) = std::tolower(str.at(i));
+}
 
 bool SkipComments(std::stringstream &stream, std::string &str)
 {
@@ -72,6 +79,9 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 	{
 		if (SkipComments(sstream, tmp))
 			continue;
+		//		stringToLower(tmp); // Might be usefull to have. BUT we a PATH
+		//is case sensitive so we'd have to do this in the syntax checker and it
+		// should exclude PATHs
 		if (tmp.find_first_of(TOKENLIST_SPECIAL_CHAR) != std::string::npos)
 			splitString(tmp);
 		else
