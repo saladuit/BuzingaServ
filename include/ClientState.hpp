@@ -7,6 +7,7 @@ enum class ClientState
 	Loading,
 	Sending,
 	Done,
+	Error,
 	Unkown,
 };
 

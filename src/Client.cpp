@@ -1,3 +1,5 @@
+#include "ClientException.hpp"
+#include "HTTPStatus.hpp"
 #include <Client.hpp>
 
 #include <sys/poll.h>
@@ -20,21 +22,25 @@ ClientState Client::handleConnection(short events)
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Handling client connection on fd: " +
 						 std::to_string(_socket.getFD()));
-	if (events & POLLIN)
+	try
 	{
-		_state = _request.receive(_socket.getFD());
-		if (_state == ClientState::Loading)
-			/* _file_manager.openFile(_request.getRequestTarget()); */
-			return (_state);
+		if (events & POLLIN)
+			return (_request.receive(_socket.getFD()));
+		else if (events & POLLOUT && _state == ClientState::Loading)
+		{
+			/* _response.append(_file_manager.loadFile()); */
+		}
+		else if (events & POLLOUT && _state == ClientState::Error)
+			_response.append(_file_manager.loadErrorPage());
+		else if (events & POLLOUT && _state == ClientState::Sending)
+			return (_response.send(_socket.getFD()));
 	}
-	if (events & POLLOUT && _state == ClientState::Loading)
+	catch (ClientException &e)
 	{
-		/* _response.append(_file_manager.loadFile()); */
-	}
-	if (events & POLLOUT && _state == ClientState::Sending)
-	{
-		_state = _response.send(_socket.getFD());
-		return (_state);
+		// TODO: Add clear function
+		_response.append(e.what()); // TODO: Error pages
+		_file_manager.openErrorPage(e.getStatusCode());
+		_state = ClientState::Error;
 	}
 	return (ClientState::Unkown);
 }

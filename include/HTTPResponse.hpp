@@ -11,7 +11,6 @@ class HTTPResponse
   private:
 	ssize_t _bytes_sent;
 	std::string _response;
-	std::ifstream _requested_file;
 
   public:
 	HTTPResponse();
@@ -20,7 +19,7 @@ class HTTPResponse
 	~HTTPResponse();
 
 	ClientState send(int client_fd);
-	void composeStartLine(int status, const std::string &file_content);
+	void append(const std::string &content);
 };
 
 #endif
