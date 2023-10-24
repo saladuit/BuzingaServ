@@ -8,7 +8,7 @@
 
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _methodType(HTTPMethod::UNKNOWN), _http_request(),
-	  _headers()
+	  _body(), _headers()
 {
 }
 
@@ -61,6 +61,11 @@ void HTTPRequest::setHTTPVersion(const std::string &http_version)
 const std::string &HTTPRequest::getHTTPVersion(void) const
 {
 	return (_http_version);
+}
+
+const std::string &HTTPRequest::getBody(void) const
+{
+	return (_body);
 }
 
 size_t HTTPRequest::parseStartLine(size_t &i)

@@ -28,12 +28,15 @@ ClientState Client::handleConnection(short events)
 			return (_request.receive(_socket.getFD()));
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			/* _response.append(_file_manager.loadFile()); */
+			_file_manager.manage(_request.getMethodType(),
+								 _request.getRequestTarget(),
+								 _request.getBody());
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)
-			_response.append(_file_manager.loadErrorPage());
+			_file_manager.loadErrorPage();
 		else if (events & POLLOUT && _state == ClientState::Sending)
-			return (_response.send(_socket.getFD()));
+			return (
+				_response.send(_socket.getFD(), _file_manager.getResponse()));
 	}
 	catch (ClientException &e)
 	{
