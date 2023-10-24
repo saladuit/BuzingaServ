@@ -5,6 +5,7 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
+#include <array>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -85,4 +86,54 @@ void ServerSettings::setServerSetting(ServerSettingOption key,
 	std::vector<std::string> &vect =
 		_server_setting.at(key); // TODO: add to back of vector
 	vect.emplace_back(value);
+}
+
+// THIS IS PRINTING FUNCTION
+
+const std::string printServerSettingKey(ServerSettingOption Key)
+{
+	switch (Key)
+	{
+	case (ServerSettingOption::Port):
+		return ("Port");
+	case (ServerSettingOption::Host):
+		return ("Host");
+	case (ServerSettingOption::ServerName):
+		return ("ServerName");
+	case (ServerSettingOption::ClientMaxBodySize):
+		return ("ClientMaxBodySize");
+	case (ServerSettingOption::ErrorPages):
+		return ("ErrorPages");
+	case (ServerSettingOption::Location):
+		return ("Location");
+	default:
+		return ("OUT OF BOUND KEY");
+	}
+}
+const std::string
+ServerSettings::printServerSettingValue(ServerSettingOption Key) const
+{
+	std::string ret;
+
+	for (const std::string &it : getServerSetting(Key))
+		ret += it + " ";
+	return (ret);
+}
+
+void ServerSettings::printServerSettings() const
+{
+	Logger &logger = Logger::getInstance();
+
+	std::array<ServerSettingOption, 7> num = {
+		ServerSettingOption::Port,		 ServerSettingOption::Host,
+		ServerSettingOption::ServerName, ServerSettingOption::ClientMaxBodySize,
+		ServerSettingOption::ErrorPages, ServerSettingOption::Location,
+	};
+
+	for (const ServerSettingOption &option : num)
+		logger.log(DEBUG, printServerSettingKey(option) + " : " +
+							  printServerSettingValue(option));
+
+	for (const LocationSettings &loc : _location_settings)
+		loc.printLocationSettings();
 }

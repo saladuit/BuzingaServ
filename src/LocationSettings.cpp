@@ -76,3 +76,10 @@ void LocationSettings::setLocationSetting(LocationSettingOption key,
 	std::vector<std::string> &vect = _setting.at(key);
 	vect.emplace_back(value);
 }
+
+// THIS IS PRINTING FUNCTION
+
+// TODO: make this function
+void LocationSettings::printLocationSettings() const
+{
+}

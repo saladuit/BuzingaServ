@@ -35,6 +35,8 @@ class LocationSettings
 
 	LocationSettingOption identifyLocationSetting(const std::string token);
 
+	void printLocationSettings() const;
+
   private:
 	std::unordered_map<LocationSettingOption, std::vector<std::string>>
 		_setting;
