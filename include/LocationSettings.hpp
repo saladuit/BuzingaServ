@@ -15,6 +15,7 @@ enum class LocationSettingOption
 	DirectoryListing,
 	AllowMethods,
 	CgiPass,
+	Count,
 };
 
 class LocationSettings
@@ -22,14 +23,14 @@ class LocationSettings
   public:
 	LocationSettings();
 	~LocationSettings();
-	LocationSettings(std::vector<Token>::iterator token);
+	LocationSettings(std::vector<Token>::iterator &token);
 	LocationSettings(const LocationSettings &rhs);
 	LocationSettings &operator=(const LocationSettings &rhs) = delete;
 
 	const std::vector<std::string> &
-	getLocationSetting(LocationSettingOption setting) const;
-	void setLocationSetting(LocationSettingOption key,
-							const std::string &value);
+	getValues(LocationSettingOption setting) const;
+	void addValue(LocationSettingOption key, const std::string &value);
+
 	const std::string getPath() const;
 	void setPath(std::string path);
 
@@ -41,5 +42,8 @@ class LocationSettings
 	std::unordered_map<LocationSettingOption, std::vector<std::string>>
 		_setting;
 	std::string _path;
+
+	const std::string
+	printLocationSettingValue(LocationSettingOption Key) const;
 };
 #endif // !LOCATIONSETTING_HPP

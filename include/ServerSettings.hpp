@@ -16,6 +16,7 @@ enum class ServerSettingOption
 	ClientMaxBodySize,
 	ErrorPages,
 	Location,
+	Count,
 };
 
 class ServerSettings
@@ -27,9 +28,8 @@ class ServerSettings
 	ServerSettings(const ServerSettings &rhs);
 	ServerSettings &operator=(const ServerSettings &rhs) = delete;
 
-	const std::vector<std::string> &
-	getServerSetting(ServerSettingOption setting) const;
-	void setServerSetting(ServerSettingOption key, const std::string &value);
+	const std::string &getValue(ServerSettingOption setting) const;
+	void setValue(ServerSettingOption key, const std::string &value);
 
 	ServerSettingOption identifyServerSetting(std::string token_string);
 	// TODO: void addLocationSetting(LocationSettings settings);
@@ -38,8 +38,7 @@ class ServerSettings
 	const std::string printServerSettingValue(ServerSettingOption Key) const;
 
   private:
-	std::unordered_map<ServerSettingOption, std::vector<std::string>>
-		_server_setting;
+	std::unordered_map<ServerSettingOption, std::string> _server_setting;
 	std::vector<LocationSettings> _location_settings;
 
 	// TODO: methods fucntion that can resolve if a read/write/delete can be

@@ -2,6 +2,7 @@
 #define SERVER_HPP
 
 #include <ConfigParser.hpp>
+#include <ServerSettings.hpp>
 #include <Socket.hpp>
 
 class Server
@@ -15,11 +16,7 @@ class Server
 	int getFD(void) const;
 
   private:
-	const std::string &_host;
-	const std::string &_port;
-	const std::string &_server_name;
-	const std::string &_client_max_body_size;
-	const std::string &_error_pages;
+	const ServerSettings &_server_settings;
 	Socket _socket;
 };
 

@@ -47,11 +47,13 @@ void ConfigParser::ParseConfig()
 	Logger &logger = Logger::getInstance();
 
 	_tokenlist.tokenizeSstream(OpenFile());
-	logger.log(INFO, "Tokenlist succesfully made");
 
 	for (std::vector<Token>::iterator it = _tokenlist.getTokens().begin();
 		 it != _tokenlist.getTokens().end(); it++)
-	{
 		_server_settings.emplace_back(ServerSettings(it));
-	}
+
+	for (auto &it : _server_settings)
+		it.printServerSettings();
+
+	logger.log(INFO, "Parsered configfile: " + _config_file_path);
 }

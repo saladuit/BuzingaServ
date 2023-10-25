@@ -80,7 +80,8 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 		if (SkipComments(sstream, tmp))
 			continue;
 		//		stringToLower(tmp); // Might be usefull to have. BUT we a PATH
-		//is case sensitive so we'd have to do this in the syntax checker and it
+		// is case sensitive so we'd have to do this in the syntax checker and
+		// it
 		// should exclude PATHs
 		if (tmp.find_first_of(TOKENLIST_SPECIAL_CHAR) != std::string::npos)
 			splitString(tmp);
