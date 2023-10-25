@@ -25,7 +25,10 @@ ClientState Client::handleConnection(short events)
 	try
 	{
 		if (events & POLLIN)
-			return (_request.receive(_socket.getFD()));
+		{
+			_state = _request.receive(_socket.getFD());
+			return (_state);
+		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			_state = _file_manager.manage(_request.getMethodType(),

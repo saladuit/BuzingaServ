@@ -2,6 +2,7 @@
 #include <FileManager.hpp>
 #include <Logger.hpp>
 
+#include <algorithm>
 #include <filesystem>
 
 FileManager::FileManager()
@@ -14,9 +15,10 @@ FileManager::~FileManager()
 
 void FileManager::openFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path))
+	if (!std::filesystem::exists("./data/www" + request_target_path))
 		throw ClientException(StatusCode::NotFound);
 	_request_target.open(
+		"./data/www" +
 		request_target_path); // TODO: Status when file is created
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::Forbidden);
@@ -55,12 +57,14 @@ ClientState FileManager::loadErrorPage(void)
 ClientState FileManager::manageGet(void)
 {
 	Logger &logger = Logger::getInstance();
-	char buffer[BUFFER_SIZE];
+	char buffer[BUFFER_SIZE + 1];
 
 	logger.log(DEBUG, "manageGet method is called");
 	_request_target.read(buffer, BUFFER_SIZE);
+	logger.log(DEBUG, "get buffer: " + std::string(buffer));
 	if (_request_target.fail())
 		throw ClientException(StatusCode::InternalServerError);
+	buffer[_request_target.gcount()] = '\0';
 	_response += std::string(buffer);
 	if (_request_target.eof())
 		return (ClientState::Sending);
@@ -74,6 +78,7 @@ ClientState FileManager::managePost(const std::string &body)
 
 	logger.log(DEBUG, "managePost method is called");
 	_request_target.write(body.c_str() + pos, BUFFER_SIZE);
+	logger.log(DEBUG, "post buffer: " + body.substr(pos, BUFFER_SIZE));
 	if (_request_target.fail())
 		throw ClientException(StatusCode::InternalServerError);
 	if (_request_target.eof())

@@ -1,29 +1,31 @@
 #include "StatusCode.hpp"
 #include <HTTPStatus.hpp>
 
+std::unordered_map<StatusCode, std::string> HTTPStatus::_message = {
+	{StatusCode::OK, "OK"},
+	{StatusCode::Created, "Created"},
+	{StatusCode::Accepted, "Accepted"},
+	{StatusCode::NoContent, "No Content"},
+	{StatusCode::Found, "Found"},
+	{StatusCode::NotModified, "Not Modified"},
+	{StatusCode::BadRequest, "Bad Request"},
+	{StatusCode::UnAuthorized, "Unauthorized"},
+	{StatusCode::Forbidden, "Forbidden"},
+	{StatusCode::NotFound, "Not Found"},
+	{StatusCode::MethodNotAllowed, "Method Not Allowed"},
+	{StatusCode::RequestTimeout, "Request Timeout"},
+	{StatusCode::LenghtRequired, "Length Required"},
+	{StatusCode::PayloadToLarge, "Payload Too Large"},
+	{StatusCode::URIToLong, "URI Too Long"},
+	{StatusCode::UnsupportedMediaType, "Unsupported Media Type"},
+	{StatusCode::InternalServerError, "Internal Server Error"},
+	{StatusCode::NotImplemented, "Not Implemented"},
+	{StatusCode::BadGateway, "Bad Gateway"},
+	{StatusCode::ServiceUnavailable, "Service Unavailable"},
+	{StatusCode::GatewayTimeout, "Gateway Timeout"}};
+
 HTTPStatus::HTTPStatus(StatusCode status_code) : _status_code(status_code)
 {
-	_message[StatusCode::OK] = "OK";
-	_message[StatusCode::Created] = "Created";
-	_message[StatusCode::Accepted] = "Accepted";
-	_message[StatusCode::NoContent] = "No Content";
-	_message[StatusCode::Found] = "Found";
-	_message[StatusCode::NotModified] = "Not Modified";
-	_message[StatusCode::BadRequest] = "Bad Request";
-	_message[StatusCode::UnAuthorized] = "Unauthorized";
-	_message[StatusCode::Forbidden] = "Forbidden";
-	_message[StatusCode::NotFound] = "Not Found";
-	_message[StatusCode::MethodNotAllowed] = "Method Not Allowed";
-	_message[StatusCode::RequestTimeout] = "Request Timeout";
-	_message[StatusCode::LenghtRequired] = "Length Required";
-	_message[StatusCode::PayloadToLarge] = "Payload Too Large";
-	_message[StatusCode::URIToLong] = "URI Too Long";
-	_message[StatusCode::UnsupportedMediaType] = "Unsupported Media Type";
-	_message[StatusCode::InternalServerError] = "Internal Server Error";
-	_message[StatusCode::NotImplemented] = "Not Implemented";
-	_message[StatusCode::BadGateway] = "Bad Gateway";
-	_message[StatusCode::ServiceUnavailable] = "Service Unavailable";
-	_message[StatusCode::GatewayTimeout] = "Gateway Timeout";
 }
 
 HTTPStatus::~HTTPStatus()

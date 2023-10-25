@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-#define BUFFER_SIZE 16
+#define BUFFER_SIZE 64
 
 enum class HTTPMethod
 {

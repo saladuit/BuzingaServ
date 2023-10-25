@@ -45,5 +45,10 @@ ClientState HTTPResponse::send(int client_fd, const std::string &response)
 		throw SystemException("Error: write failed on: " +
 							  std::to_string(client_fd)); // TODO handle error
 	_bytes_sent += w_size;
-	return (ClientState::Done);
+	if (_bytes_sent == _response.length())
+	{
+		clear();
+		return (ClientState::Done);
+	}
+	return (ClientState::Sending);
 }

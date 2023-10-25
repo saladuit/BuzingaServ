@@ -9,7 +9,7 @@
 class HTTPResponse
 {
   private:
-	ssize_t _bytes_sent;
+	size_t _bytes_sent;
 	std::string _response;
 
   public:
