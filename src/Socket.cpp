@@ -3,6 +3,7 @@
 #include <SystemException.hpp>
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <cassert>
@@ -13,9 +14,9 @@ Socket::Socket(const int fd)
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "Accepting connection on fd: " + std::to_string(fd));
-	if (_fd == SYSTEM_ERROR)
+	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("Accept");
+	assert(fcntl(getFD(), F_SETFL, O_NONBLOCK) != SYSTEM_ERROR);
 	char address[INET_ADDRSTRLEN];
 	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) !=
 		   NULL);
@@ -26,13 +27,18 @@ Socket::Socket(const int fd)
 
 Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
 {
-	if (_fd == SYSTEM_ERROR)
+	Logger &logger = Logger::getInstance();
+
+	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("socket creation failed");
+	assert(fcntl(getFD(), F_SETFL, O_NONBLOCK) != SYSTEM_ERROR);
+	logger.log(DEBUG,
+			   "Created server socket on fd: " + std::to_string(getFD()));
 }
 
 Socket::~Socket()
 {
-	assert(close(_fd) != SYSTEM_ERROR);
+	assert(close(getFD()) != SYSTEM_ERROR);
 }
 
 void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
@@ -51,9 +57,10 @@ void Socket::setupServer(const std::string &port)
 		SYSTEM_ERROR)
 		throw SystemException("setsockopt failed");
 	initSockaddrIn(_addr, port);
-	if (bind(_fd, (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) == SYSTEM_ERROR)
+	if (bind(getFD(), (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) ==
+		SYSTEM_ERROR)
 		throw SystemException("Bind");
-	if (listen(_fd, MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)
+	if (listen(getFD(), MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)
 		throw SystemException("Listen");
 }
 
