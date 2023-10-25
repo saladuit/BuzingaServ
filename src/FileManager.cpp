@@ -61,9 +61,9 @@ ClientState FileManager::manageGet(void)
 
 	logger.log(DEBUG, "manageGet method is called");
 	_request_target.read(buffer, BUFFER_SIZE);
-	logger.log(DEBUG, "get buffer: " + std::string(buffer));
-	if (_request_target.fail())
+	if (_request_target.bad())
 		throw ClientException(StatusCode::InternalServerError);
+	logger.log(DEBUG, "get buffer: " + std::string(buffer));
 	buffer[_request_target.gcount()] = '\0';
 	_response += std::string(buffer);
 	if (_request_target.eof())

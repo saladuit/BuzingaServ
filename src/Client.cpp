@@ -51,6 +51,7 @@ ClientState Client::handleConnection(short events)
 	catch (ClientException &e)
 	{
 		_response.clear();
+		logger.log(ERROR, "Client exception: " + std::string(e.what()));
 		_response.append(e.what());
 		_state =
 			_file_manager.openErrorPage("./data/errors", e.getStatusCode());
