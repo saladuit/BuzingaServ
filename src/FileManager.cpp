@@ -22,6 +22,36 @@ void FileManager::openFile(const std::string &request_target_path)
 		throw ClientException(StatusCode::Forbidden);
 }
 
+ClientState FileManager::openErrorPage(const std::string &error_pages_path,
+									   const StatusCode &status_code)
+{
+	_request_target.open(error_pages_path +
+						 std::to_string(static_cast<int>(status_code)) +
+						 ".html");
+	if (!_request_target.is_open())
+	{
+		HTTPStatus status(status_code);
+		_response += status.getHTMLStatus();
+		return (ClientState::Sending);
+	}
+	return (ClientState::Error);
+}
+
+ClientState FileManager::loadErrorPage(void)
+{
+	char buffer[BUFFER_SIZE];
+	_request_target.read(buffer, BUFFER_SIZE);
+	if (_request_target.fail())
+	{
+		HTTPStatus status(StatusCode::InternalServerError);
+		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
+	}
+	_response += std::string(buffer);
+	if (_request_target.eof())
+		return (ClientState::Sending);
+	return (ClientState::Loading);
+}
+
 ClientState FileManager::manageGet(void)
 {
 	Logger &logger = Logger::getInstance();

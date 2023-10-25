@@ -18,8 +18,9 @@ class HTTPResponse
 	HTTPResponse &operator=(const HTTPResponse &rhs) = delete;
 	~HTTPResponse();
 
-	ClientState send(int client_fd);
+	ClientState send(int client_fd, const std::string &response);
 	void append(const std::string &content);
+	void clear(void);
 };
 
 #endif

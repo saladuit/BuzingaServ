@@ -5,7 +5,6 @@
 #include <FileManager.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
-#include <Logger.hpp>
 #include <Socket.hpp>
 
 class Client
