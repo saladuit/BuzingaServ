@@ -13,15 +13,36 @@ FileManager::~FileManager()
 {
 }
 
-void FileManager::openFile(const std::string &request_target_path)
+void FileManager::openGetFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists("./data/www" + request_target_path))
+	if (!std::filesystem::exists(request_target_path))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(
-		"./data/www" +
-		request_target_path); // TODO: Status when file is created
+	_request_target.open(request_target_path, std::ios::in);
 	if (!_request_target.is_open())
-		throw ClientException(StatusCode::Forbidden);
+		throw ClientException(StatusCode::NotFound);
+	HTTPStatus status(StatusCode::OK);
+	_response += status.getStatusLine("HTTP/1.1");
+}
+
+void FileManager::openPostFile(const std::string &request_target_path)
+{
+	if (!std::filesystem::exists(request_target_path))
+	{
+		_request_target.open(request_target_path, std::ios::out);
+		if (!_request_target.is_open())
+			throw ClientException(StatusCode::InternalServerError);
+		HTTPStatus status(StatusCode::Created);
+		_response += status.getStatusLine("HTTP/1.1");
+	}
+	else
+	{
+		_request_target.open(request_target_path,
+							 std::ios::out | std::ios::app);
+		if (!_request_target.is_open())
+			throw ClientException(StatusCode::InternalServerError);
+		HTTPStatus status(StatusCode::OK);
+		_response += status.getStatusLine("HTTP/1.1");
+	}
 }
 
 ClientState FileManager::openErrorPage(const std::string &error_pages_path,
@@ -43,7 +64,7 @@ ClientState FileManager::loadErrorPage(void)
 {
 	char buffer[BUFFER_SIZE];
 	_request_target.read(buffer, BUFFER_SIZE);
-	if (_request_target.fail())
+	if (_request_target.bad())
 	{
 		HTTPStatus status(StatusCode::InternalServerError);
 		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
@@ -94,7 +115,7 @@ ClientState FileManager::manageDelete(const std::string &request_target_path)
 	if (std::remove(request_target_path.c_str()) != 0)
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::NoContent);
-	_response = status.getStatusLine("HTTP/1.1");
+	_response += status.getStatusLine("HTTP/1.1");
 	return (ClientState::Sending);
 }
 
@@ -104,11 +125,19 @@ ClientState FileManager::manage(HTTPMethod method,
 {
 	if (method == HTTPMethod::DELETE)
 		return (manageDelete(request_target_path));
-	if (!_request_target.is_open())
-		openFile(request_target_path);
 	if (method == HTTPMethod::GET)
+	{
+		if (!_request_target.is_open())
+			openGetFile(request_target_path);
 		return (manageGet());
-	return (managePost(body));
+	}
+	else if (method == HTTPMethod::POST)
+	{
+		if (!_request_target.is_open())
+			openPostFile(request_target_path);
+		return (managePost(body));
+	}
+	return (ClientState::Unkown);
 }
 
 const std::string &FileManager::getResponse(void) const

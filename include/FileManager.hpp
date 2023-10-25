@@ -1,7 +1,6 @@
 #ifndef FILE_MANAGER_HPP
 #define FILE_MANAGER_HPP
 
-#include "ClientState.hpp"
 #include <HTTPRequest.hpp>
 #include <HTTPStatus.hpp>
 #include <fstream>
@@ -19,7 +18,8 @@ class FileManager
 	void operator=(const FileManager &other) = delete;
 	~FileManager();
 
-	void openFile(const std::string &request_target);
+	void openGetFile(const std::string &request_target_path);
+	void openPostFile(const std::string &request_target_path);
 	ClientState openErrorPage(const std::string &error_pages_path,
 							  const StatusCode &status_code);
 	ClientState setErrorResponse(const StatusCode &status_code);

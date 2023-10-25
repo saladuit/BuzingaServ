@@ -35,7 +35,8 @@ HTTPStatus::~HTTPStatus()
 std::string HTTPStatus::getStatusLine(const std::string &version) const
 {
 	return (version + " " + std::to_string(static_cast<int>(_status_code)) +
-			" " + _message.at(_status_code));
+			" " + _message.at(_status_code)) +
+		   "\r\n\r\n";
 }
 
 std::string HTTPStatus::getHTMLStatus(void) const
