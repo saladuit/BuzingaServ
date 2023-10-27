@@ -56,7 +56,7 @@ LocationSettings::LocationSettings(const LocationSettings &rhs)
 }
 
 LocationSettingOption
-LocationSettings::identifyLocationSetting(const std::string token)
+LocationSettings::identifyLocationSetting(const std::string &token)
 {
 	if (token == "prefix")
 		return (LocationSettingOption::Prefix);
@@ -71,7 +71,7 @@ LocationSettings::identifyLocationSetting(const std::string token)
 	else if (token == "cgipass")
 		return (LocationSettingOption::CgiPass);
 	else
-		throw std::runtime_error("Unknow Key Token in LocatoinSettings" +
+		throw std::runtime_error("Unknow Key Token in LocationSettings" +
 								 token);
 }
 
@@ -90,7 +90,7 @@ void LocationSettings::addValue(LocationSettingOption key,
 
 // THIS IS PRINTING FUNCTION
 
-const std::string printLocationSettingKey(LocationSettingOption Key)
+std::string LocationSettings::keyToString(LocationSettingOption Key) const
 {
 	switch (Key)
 	{
@@ -107,12 +107,11 @@ const std::string printLocationSettingKey(LocationSettingOption Key)
 	case (LocationSettingOption::CgiPass):
 		return ("CgiPass");
 	default:
-		return ("OUT OF BOUND KEY");
+		return ("__UNRECOGNISED KEY__");
 	}
 }
 
-const std::string
-LocationSettings::printLocationSettingValue(LocationSettingOption Key) const
+std::string LocationSettings::valuesToString(LocationSettingOption Key) const
 {
 	std::string ret;
 
@@ -125,17 +124,17 @@ void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "Path: " + _path);
+	logger.log(DEBUG, "Path:\t" + _path);
 	for (int i = static_cast<int>(LocationSettingOption::Prefix);
 		 i < static_cast<int>(LocationSettingOption::Count); i++)
 	{
-		logger.log(DEBUG, "LocationSetting : Key : " +
-							  printLocationSettingKey(
-								  static_cast<LocationSettingOption>(i)));
+		logger.log(DEBUG,
+				   "LocationSetting: Key:\t" +
+					   keyToString(static_cast<LocationSettingOption>(i)));
 		try
 		{
-			logger.log(DEBUG, "LocationSetting : Value : " +
-								  printLocationSettingValue(
+			logger.log(DEBUG, "LocationSetting: Value:\t" +
+								  valuesToString(
 									  static_cast<LocationSettingOption>(i)));
 		}
 		catch (std::out_of_range &e)

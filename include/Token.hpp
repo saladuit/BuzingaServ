@@ -4,6 +4,10 @@
 #include <sstream>
 #include <vector>
 
+#ifndef TOKENLIST_SPECIAL_CHAR
+#define TOKENLIST_SPECIAL_CHAR "{};"
+#endif
+
 enum class TokenType
 {
 	SEMICOLON,

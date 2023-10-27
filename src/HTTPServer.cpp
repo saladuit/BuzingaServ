@@ -23,6 +23,7 @@ int HTTPServer::run()
 
 	try
 	{
+		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
 		while (true)
@@ -43,15 +44,14 @@ void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(INFO, "Parsing Config File");
-	_parser.ParseConfig();
-
 	logger.log(INFO, "Setting up server sockets");
 	const std::vector<ServerSettings> &server_settings =
 		_parser.getServerSettings();
-	for (const auto &server_block : server_settings)
+
+	for (const auto &server_setting : server_settings)
 	{
-		std::shared_ptr<Server> server = std::make_shared<Server>(server_block);
+		std::shared_ptr<Server> server =
+			std::make_shared<Server>(server_setting);
 		_active_servers.emplace(server->getFD(), server);
 		_poll.addFD(server->getFD(), POLLIN);
 	}

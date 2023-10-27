@@ -29,6 +29,7 @@ class ConfigParser
 	const std::vector<ServerSettings> &getServerSettings();
 };
 
-void tokenizeStream(std::stringstream sstream, std::vector<Token> &list);
+void tokenizeStream(std::stringstream sstream,
+					std::vector<Token> &list); // Located @ Token.cpp
 
 #endif

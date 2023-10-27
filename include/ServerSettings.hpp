@@ -31,11 +31,10 @@ class ServerSettings
 	const std::string &getValue(ServerSettingOption setting) const;
 	void setValue(ServerSettingOption key, const std::string &value);
 
-	ServerSettingOption identifyServerSetting(std::string token_string);
+	ServerSettingOption identifyServerSetting(const std::string &token);
 	// TODO: void addLocationSetting(LocationSettings settings);
 
 	void printServerSettings() const;
-	const std::string printServerSettingValue(ServerSettingOption Key) const;
 
   private:
 	std::unordered_map<ServerSettingOption, std::string> _server_setting;

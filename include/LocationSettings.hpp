@@ -31,19 +31,18 @@ class LocationSettings
 	getValues(LocationSettingOption setting) const;
 	void addValue(LocationSettingOption key, const std::string &value);
 
-	const std::string getPath() const;
+	const std::string &getPath() const;
 	void setPath(std::string path);
 
-	LocationSettingOption identifyLocationSetting(const std::string token);
-
 	void printLocationSettings() const;
+	std::string keyToString(LocationSettingOption Key) const;
+	std::string valuesToString(LocationSettingOption Key) const;
 
   private:
 	std::unordered_map<LocationSettingOption, std::vector<std::string>>
 		_setting;
 	std::string _path;
 
-	const std::string
-	printLocationSettingValue(LocationSettingOption Key) const;
+	LocationSettingOption identifyLocationSetting(const std::string &token);
 };
 #endif // !LOCATIONSETTING_HPP

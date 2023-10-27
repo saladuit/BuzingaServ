@@ -28,6 +28,7 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
+								 // TODO: this needs to be moved to syntax
 
 	token += 2;
 
@@ -50,30 +51,30 @@ ServerSettings::~ServerSettings()
 }
 
 ServerSettingOption
-ServerSettings::identifyServerSetting(std::string token_string)
+ServerSettings::identifyServerSetting(const std::string &token)
 {
-	if (token_string == "port")
+	if (token == "port")
 		return (ServerSettingOption::Port);
-	else if (token_string == "host")
+	else if (token == "host")
 		return (ServerSettingOption::Host);
-	else if (token_string == "server_name")
+	else if (token == "server_name")
 		return (ServerSettingOption::ServerName);
-	else if (token_string == "client_max_body_size")
+	else if (token == "client_max_body_size")
 		return (ServerSettingOption::ClientMaxBodySize);
-	else if (token_string == "error_pages")
+	else if (token == "error_pages")
 		return (ServerSettingOption::ErrorPages);
-	else if (token_string == "location")
+	else if (token == "location")
 		return (ServerSettingOption::Location);
 	else
-		throw std::runtime_error("Unknow Key Token in ServerSetting " +
-								 token_string);
+		throw std::runtime_error("Unknow Key Token in ServerSetting " + token);
+	// TODO: this might need a costum exception
 }
 
 // TODO: void addLocationSetting(LocationSettings settings);
 
 const std::string &ServerSettings::getValue(ServerSettingOption setting) const
 {
-	return (_server_setting.at(setting)); // TODO: throw exception for something
+	return (_server_setting.at(setting));
 }
 
 void ServerSettings::setValue(ServerSettingOption key, const std::string &value)
@@ -83,7 +84,7 @@ void ServerSettings::setValue(ServerSettingOption key, const std::string &value)
 
 // THIS IS PRINTING FUNCTION
 
-const std::string printServerSettingKey(ServerSettingOption Key)
+std::string keyToString(ServerSettingOption Key)
 {
 	switch (Key)
 	{
@@ -111,14 +112,12 @@ void ServerSettings::printServerSettings() const
 	for (int i = static_cast<int>(ServerSettingOption::Port);
 		 i < static_cast<int>(ServerSettingOption::Count); i++)
 	{
-		logger.log(DEBUG, "ServerSettings : Key :" +
-							  printServerSettingKey(
-								  static_cast<ServerSettingOption>(i)) +
-							  " : ");
+		logger.log(DEBUG, "ServerSetting: Key:\t" +
+							  keyToString(static_cast<ServerSettingOption>(i)));
 		try
 		{
 			logger.log(DEBUG,
-					   "ServerSetting : Value : " +
+					   "ServerSetting: Value:\t" +
 						   getValue(static_cast<ServerSettingOption>(i)));
 		}
 		catch (std::out_of_range &e)

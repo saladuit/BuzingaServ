@@ -27,11 +27,7 @@ TokenType Token::getType() const
 	return (_type);
 }
 
-#ifndef TOKENLIST_SPECIAL_CHAR
-#define TOKENLIST_SPECIAL_CHAR "{};"
-#endif
-
-TokenType identifyToken(std::string str)
+TokenType identifyToken(const std::string &str)
 {
 	if (str == "}")
 		return (TokenType::CLOSE_BRACKET);
@@ -49,7 +45,7 @@ void stringToLower(std::string &str)
 		str.at(i) = std::tolower(str.at(i));
 }
 
-bool SkipComments(std::stringstream &stream, std::string &str)
+bool stripComments(std::stringstream &stream, std::string &str)
 {
 	size_t pos = str.find('#');
 	if (pos != std::string::npos)
@@ -61,7 +57,7 @@ bool SkipComments(std::stringstream &stream, std::string &str)
 	return (str.empty());
 }
 
-void splitString(std::string input, std::vector<Token> &list)
+void splitString(std::string &input, std::vector<Token> &list)
 {
 	size_t pos = input.find_first_of(TOKENLIST_SPECIAL_CHAR);
 
@@ -84,7 +80,7 @@ void tokenizeStream(std::stringstream sstream, std::vector<Token> &list)
 
 	while (sstream >> tmp)
 	{
-		if (SkipComments(sstream, tmp))
+		if (stripComments(sstream, tmp))
 			continue;
 		//		stringToLower(tmp); // Might be usefull to have. BUT we a PATH
 		// is case sensitive so we'd have to do this in the syntax checker and
