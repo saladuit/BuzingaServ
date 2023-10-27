@@ -1,14 +1,14 @@
-#include "ClientState.hpp"
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
-#include <sstream>
+
+#include <string>
 
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _bytes_read(0), _methodType(HTTPMethod::UNKNOWN), _http_request(),
-	  _body(), _headers()
+	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
+	  _http_request(), _body(), _headers()
 {
 }
 
@@ -40,7 +40,7 @@ void HTTPRequest::setHeader(const std::string &key, const std::string &header)
 
 const std::string &HTTPRequest::getHeader(const std::string &key) const
 {
-	return (_headers.at(key)); // TODO: throw exception
+	return (_headers.at(key));
 }
 
 void HTTPRequest::setRequestTarget(const std::string &request_target)
@@ -102,20 +102,32 @@ size_t HTTPRequest::parseHeaders(size_t &i)
 	logger.log(DEBUG, "Key: " + key);
 	value = line.substr(line.find(':') + 2);
 	logger.log(DEBUG, "Value: " + value);
+	setHeader(key, value);
 	i = pos + 2;
 	return (i);
 }
 
 ClientState HTTPRequest::receive(int client_fd)
 {
+	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE];
 	std::string header_end;
 	size_t pos;
 	size_t i = 0;
 
 	_bytes_read = read(client_fd, buffer, BUFFER_SIZE);
-	if (_bytes_read == -1)
+	if (_bytes_read == SYSTEM_ERROR)
 		throw SystemException("Read failed on: " + std::to_string(client_fd));
+	if (_content_length != 0)
+	{
+		_body += std::string(buffer, _bytes_read);
+		if (_body.size() >= _content_length)
+		{
+			logger.log(DEBUG, "Body: " + _body);
+			return (ClientState::Loading);
+		}
+		return (ClientState::Receiving);
+	}
 	_http_request += std::string(buffer, _bytes_read);
 	pos = _http_request.find("\r\n\r\n");
 	if (pos != std::string::npos)
@@ -124,7 +136,18 @@ ClientState HTTPRequest::receive(int client_fd)
 	{
 		header_end = _http_request.substr(pos - 2, 4);
 		if (header_end == "\r\n\r\n")
-			return (ClientState::Loading);
+		{
+			if (_headers.find("Content-length") != _headers.end())
+			{
+				_content_length = std::stoi(getHeader("Content-length"));
+				if (_content_length == 0)
+					return (ClientState::Loading);
+				_body += _http_request.substr(pos + 2);
+				return (ClientState::Receiving);
+			}
+			else
+				return (ClientState::Loading);
+		}
 		pos = parseHeaders(i);
 	}
 	return (ClientState::Receiving);

@@ -41,6 +41,7 @@ class HTTPRequest
 
   private:
 	ssize_t _bytes_read;
+	size_t _content_length;
 	HTTPMethod _methodType;
 	std::string _http_request;
 	std::string _request_target;

@@ -33,7 +33,7 @@ ClientState Client::handleConnection(short events)
 		{
 			_state = _file_manager.manage(
 				_request.getMethodType(),
-				".data/www" + _request.getRequestTarget(),
+				"./data/www" + _request.getRequestTarget(),
 				_request.getBody()); // TODO: resolve location
 			return (_state);
 		}
