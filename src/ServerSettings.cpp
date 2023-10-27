@@ -1,4 +1,5 @@
 
+#include <HTTPRequest.hpp>
 #include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
