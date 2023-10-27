@@ -70,7 +70,41 @@ ServerSettings::identifyServerSetting(const std::string &token)
 	// TODO: this might need a costum exception
 }
 
-// TODO: void addLocationSetting(LocationSettings settings);
+bool validateMethod(HTTPMethod method) // TODO: change data_types in function
+{
+	switch (method)
+	{
+	case (HTTPMethod::GET):
+		return ("GET");
+	case (HTTPMethod::POST):
+		return ("POST");
+	case (HTTPMethod::DELETE):
+		return ("DELETE");
+	default:
+		throw std::runtime_error("Unknown HTTPMethod");
+	}
+}
+
+const std::string
+methodToString(std::string input) // TODO: change data_types in function
+{
+}
+
+bool ServerSettings::resolveLocation(std::string path, HTTPMethod input_method)
+{
+	for (auto &settings : _location_settings)
+	{
+		if (settings.getPath() != path)
+			continue;
+		for (auto &methods :
+			 settings.getValues(LocationSettingOption::AllowMethods))
+		{
+			if (validateMethod(methods, methodToString(input_method)))
+				return (true);
+		}
+	}
+	return (false);
+}
 
 const std::string &ServerSettings::getValue(ServerSettingOption setting) const
 {
