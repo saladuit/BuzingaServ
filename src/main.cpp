@@ -1,6 +1,7 @@
-#include "ConfigParser.hpp"
+#include <ConfigParser.hpp>
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <stdexcept>
 
 int main(int argc, char **argv)
 {

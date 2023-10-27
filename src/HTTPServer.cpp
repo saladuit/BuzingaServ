@@ -1,5 +1,6 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
+#include <ServerSettings.hpp>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
@@ -22,6 +23,7 @@ int HTTPServer::run()
 
 	try
 	{
+		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
 		while (true)
@@ -41,11 +43,15 @@ int HTTPServer::run()
 void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "Setting up Servers");
-	const std::vector<ServerBlock> &server_blocks = _parser.getServerBlocks();
-	for (const auto &server_block : server_blocks)
+
+	logger.log(INFO, "Setting up server sockets");
+	const std::vector<ServerSettings> &server_settings =
+		_parser.getServerSettings();
+
+	for (const auto &server_setting : server_settings)
 	{
-		std::shared_ptr<Server> server = std::make_shared<Server>(server_block);
+		std::shared_ptr<Server> server =
+			std::make_shared<Server>(server_setting);
 		_active_servers.emplace(server->getFD(), server);
 		_poll.addFD(server->getFD(), POLLIN);
 	}

@@ -8,6 +8,13 @@
 
 #define BUFFER_SIZE 16
 
+// DEFINES
+
+#ifndef HTTP_READ_SIZE
+#define HTTP_READ_SIZE 1024
+#endif
+
+// ENUM
 enum class HTTPMethod
 {
 	GET,
@@ -16,6 +23,7 @@ enum class HTTPMethod
 	UNKNOWN,
 };
 
+// CLASS
 class HTTPRequest
 {
   public:
