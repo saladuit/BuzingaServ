@@ -3,7 +3,6 @@
 
 #include <LocationSettings.hpp>
 #include <ServerSettings.hpp>
-#include <Tokenlist.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -13,7 +12,6 @@ class ConfigParser
 {
   private:
 	const std::string _config_file_path;
-	Tokenlist _tokenlist;
 	std::vector<ServerSettings> _server_settings;
 
 	std::stringstream OpenFile();
@@ -30,5 +28,7 @@ class ConfigParser
 
 	const std::vector<ServerSettings> &getServerSettings();
 };
+
+void tokenizeStream(std::stringstream sstream, std::vector<Token> &list);
 
 #endif

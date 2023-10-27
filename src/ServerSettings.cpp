@@ -24,31 +24,21 @@ ServerSettings::ServerSettings(const ServerSettings &rhs)
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	: _server_setting(), _location_settings()
 {
-	//	Logger &logger = Logger::getInstance();
-
 	if (token->getString() != "server")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
 
-	//	logger.log(DEBUG, "ServerSetting : " + token->getString());
 	token += 2;
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
-		//		std::vector<Token>::iterator token_key = token;
-
 		ServerSettingOption key = identifyServerSetting(token->getString());
 		if (key == ServerSettingOption::Location)
-		{
 			_location_settings.emplace_back(LocationSettings(token));
-		}
 		else
 		{
 			token++;
-			/* logger.log(DEBUG, "ServerSetting :\tKey:\t" + */
-			/* 					  token_key->getString() + "\tValue:\t" + */
-			/* 					  token->getString()); */
 			setValue(key, token->getString());
 			token += 2;
 		}
@@ -121,16 +111,20 @@ void ServerSettings::printServerSettings() const
 	for (int i = static_cast<int>(ServerSettingOption::Port);
 		 i < static_cast<int>(ServerSettingOption::Count); i++)
 	{
-		logger.log(DEBUG,
-				   printServerSettingKey(static_cast<ServerSettingOption>(i)) +
-					   " : ");
+		logger.log(DEBUG, "ServerSettings : Key :" +
+							  printServerSettingKey(
+								  static_cast<ServerSettingOption>(i)) +
+							  " : ");
 		try
 		{
-			logger.log(DEBUG, getValue(static_cast<ServerSettingOption>(i)));
+			logger.log(DEBUG,
+					   "ServerSetting : Value : " +
+						   getValue(static_cast<ServerSettingOption>(i)));
 		}
 		catch (std::out_of_range &e)
 		{
-			logger.log(WARNING, "Missing option: " + std::string(e.what()));
+			logger.log(WARNING, "ServerSettings : Missing option: " +
+									std::string(e.what()));
 		}
 	}
 

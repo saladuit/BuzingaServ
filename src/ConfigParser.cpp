@@ -12,7 +12,7 @@
 #include <vector>
 
 ConfigParser::ConfigParser(const std::string &file_path)
-	: _config_file_path(file_path), _tokenlist(), _server_settings()
+	: _config_file_path(file_path), _server_settings()
 {
 }
 
@@ -45,15 +45,16 @@ std::stringstream ConfigParser::OpenFile()
 void ConfigParser::ParseConfig()
 {
 	Logger &logger = Logger::getInstance();
+	std::vector<Token> tokenlist;
 
-	_tokenlist.tokenizeSstream(OpenFile());
+	tokenizeStream(OpenFile(), tokenlist);
 
-	for (std::vector<Token>::iterator it = _tokenlist.getTokens().begin();
-		 it != _tokenlist.getTokens().end(); it++)
+	for (std::vector<Token>::iterator it = tokenlist.begin();
+		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
-	/* for (auto &it : _server_settings) */
-	/* 	it.printServerSettings(); */
+	for (auto &it : _server_settings)
+		it.printServerSettings();
 
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

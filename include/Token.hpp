@@ -1,7 +1,6 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include <ostream>
 #include <sstream>
 #include <vector>
 
