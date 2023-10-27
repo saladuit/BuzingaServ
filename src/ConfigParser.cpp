@@ -52,8 +52,8 @@ void ConfigParser::ParseConfig()
 		 it != _tokenlist.getTokens().end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
-	for (auto &it : _server_settings)
-		it.printServerSettings();
+	/* for (auto &it : _server_settings) */
+	/* 	it.printServerSettings(); */
 
-	logger.log(INFO, "Parsered configfile: " + _config_file_path);
+	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

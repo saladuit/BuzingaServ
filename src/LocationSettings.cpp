@@ -14,16 +14,19 @@ LocationSettings::LocationSettings() : _setting(), _path()
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 {
-	Logger &logger = Logger::getInstance();
+	/* Logger &logger = Logger::getInstance(); */
 
 	if (token->getString() != "location")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
-	logger.log(DEBUG, "LocationSetting : Token: " + token->getString());
 
+	std::vector<Token>::iterator tmp = token;
 	token++;
-	logger.log(DEBUG, "LocationSetting : Path: " + token->getString());
+
+	/* logger.log(DEBUG, "LocationSetting :\tblock_id:\t" + tmp->getString() +
+	 */
+	/* 					  "\tPath:\t" + token->getString()); */
 	_path = token->getString();
 	token += 2;
 
@@ -31,12 +34,15 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 	{
 		const LocationSettingOption key =
 			identifyLocationSetting(token->getString());
+		tmp = token;
+		//		logger.log(DEBUG, "LocationSetting :\tKey:\t" +
+		// token->getString());
 
-		logger.log(DEBUG, "LocationSetting : Key: " + token->getString());
 		token++;
 		while (token->getType() != TokenType::SEMICOLON)
 		{
-			logger.log(DEBUG, "LocationSetting : Value: " + token->getString());
+			/* logger.log(DEBUG, */
+			/* 		   "LocationSetting :\tValue:\t" + token->getString()); */
 			if (_setting
 					.try_emplace(key,
 								 std::vector<std::string>{token->getString()})
@@ -46,7 +52,6 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 		}
 		token++;
 	}
-	logger.log(DEBUG, "LocationSetting Built");
 	token++;
 }
 
@@ -135,8 +140,7 @@ void LocationSettings::printLocationSettings() const
 	{
 		logger.log(DEBUG, "LocationSetting : Key : " +
 							  printLocationSettingKey(
-								  static_cast<LocationSettingOption>(i)) +
-							  " : ");
+								  static_cast<LocationSettingOption>(i)));
 		try
 		{
 			logger.log(DEBUG, "LocationSetting : Value : " +

@@ -88,6 +88,6 @@ void Tokenlist::tokenizeSstream(std::stringstream sstream)
 		else
 			_tokens.emplace_back(Token(identifyToken(tmp), tmp));
 	}
-	for (auto &token : _tokens)
-		logger.log(DEBUG, "TOKEN: " + token.getString());
+	/* for (auto &token : _tokens) */
+	/* 	logger.log(DEBUG, "TOKEN: " + token.getString()); */
 }

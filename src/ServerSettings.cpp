@@ -24,20 +24,20 @@ ServerSettings::ServerSettings(const ServerSettings &rhs)
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	: _server_setting(), _location_settings()
 {
-	Logger &logger = Logger::getInstance();
+	//	Logger &logger = Logger::getInstance();
 
 	if (token->getString() != "server")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
 
-	logger.log(DEBUG, "ServerSetting : " + token->getString());
+	//	logger.log(DEBUG, "ServerSetting : " + token->getString());
 	token += 2;
-	logger.log(DEBUG, "ServerSetting : " + token->getString());
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
-		logger.log(DEBUG, "ServerSetting : Key: " + token->getString());
+		//		std::vector<Token>::iterator token_key = token;
+
 		ServerSettingOption key = identifyServerSetting(token->getString());
 		if (key == ServerSettingOption::Location)
 		{
@@ -46,7 +46,9 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 		else
 		{
 			token++;
-			logger.log(DEBUG, "ServerSetting : Value: " + token->getString());
+			/* logger.log(DEBUG, "ServerSetting :\tKey:\t" + */
+			/* 					  token_key->getString() + "\tValue:\t" + */
+			/* 					  token->getString()); */
 			setValue(key, token->getString());
 			token += 2;
 		}
