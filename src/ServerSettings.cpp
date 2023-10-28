@@ -71,7 +71,8 @@ ServerSettings::identifyServerSetting(const std::string &token)
 	// TODO: this might need a costum exception
 }
 
-bool validateMethod(HTTPMethod method) // TODO: change data_types in function
+const std::string
+methodToString(HTTPMethod method) // TODO: change data_types in function
 {
 	switch (method)
 	{
@@ -86,23 +87,16 @@ bool validateMethod(HTTPMethod method) // TODO: change data_types in function
 	}
 }
 
-const std::string
-methodToString(std::string input) // TODO: change data_types in function
-{
-}
-
 bool ServerSettings::resolveLocation(std::string path, HTTPMethod input_method)
 {
-	for (auto &settings : _location_settings)
+	for (auto &location_instance : _location_settings)
 	{
-		if (settings.getPath() != path)
+		if (location_instance.getPath() != path)
 			continue;
 		for (auto &methods :
-			 settings.getValues(LocationSettingOption::AllowMethods))
-		{
-			if (validateMethod(methods, methodToString(input_method)))
+			 location_instance.getValues(LocationSettingOption::AllowMethods))
+			if (methods == methodToString(input_method))
 				return (true);
-		}
 	}
 	return (false);
 }
