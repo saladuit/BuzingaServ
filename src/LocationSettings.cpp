@@ -88,6 +88,16 @@ void LocationSettings::addValue(LocationSettingOption key,
 	vect.emplace_back(value);
 }
 
+const std::string &LocationSettings::getPath() const
+{
+	return (_path);
+}
+
+void LocationSettings::setPath(const std::string &path)
+{
+	_path = path;
+}
+
 // THIS IS PRINTING FUNCTION
 
 std::string LocationSettings::keyToString(LocationSettingOption Key) const

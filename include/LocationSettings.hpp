@@ -32,9 +32,10 @@ class LocationSettings
 	void addValue(LocationSettingOption key, const std::string &value);
 
 	const std::string &getPath() const;
-	void setPath(std::string path);
+	void setPath(const std::string &path);
 
 	void printLocationSettings() const;
+
 	std::string keyToString(LocationSettingOption Key) const;
 	std::string valuesToString(LocationSettingOption Key) const;
 
