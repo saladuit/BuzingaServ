@@ -1,76 +1,35 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
-#include <map>
+#include <LocationSettings.hpp>
+#include <ServerSettings.hpp>
+
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-enum class GlobalSetting
-{
-	Threads,
-	DefaultErrorPages,
-	ReadSize,
-	WriteSize,
-};
-
-enum class ServerSetting
-{
-	Port,
-	Host,
-	ServerName,
-	ClientMaxBodySize,
-	ErrorPages,
-};
-
-enum class LocationSetting
-{
-	Prefix,
-	Root,
-	Index,
-	DirectoryListing,
-	AllowMethods,
-	CgiPass,
-};
-
-struct LocationBlock
-{
-	std::map<LocationSetting, std::string> settings;
-};
-
-struct ServerBlock
-{
-	std::map<ServerSetting, std::string> settings;
-	std::vector<LocationBlock> location_blocks;
-};
 
 class ConfigParser
 {
   private:
-	const std::string _file_path;
-	std::map<GlobalSetting, std::string> _global_settings;
-	std::vector<ServerBlock> _server_blocks;
+	const std::string _config_file_path;
+	std::vector<ServerSettings> _server_settings;
 
-	void parseBlock(std::ifstream &config_file, ServerBlock &current_server);
-	void parseServerBlock(std::istream &stream);
-	void parseGlobalBlock(std::istream &stream);
-	void parseLocationBlock(std::istream &stream, const std::string &URI);
-
-	std::ifstream openConfigFile(const std::string &file_path);
-	void readConfigFile(std::istream &config_file);
-	bool isCommentOrEmpty(const std::string &line);
-	void validateConfig();
+	std::stringstream OpenFile();
 
   public:
 	ConfigParser(const std::string &file_path);
+	~ConfigParser();
 
 	ConfigParser() = delete;
 	ConfigParser(const ConfigParser &src) = delete;
-	ConfigParser &operator=(const ConfigParser &rhs) = delete;
+	ConfigParser &operator=(const ConfigParser &src) = delete;
 
-	void readConfig();
+	void ParseConfig();
 
-	const std::string &getGlobalSettings(const GlobalSetting setting) const;
-	const std::vector<ServerBlock> &getServerBlocks() const;
+	const std::vector<ServerSettings> &getServerSettings();
 };
+
+void tokenizeStream(std::stringstream sstream,
+					std::vector<Token> &list); // Located @ Token.cpp
 
 #endif

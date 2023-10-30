@@ -89,3 +89,43 @@ socket() creates an endpoint for communication and returns a descriptor.
 
 - [Linux Programming Interface](https://sciencesoftcode.files.wordpress.com/2018/12/the-linux-programming-interface-michael-kerrisk-1.pdfh): Chapter 56-61
 - [RFC:  9112](https://www.rfc-editor.org/rfc/rfc9112.pdf) (HTTP/1.1) (could be obsolete)
+
+## Grammer
+
+--------------------------------------------------------------------------------------
+
+
+'WORD'          |
+
+Configfile      |       BLOCK
+                ;
+BLOCK           |       BLOCK identifier '{' Body '}'
+                |       identifier '{' Body '}'
+                ;
+Body            |       global
+                |       server location_BLOCK
+                ;
+identifier      |       'server'
+                |       'global'
+                ;
+global          |       Setting
+                ;
+server          |       Setting
+                ;
+location_BLOCK  |       location_BLOCK 'location' path '{' Setting '}'
+                |       'location' path '{' Setting '}'
+                ;
+Setting         |       Setting Option ';'
+                |       Option ';'
+                ;
+Option          |       Key Value
+                ;
+Key             |       WORD
+                ;
+Value           |       Value WORD 
+                |       WORD
+                ;
+path            |       WORD
+                ;
+
+--------------------------------------------------------------------------------------

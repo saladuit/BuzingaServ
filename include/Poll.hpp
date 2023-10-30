@@ -18,14 +18,14 @@ class Poll
 	Poll &operator=(const Poll &rhs) = delete;
 	~Poll();
 
-	void addFD(int fd, short events);
+	void addPollFD(int fd, short events);
 	void pollFDs(void);
 	void removeFD(int fd);
 	void setEvents(int fd, short events);
 	void checkREvents(short revents) const;
 
 	std::string pollEventsToString(short events) const;
-	std::vector<pollfd> getFds(void) const;
+	std::vector<pollfd> getPollFDs(void) const;
 
 	class PollException : public std::runtime_error
 	{

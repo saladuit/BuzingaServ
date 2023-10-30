@@ -10,7 +10,7 @@ Poll::~Poll()
 {
 }
 
-void Poll::addFD(int fd, short events)
+void Poll::addPollFD(int fd, short events)
 {
 	_poll_fds.emplace_back(pollfd{fd, events, 0});
 }
@@ -32,7 +32,7 @@ void Poll::removeFD(int fd)
 					_poll_fds.end());
 }
 
-std::vector<pollfd> Poll::getFds(void) const
+std::vector<pollfd> Poll::getPollFDs(void) const
 {
 	return (_poll_fds);
 }

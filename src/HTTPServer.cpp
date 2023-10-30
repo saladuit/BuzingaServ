@@ -1,6 +1,6 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
-#include <stdexcept>
+#include <ServerSettings.hpp>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
@@ -23,6 +23,7 @@ int HTTPServer::run()
 
 	try
 	{
+		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
 		while (true)
@@ -41,13 +42,17 @@ int HTTPServer::run()
 void HTTPServer::setupServers(void)
 {
 	Logger &logger = Logger::getInstance();
-	logger.log(INFO, "Setting up Servers");
-	const std::vector<ServerBlock> &server_blocks = _parser.getServerBlocks();
-	for (const auto &server_block : server_blocks)
+
+	logger.log(INFO, "Setting up server sockets");
+	const std::vector<ServerSettings> &server_settings =
+		_parser.getServerSettings();
+
+	for (const auto &server_setting : server_settings)
 	{
-		std::shared_ptr<Server> server = std::make_shared<Server>(server_block);
+		std::shared_ptr<Server> server =
+			std::make_shared<Server>(server_setting);
 		_active_servers.emplace(server->getFD(), server);
-		_poll.addFD(server->getFD(), POLLIN);
+		_poll.addPollFD(server->getFD(), POLLIN);
 	}
 }
 
@@ -55,11 +60,21 @@ void HTTPServer::handleActivePollFDs()
 {
 	Logger &logger = Logger::getInstance();
 	_poll.pollFDs();
-	for (const auto &poll_fd : _poll.getFds())
+	for (const auto &poll_fd : _poll.getPollFDs())
 	{
 		if (poll_fd.revents == 0)
 			continue;
-		_poll.checkREvents(poll_fd.revents);
+		try
+		{
+			_poll.checkREvents(poll_fd.revents);
+		}
+		catch (const Poll::PollException &e)
+		{
+			logger.log(ERROR, e.what());
+			_poll.removeFD(poll_fd.fd);
+			_active_clients.erase(poll_fd.fd);
+			continue;
+		}
 		logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
@@ -76,7 +91,7 @@ void HTTPServer::handleNewConnection(int fd)
 {
 	std::shared_ptr<Client> client = std::make_shared<Client>(fd);
 	_active_clients.emplace(client->getFD(), client);
-	_poll.addFD(client->getFD(), POLLIN);
+	_poll.addPollFD(client->getFD(), POLLIN);
 }
 
 void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
