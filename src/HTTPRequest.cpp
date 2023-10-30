@@ -8,7 +8,7 @@
 
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _body(), _headers()
+	  _http_request(), _request_target(), _http_version(), _body(), _headers()
 {
 }
 

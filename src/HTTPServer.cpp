@@ -26,10 +26,6 @@ int HTTPServer::run()
 		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
-		while (true)
-		{
-			handleActivePollFDs();
-		}
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -37,6 +33,19 @@ int HTTPServer::run()
 		return (EXIT_FAILURE);
 	}
 	return (EXIT_SUCCESS);
+
+	while (true)
+	{
+		try
+		{
+			handleActivePollFDs();
+		}
+		catch (const std::runtime_error &e)
+		{
+			logger.log(FATAL, e.what());
+			return (EXIT_FAILURE);
+		}
+	}
 }
 
 void HTTPServer::setupServers(void)

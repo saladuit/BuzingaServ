@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 
-FileManager::FileManager()
+FileManager::FileManager() : _response(), _request_target()
 {
 }
 

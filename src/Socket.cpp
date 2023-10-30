@@ -8,21 +8,27 @@
 
 #include <cassert>
 
-Socket::Socket(const int fd)
+Socket::Socket(int server_fd)
 	: _addr_len(sizeof(_addr)),
-	  _fd(accept(fd, (t_sockaddr *)&_addr, &_addr_len))
+	  _fd(accept(server_fd, (t_sockaddr *)&_addr, &_addr_len))
 {
 	Logger &logger = Logger::getInstance();
 
 	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("Accept");
+	logger.log(INFO,
+			   " created client socket on fd: " + std::to_string(getFD()));
+}
+
+void Socket::setupClient(void)
+{
+	Logger &logger = Logger::getInstance();
+
 	assert(fcntl(getFD(), F_SETFL, O_NONBLOCK) != SYSTEM_ERROR);
 	char address[INET_ADDRSTRLEN];
-	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) !=
-		   NULL);
-	logger.log(INFO,
-			   "Connection received from " + std::string(address) +
-				   " created client socket on fd: " + std::to_string(getFD()));
+	if (inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) == NULL)
+		throw SystemException("inet_ntop failed");
+	logger.log(INFO, "Connection received from " + std::string(address));
 }
 
 Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
@@ -31,7 +37,6 @@ Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
 
 	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("socket creation failed");
-	assert(fcntl(getFD(), F_SETFL, O_NONBLOCK) != SYSTEM_ERROR);
 	logger.log(DEBUG,
 			   "Created server socket on fd: " + std::to_string(getFD()));
 }
@@ -53,6 +58,8 @@ void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
 void Socket::setupServer(const std::string &port)
 {
 	int option = 1;
+	if (fcntl(getFD(), F_SETFL, O_NONBLOCK) == SYSTEM_ERROR)
+		throw SystemException("fcntl failed");
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) ==
 		SYSTEM_ERROR)
 		throw SystemException("setsockopt failed");

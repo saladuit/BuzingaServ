@@ -6,6 +6,7 @@
 
 Client::Client(const int &server_fd) : _socket(server_fd)
 {
+	_socket.setupClient();
 }
 
 Client::~Client()
