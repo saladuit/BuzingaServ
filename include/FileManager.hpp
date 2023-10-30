@@ -1,41 +1,36 @@
 #ifndef FILE_MANAGER_HPP
 #define FILE_MANAGER_HPP
 
-// INCLUDES
 #include <HTTPRequest.hpp>
+#include <HTTPStatus.hpp>
+#include <fstream>
 #include <string>
 
-// // ENUM
-// enum class HTTPMethod {
-// 	GET,
-// 	POST,
-// 	DELETE,
-// };
-
-// CLASS
 class FileManager
 {
   private:
-	int _status_code;
-	std::string _content;
+	std::string _response;
+	std::fstream _request_target;
 
   public:
-	// canonical form: constructors, operator and destructor
 	FileManager();
-	FileManager(const FileManager &other);
+	FileManager(const FileManager &other) = delete;
 	void operator=(const FileManager &other) = delete;
 	~FileManager();
 
-	// manage methods
-	void manage(HTTPMethod method, const std::string &filename,
-				const std::string &body);
-	void manageGet(const std::string &filename);
-	void managePost(const std::string &filename, const std::string &body);
-	void manageDelete(const std::string &filename);
+	void openGetFile(const std::string &request_target_path);
+	void openPostFile(const std::string &request_target_path);
+	ClientState openErrorPage(const std::string &error_pages_path,
+							  const StatusCode &status_code);
+	ClientState setErrorResponse(const StatusCode &status_code);
+	ClientState loadErrorPage(void);
+	ClientState manage(HTTPMethod method, const std::string &filename,
+					   const std::string &body);
+	ClientState manageGet(void);
+	ClientState managePost(const std::string &body);
+	ClientState manageDelete(const std::string &reqest_target_path);
 
-	// getters
-	const std::string &getContent() const;
-	int getStatusCode() const;
+	const std::string &getResponse(void) const;
 };
 
 #endif

@@ -1,11 +1,11 @@
+#include "HTTPRequest.hpp"
 #include <HTTPResponse.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
 
 #include <unistd.h>
 
-HTTPResponse::HTTPResponse()
-	: _status_code(0), _bytes_sent(0), _response("HTTP/1.1 200 OK\r\n\r\nHello")
+HTTPResponse::HTTPResponse() : _bytes_sent(0), _response("")
 {
 }
 
@@ -13,15 +13,42 @@ HTTPResponse::~HTTPResponse()
 {
 }
 
-ClientState HTTPResponse::send(int client_fd)
+void HTTPResponse::append(const std::string &content)
+{
+	_response.append(content);
+}
+
+void HTTPResponse::clear(void)
+{
+	_bytes_sent = 0;
+	_response.clear();
+}
+
+ClientState HTTPResponse::send(int client_fd, const std::string &response)
 {
 	Logger &logger = Logger::getInstance();
+	ssize_t bytes_to_send;
+	ssize_t w_size;
+
+	if (_response.empty())
+		_response = response;
 	logger.log(INFO, "Sending response to client on fd: " +
 						 std::to_string(client_fd));
 	logger.log(DEBUG, "response: " + _response);
-	_bytes_sent += write(client_fd, _response.c_str(), _response.length());
-	if (_bytes_sent == -1)
+	if (_response.length() - _bytes_sent < BUFFER_SIZE)
+		bytes_to_send = _response.length() - _bytes_sent;
+	else
+		bytes_to_send = BUFFER_SIZE;
+	w_size =
+		write(client_fd, _response.substr(_bytes_sent).c_str(), bytes_to_send);
+	if (w_size == -1)
 		throw SystemException("Error: write failed on: " +
-							  std::to_string(client_fd));
-	return (ClientState::Done);
+							  std::to_string(client_fd)); // TODO handle error
+	_bytes_sent += w_size;
+	if (_bytes_sent == _response.length())
+	{
+		clear();
+		return (ClientState::Done);
+	}
+	return (ClientState::Sending);
 }

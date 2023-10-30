@@ -1,4 +1,4 @@
-GET www/index.html HTTP/1.1
+GET /index.html HTTP/1.1
 User-Agent: custom-client
 Host: weebserv
 Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5

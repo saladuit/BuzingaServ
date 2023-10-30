@@ -1,18 +1,11 @@
+#include <ClientException.hpp>
 #include <FileManager.hpp>
 #include <Logger.hpp>
+
+#include <algorithm>
 #include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <string>
 
-namespace fs = std::filesystem;
-
-FileManager::FileManager() : _status_code(0)
-{
-}
-
-FileManager::FileManager(const FileManager &rhs)
-	: _status_code(rhs._status_code), _content(rhs._content)
+FileManager::FileManager() : _response(), _request_target()
 {
 }
 
@@ -20,115 +13,134 @@ FileManager::~FileManager()
 {
 }
 
-// the following line is hard code, need to fix this with input of the config
-// file std::ifstream	file("data/" + filename);
-void FileManager::manageGet(const std::string &filename)
+void FileManager::openGetFile(const std::string &request_target_path)
+{
+	if (!std::filesystem::exists(request_target_path))
+		throw ClientException(StatusCode::NotFound);
+	_request_target.open(request_target_path, std::ios::in);
+	if (!_request_target.is_open())
+		throw ClientException(StatusCode::NotFound);
+	HTTPStatus status(StatusCode::OK);
+	_response += status.getStatusLine("HTTP/1.1");
+}
+
+void FileManager::openPostFile(const std::string &request_target_path)
+{
+	if (!std::filesystem::exists(request_target_path))
+	{
+		_request_target.open(request_target_path, std::ios::out);
+		if (!_request_target.is_open())
+			throw ClientException(StatusCode::InternalServerError);
+		HTTPStatus status(StatusCode::Created);
+		_response += status.getStatusLine("HTTP/1.1");
+	}
+	else
+	{
+		_request_target.open(request_target_path,
+							 std::ios::out | std::ios::app);
+		if (!_request_target.is_open())
+			throw ClientException(StatusCode::InternalServerError);
+		HTTPStatus status(StatusCode::OK);
+		_response += status.getStatusLine("HTTP/1.1");
+	}
+}
+
+ClientState FileManager::openErrorPage(const std::string &error_pages_path,
+									   const StatusCode &status_code)
+{
+	_request_target.open(error_pages_path +
+						 std::to_string(static_cast<int>(status_code)) +
+						 ".html");
+	if (!_request_target.is_open())
+	{
+		HTTPStatus status(status_code);
+		_response += status.getHTMLStatus();
+		return (ClientState::Sending);
+	}
+	return (ClientState::Error);
+}
+
+ClientState FileManager::loadErrorPage(void)
+{
+	char buffer[BUFFER_SIZE];
+	_request_target.read(buffer, BUFFER_SIZE);
+	if (_request_target.bad())
+	{
+		HTTPStatus status(StatusCode::InternalServerError);
+		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
+	}
+	_response += std::string(buffer);
+	if (_request_target.eof())
+		return (ClientState::Sending);
+	return (ClientState::Loading);
+}
+
+ClientState FileManager::manageGet(void)
 {
 	Logger &logger = Logger::getInstance();
-	std::ifstream file("data/" + filename);
-	std::string line;
+	char buffer[BUFFER_SIZE + 1];
 
 	logger.log(DEBUG, "manageGet method is called");
-	logger.log(DEBUG, "filename: data/" + filename);
-
-	if (fs::exists("data/" + filename))
-	{
-		if (!file.is_open())
-		{
-			logger.log(WARNING, "401 UNAUTHORIZED");
-			_status_code = 401;
-			return;
-		}
-		while (std::getline(file, line))
-			_content += line + "\n";
-		logger.log(INFO, "200 OK");
-		_status_code = 200;
-	}
-	else
-	{
-		logger.log(WARNING, "404 NOT FOUND");
-		_status_code = 404;
-	}
-	logger.log(DEBUG, "_status_code in the manageGet method is: %",
-			   _status_code);
+	_request_target.read(buffer, BUFFER_SIZE);
+	if (_request_target.bad())
+		throw ClientException(StatusCode::InternalServerError);
+	logger.log(DEBUG, "get buffer: " + std::string(buffer));
+	buffer[_request_target.gcount()] = '\0';
+	_response += std::string(buffer);
+	if (_request_target.eof())
+		return (ClientState::Sending);
+	return (ClientState::Loading);
 }
 
-// again, here below hard code, handle with input config file?
-// 	std::ofstream	newFile("data/upload/" + filename);
-void FileManager::managePost(const std::string &filename,
-							 const std::string &body)
+ClientState FileManager::managePost(const std::string &body)
 {
 	Logger &logger = Logger::getInstance();
-	std::ofstream newFile("data/upload/" + filename);
+	size_t pos = _request_target.tellp();
 
 	logger.log(DEBUG, "managePost method is called");
-	logger.log(DEBUG, "body is: " + body);
-
-	if (!newFile)
-	{
-		logger.log(WARNING, "400 BAD REQUEST");
-		_status_code = 400;
-	}
-	else
-	{
-		newFile << body;
-		logger.log(INFO, "201 CREATED");
-		_status_code = 201;
-	}
-	logger.log(DEBUG, "_status_code in the managePost method is: %",
-			   _status_code);
+	_request_target.write(body.c_str() + pos, BUFFER_SIZE);
+	logger.log(DEBUG, "post buffer: " + body.substr(pos, BUFFER_SIZE));
+	if (_request_target.fail())
+		throw ClientException(StatusCode::InternalServerError);
+	if (_request_target.eof())
+		return (ClientState::Sending);
+	return (ClientState::Loading);
 }
 
-// again, here below hard code, handle with input config file?
-//	const std::string file_path("data/www/"+filename);
-void FileManager::manageDelete(const std::string &filename)
+ClientState FileManager::manageDelete(const std::string &request_target_path)
 {
 	Logger &logger = Logger::getInstance();
-	const std::string file_path("data/www/" + filename);
-	std::ifstream inputFile(file_path);
 
 	logger.log(DEBUG, "manageDelete method is called");
-	logger.log(DEBUG, "inputFile: " + file_path);
-
-	if (!inputFile.is_open())
-	{
-		logger.log(WARNING, "404 NOT FOUND");
-		_status_code = 404;
-	}
-	else if (std::remove(file_path.c_str()) != 0)
-	{
-		logger.log(WARNING, "403 FORBIDDEN");
-		_status_code = 403;
-	}
-	else
-	{
-		logger.log(INFO, "204 NO CONTENT");
-		_status_code = 204;
-	}
-	logger.log(DEBUG, "_status_code in the manageDelete method is: %",
-			   _status_code);
+	if (std::remove(request_target_path.c_str()) != 0)
+		throw ClientException(StatusCode::NotFound);
+	HTTPStatus status(StatusCode::NoContent);
+	_response += status.getStatusLine("HTTP/1.1");
+	return (ClientState::Sending);
 }
 
-void FileManager::manage(HTTPMethod method, const std::string &filename,
-						 const std::string &body)
+ClientState FileManager::manage(HTTPMethod method,
+								const std::string &request_target_path,
+								const std::string &body)
 {
-	Logger &logger = Logger::getInstance();
-	logger.log(DEBUG, "manage method is called");
+	if (method == HTTPMethod::DELETE)
+		return (manageDelete(request_target_path));
 	if (method == HTTPMethod::GET)
-		manageGet(filename);
+	{
+		if (!_request_target.is_open())
+			openGetFile(request_target_path);
+		return (manageGet());
+	}
 	else if (method == HTTPMethod::POST)
-		managePost(filename, body);
-	else
-		manageDelete(filename);
-	logger.log(DEBUG, "_status_code in the manage method is: %", _status_code);
+	{
+		if (!_request_target.is_open())
+			openPostFile(request_target_path);
+		return (managePost(body));
+	}
+	return (ClientState::Unkown);
 }
 
-const std::string &FileManager::getContent() const
+const std::string &FileManager::getResponse(void) const
 {
-	return (_content);
-}
-
-int FileManager::getStatusCode() const
-{
-	return (_status_code);
+	return (_response);
 }
