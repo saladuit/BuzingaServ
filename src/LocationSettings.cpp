@@ -67,7 +67,7 @@ LocationSettings::identifyLocationSetting(const std::string &token)
 	else if (token == "directory_listing")
 		return (LocationSettingOption::DirectoryListing);
 	else if (token == "allow_methods")
-		return (LocationSettingOption::AllowMethods);
+		return (LocationSettingOption::AllowedMethods);
 	else if (token == "cgipass")
 		return (LocationSettingOption::CgiPass);
 	else
@@ -88,6 +88,16 @@ void LocationSettings::addValue(LocationSettingOption key,
 	vect.emplace_back(value);
 }
 
+const std::string &LocationSettings::getPath() const
+{
+	return (_path);
+}
+
+void LocationSettings::setPath(const std::string &path)
+{
+	_path = path;
+}
+
 // THIS IS PRINTING FUNCTION
 
 std::string LocationSettings::keyToString(LocationSettingOption Key) const
@@ -102,8 +112,8 @@ std::string LocationSettings::keyToString(LocationSettingOption Key) const
 		return ("Index");
 	case (LocationSettingOption::DirectoryListing):
 		return ("DirectoryListing");
-	case (LocationSettingOption::AllowMethods):
-		return ("AllowMethods");
+	case (LocationSettingOption::AllowedMethods):
+		return ("AllowedMethods");
 	case (LocationSettingOption::CgiPass):
 		return ("CgiPass");
 	default:
@@ -123,10 +133,11 @@ std::string LocationSettings::valuesToString(LocationSettingOption Key) const
 void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
+	size_t enum_size = sizeof(LocationSettingOption) /
+					   sizeof(std::underlying_type<LocationSettingOption>);
 
 	logger.log(DEBUG, "Path:\t" + _path);
-	for (int i = static_cast<int>(LocationSettingOption::Prefix);
-		 i < static_cast<int>(LocationSettingOption::Count); i++)
+	for (size_t i = 0; i <= enum_size + 1; i++)
 	{
 		logger.log(DEBUG,
 				   "LocationSetting: Key:\t" +
