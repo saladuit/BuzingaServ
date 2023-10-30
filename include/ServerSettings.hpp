@@ -34,7 +34,7 @@ class ServerSettings
 
 	ServerSettingOption identifyServerSetting(const std::string &token);
 	// TODO: void addLocationSetting(LocationSettings settings);
-	bool resolveLocation(std::string path, HTTPMethod method);
+	bool resolveLocation(const std::string &path, HTTPMethod method);
 
 	void printServerSettings() const;
 

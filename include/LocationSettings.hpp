@@ -4,6 +4,7 @@
 #include <Token.hpp>
 
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -13,9 +14,8 @@ enum class LocationSettingOption
 	Root,
 	Index,
 	DirectoryListing,
-	AllowMethods,
+	AllowedMethods,
 	CgiPass,
-	Count,
 };
 
 class LocationSettings
