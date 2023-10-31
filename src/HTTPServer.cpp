@@ -32,7 +32,6 @@ int HTTPServer::run()
 		logger.log(FATAL, e.what());
 		return (EXIT_FAILURE);
 	}
-	return (EXIT_SUCCESS);
 
 	while (true)
 	{
@@ -46,6 +45,7 @@ int HTTPServer::run()
 			return (EXIT_FAILURE);
 		}
 	}
+	return (EXIT_SUCCESS);
 }
 
 void HTTPServer::setupServers(void)

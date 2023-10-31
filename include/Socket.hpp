@@ -15,7 +15,8 @@ class Socket
 	socklen_t _addr_len;
 	t_sockaddr_in _addr;
 	const int _fd;
-	void initSockaddrIn(t_sockaddr_in &addr, const std::string &_port);
+	void initSockaddrIn(t_sockaddr_in &addr, const std::string &_host,
+						const std::string &_port);
 
   public:
 	Socket();
@@ -24,7 +25,7 @@ class Socket
 	Socket &operator=(const Socket &other) = delete;
 	~Socket();
 	int getFD() const;
-	void setupServer(const std::string &port);
+	void setupServer(const std::string &host, const std::string &port);
 	void setupClient(void);
 };
 

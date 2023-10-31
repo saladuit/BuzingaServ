@@ -6,8 +6,12 @@ Server::Server(const ServerSettings &server_settings)
 	: _server_settings(server_settings), _socket()
 {
 	Logger &logger = Logger::getInstance();
+	const std::string &host =
+		server_settings.getValue(ServerSettingOption::Host);
+	const std::string &port =
+		server_settings.getValue(ServerSettingOption::Port);
 
-	_socket.setupServer(server_settings.getValue(ServerSettingOption::Port));
+	_socket.setupServer(host, port);
 	logger.log(DEBUG, "Created Server on host:port " +
 						  _server_settings.getValue(ServerSettingOption::Host) +
 						  ":" +
