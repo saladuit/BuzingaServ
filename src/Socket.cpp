@@ -51,6 +51,7 @@ void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &host,
 {
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
+	getaddrinfo(host.c_str(), port.c_str(), NULL, addr);
 	addr.sin_addr.s_addr = inet_addr(host.c_str());
 	addr.sin_port = htons(std::stoi(port)); // TODO: stoi exception
 	std::fill_n(addr.sin_zero, sizeof(addr.sin_zero), '\0');
