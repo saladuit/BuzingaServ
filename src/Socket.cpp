@@ -3,41 +3,47 @@
 #include <SystemException.hpp>
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <cassert>
 
-Socket::Socket(const int fd)
+Socket::Socket(int server_fd)
 	: _addr_len(sizeof(_addr)),
-	  _fd(accept(fd, (t_sockaddr *)&_addr, &_addr_len))
+	  _fd(accept(server_fd, (t_sockaddr *)&_addr, &_addr_len))
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "Accepting connection on fd: " + std::to_string(fd));
-	if (_fd == SYSTEM_ERROR)
+	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("Accept");
-	char address[INET_ADDRSTRLEN];
-	assert(inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) !=
-		   NULL);
 	logger.log(INFO,
-			   "Connection received from " + std::string(address) +
-				   " created client socket on fd: " + std::to_string(getFD()));
+			   " created client socket on fd: " + std::to_string(getFD()));
 }
 
-Socket::Socket(const Socket &other)
-	: _addr_len(other._addr_len), _addr(other._addr), _fd(other._fd)
+void Socket::setupClient(void)
 {
+	Logger &logger = Logger::getInstance();
+
+	assert(fcntl(getFD(), F_SETFL, O_NONBLOCK) != SYSTEM_ERROR);
+	char address[INET_ADDRSTRLEN];
+	if (inet_ntop(AF_INET, &_addr.sin_addr, address, sizeof(address)) == NULL)
+		throw SystemException("inet_ntop failed");
+	logger.log(INFO, "Connection received from " + std::string(address));
 }
 
 Socket::Socket() : _fd(socket(AF_INET, SOCK_STREAM, 0))
 {
-	if (_fd == SYSTEM_ERROR)
+	Logger &logger = Logger::getInstance();
+
+	if (getFD() == SYSTEM_ERROR)
 		throw SystemException("socket creation failed");
+	logger.log(DEBUG,
+			   "Created server socket on fd: " + std::to_string(getFD()));
 }
 
 Socket::~Socket()
 {
-	close(_fd);
+	assert(close(getFD()) != SYSTEM_ERROR);
 }
 
 void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
@@ -52,13 +58,16 @@ void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
 void Socket::setupServer(const std::string &port)
 {
 	int option = 1;
+	if (fcntl(getFD(), F_SETFL, O_NONBLOCK) == SYSTEM_ERROR)
+		throw SystemException("fcntl failed");
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) ==
 		SYSTEM_ERROR)
 		throw SystemException("setsockopt failed");
 	initSockaddrIn(_addr, port);
-	if (bind(_fd, (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) == SYSTEM_ERROR)
+	if (bind(getFD(), (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) ==
+		SYSTEM_ERROR)
 		throw SystemException("Bind");
-	if (listen(_fd, MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)
+	if (listen(getFD(), MAX_PENDING_CONNECTIONS) == SYSTEM_ERROR)
 		throw SystemException("Listen");
 }
 

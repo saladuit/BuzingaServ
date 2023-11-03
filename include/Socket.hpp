@@ -19,12 +19,13 @@ class Socket
 
   public:
 	Socket();
-	Socket(const int server_fd);
-	Socket(const Socket &other);
+	Socket(int server_fd);
+	Socket(const Socket &other) = delete;
 	Socket &operator=(const Socket &other) = delete;
 	~Socket();
 	int getFD() const;
 	void setupServer(const std::string &port);
+	void setupClient(void);
 };
 
 #endif

@@ -3,24 +3,24 @@
 
 #include <ClientState.hpp>
 #include <HTTPRequest.hpp>
+#include <fstream>
 #include <string>
 
 class HTTPResponse
 {
   private:
-	int _status_code;
-	ssize_t _bytes_sent;
+	size_t _bytes_sent;
 	std::string _response;
 
   public:
-	HTTPResponse(const HTTPRequest &request);
-	~HTTPResponse();
-
 	HTTPResponse();
 	HTTPResponse(const HTTPResponse &other) = delete;
 	HTTPResponse &operator=(const HTTPResponse &rhs) = delete;
+	~HTTPResponse();
 
-	ClientState send(int client_fd);
+	ClientState send(int client_fd, const std::string &response);
+	void append(const std::string &content);
+	void clear(void);
 };
 
 #endif

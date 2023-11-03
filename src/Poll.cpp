@@ -10,7 +10,7 @@ Poll::~Poll()
 {
 }
 
-void Poll::addFD(int fd, short events)
+void Poll::addPollFD(int fd, short events)
 {
 	_poll_fds.emplace_back(pollfd{fd, events, 0});
 }
@@ -32,7 +32,7 @@ void Poll::removeFD(int fd)
 					_poll_fds.end());
 }
 
-std::vector<pollfd> Poll::getFds(void) const
+std::vector<pollfd> Poll::getPollFDs(void) const
 {
 	return (_poll_fds);
 }
@@ -44,7 +44,7 @@ void Poll::pollFDs(void)
 						 " file descriptors");
 	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
 	if (poll_count == SYSTEM_ERROR || poll_count == 0)
-		throw SystemException("poll");
+		throw SystemException("poll"); // TODO change poll_count 0 handler
 }
 
 std::string Poll::pollEventsToString(short events) const
@@ -60,15 +60,19 @@ std::string Poll::pollEventsToString(short events) const
 		events_string += " POLLNVAL";
 	if (events & POLLPRI)
 		events_string += " POLLPRI";
-	if (events & POLLRDBAND)
-		events_string += " POLLRDBAND";
-	if (events & POLLRDNORM)
-		events_string += " POLLRDNORM";
-	if (events & POLLWRBAND)
-		events_string += " POLLWRBAND";
-	if (events & POLLWRNORM)
-		events_string += " POLLWRNORM";
 	if (events & POLLERR)
 		events_string += " POLLERR";
 	return (events_string);
+}
+
+void Poll::checkREvents(short revents) const
+{
+	if (revents & POLLHUP)
+		throw PollException("Poll wasn't closed properly");
+	if (revents & POLLNVAL)
+		throw PollException("Invalid file descriptor");
+	if (revents & POLLERR)
+		throw PollException("Error occurred on file descriptor");
+	if (revents & POLLPRI)
+		throw PollException("Exceptional condition on file descriptor");
 }

@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-#define BUFFER_SIZE 16
+#define BUFFER_SIZE 64
 
 // DEFINES
 
@@ -44,14 +44,17 @@ class HTTPRequest
 	void setHeader(const std::string &key, const std::string &header);
 	const std::string &getHeader(const std::string &key) const;
 
+	const std::string &getBody(void) const;
 	ClientState receive(int fd);
 
   private:
 	ssize_t _bytes_read;
+	size_t _content_length;
 	HTTPMethod _methodType;
 	std::string _http_request;
 	std::string _request_target;
 	std::string _http_version;
+	std::string _body;
 	std::unordered_map<std::string, std::string> _headers;
 
 	size_t parseStartLine(size_t &i);

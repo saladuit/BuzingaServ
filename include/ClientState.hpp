@@ -3,9 +3,11 @@
 
 enum class ClientState
 {
-	Read,
-	Write,
+	Receiving,
+	Loading,
+	Sending,
 	Done,
+	Error,
 	Unkown,
 };
 

@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <stdexcept>
-#include <string>
 
 #define SYSTEM_ERROR (-1)
 

@@ -5,7 +5,6 @@
 #include <FileManager.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
-#include <Logger.hpp>
 #include <Socket.hpp>
 
 class Client
@@ -26,6 +25,7 @@ class Client
 	FileManager _file_manager;
 	CGI _cgi;
 	Socket _socket;
+	ClientState _state;
 };
 
 #endif
