@@ -5,20 +5,9 @@
 #include <LocationSettings.hpp>
 #include <Token.hpp>
 
+#include <regex>
 #include <string>
-#include <unordered_map>
 #include <vector>
-
-enum class ServerSettingOption
-{
-	Port,
-	Host,
-	ServerName,
-	ClientMaxBodySize,
-	ErrorPages,
-	Location,
-	Count,
-};
 
 class ServerSettings
 {
@@ -29,18 +18,31 @@ class ServerSettings
 	ServerSettings(const ServerSettings &rhs);
 	ServerSettings &operator=(const ServerSettings &rhs) = delete;
 
-	const std::string &getValue(ServerSettingOption setting) const;
-	void setValue(ServerSettingOption key, const std::string &value);
+	// Functionality:
+	const LocationSettings *resolveLocation(const std::string &request_target,
+											HTTPMethod input_method);
+	const std::string &getListen() const;
+	const std::string &getServerName() const;
+	const std::string &getErrorDir() const;
+	const std::string &getClientMaxBodySize() const;
 
-	ServerSettingOption identifyServerSetting(const std::string &token);
-	// TODO: void addLocationSetting(LocationSettings settings);
-	bool resolveLocation(const std::string &path, HTTPMethod method);
-
+	// Printing:
 	void printServerSettings() const;
 
   private:
-	std::unordered_map<ServerSettingOption, std::string> _server_setting;
+	std::string _listen;
+	std::string _server_name;
+	std::string _error_dir;
+	std::string _client_max_body_size;
 	std::vector<LocationSettings> _location_settings;
+
+	// Parsing:
+	void addValueToServerSettings(const Token &key,
+								  std::vector<Token>::iterator &value);
+	void parseListen(const Token value);
+	void parseServerName(const Token value);
+	void parseErrorDir(const Token value);
+	void parseClientMaxBodySize(const Token value);
 
 	// TODO: methods fucntion that can resolve if a read/write/delete can be
 	// done on a certain location in the LocationSettings

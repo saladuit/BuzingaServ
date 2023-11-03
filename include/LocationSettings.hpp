@@ -7,16 +7,6 @@
 #include <unordered_map>
 #include <vector>
 
-enum class LocationSettingOption
-{
-	Prefix,
-	Root,
-	Index,
-	DirectoryListing,
-	AllowedMethods,
-	CgiPass,
-};
-
 class LocationSettings
 {
   public:
@@ -26,23 +16,26 @@ class LocationSettings
 	LocationSettings(const LocationSettings &rhs);
 	LocationSettings &operator=(const LocationSettings &rhs) = delete;
 
-	const std::vector<std::string> &
-	getValues(LocationSettingOption setting) const;
-	void addValue(LocationSettingOption key, const std::string &value);
+	// Functionality:
+	//		getters:
+	const std::string &getDir() const;
+	const std::string &getRoot() const;
+	const std::string &getIndex() const;
+	const std::string &getAllowedMethods() const;
+	bool getAutoIndex() const;
 
-	const std::string &getPath() const;
-	void setPath(const std::string &path);
+	//		setters:
+	void setDir(const std::string &path);
 
+	// Printing:
 	void printLocationSettings() const;
 
-	std::string keyToString(LocationSettingOption Key) const;
-	std::string valuesToString(LocationSettingOption Key) const;
-
   private:
-	std::unordered_map<LocationSettingOption, std::vector<std::string>>
-		_setting;
-	std::string _path;
+	std::string _directory;
 
-	LocationSettingOption identifyLocationSetting(const std::string &token);
+	std::string _root;
+	std::string _index;
+	std::string _allowed_methods;
+	bool _auto_index;
 };
 #endif // !LOCATIONSETTING_HPP
