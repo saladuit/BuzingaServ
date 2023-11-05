@@ -49,9 +49,13 @@ void ConfigParser::ParseConfig()
 
 	tokenizeStream(OpenFile(), tokenlist);
 
+	logger.log(INFO, "Tokenized FileStream: ");
+
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
+
+	logger.log(INFO, "Parsed Tokenlist: ");
 
 	for (auto &it : _server_settings)
 		it.printServerSettings();

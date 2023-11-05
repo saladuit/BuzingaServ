@@ -37,5 +37,10 @@ class LocationSettings
 	std::string _index;
 	std::string _allowed_methods;
 	bool _auto_index;
+
+  void parseRoot(Token token);
+  void parseIndex(Token token);
+  void parseAllowedMethods(Token token);
+
 };
 #endif // !LOCATIONSETTING_HPP

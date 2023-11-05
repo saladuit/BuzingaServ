@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-// this prototype is here so the constructor can use it;
+// this prototype is here so the Token constructor can use it;
 bool validateDirectory(const Token &path);
 
 LocationSettings::LocationSettings()
@@ -29,12 +29,16 @@ LocationSettings::~LocationSettings()
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 	: _directory(), _root(), _index(), _allowed_methods(), _auto_index()
 {
+	Logger &logger = Logger::getInstance();
+  logger.log(DEBUG, "\tLocationSettings:" + token->getString());
+
 	if (token->getString() != "location")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
 
 	token++;
+  logger.log(DEBUG, "\tSetting Request Target:" + token->getString());
 	//	if (!validateDirectory(token->getString()))
 	//		throw std::runtime_error("location block contains invalid direcotry:
 	//"
@@ -44,9 +48,37 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
+    const Token key = *token;
 
+    while (token->getType() != TokenType::SEMICOLON)
+    {
+      if (key.getString() == "root")
+        parseRoot(*token);
+      else if (key.getString() == "index")
+        parseIndex(*token);
+      else if (key.getString() == "allowed_methods")
+        parseAllowedMethods(*token);
+
+
+      token++;
+    }
 		token++;
 	}
+}
+
+void parseRoot(const Token token)
+{
+  _root.append(" " + token.getString());
+}
+
+void parseIndex(const Token token)
+{
+  _index.append(" " + token.getString());
+}
+
+void parseAllowedMethods(const Token token)
+{
+  _allowed_methods.append(" " + token.getString());
 }
 
 // bool validateDirectory(const Token &path)

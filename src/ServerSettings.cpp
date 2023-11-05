@@ -37,6 +37,8 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
+	Logger &logger = Logger::getInstance();
+
 	if (token->getString() != "server")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
@@ -48,13 +50,14 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	{
 		const Token key = *token;
 
+    logger.log(DEBUG, "\tTokens: Key:\t" + token->getString());
 		if (key.getString() == "location")
 			_location_settings.emplace_back(LocationSettings(token));
 		else
 		{
 			token++;
 			addValueToServerSettings(key, token);
-			token += 2;
+			token++;
 		}
 	}
 }
