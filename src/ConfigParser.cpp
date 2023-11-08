@@ -47,7 +47,7 @@ void ConfigParser::ParseConfig()
 	std::vector<Token> tokenlist;
 
 	tokenizeStream(OpenFile(), tokenlist);
-	syntaxCheck(tokenlist.begin());
+	// syntaxCheck(tokenlist);
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)

@@ -66,11 +66,16 @@ void ServerSettings::parseServerName(const Token value)
 
 void ServerSettings::parseErrorDir(const Token value)
 {
+	if (!_error_dir.empty())
+		throw std::runtime_error("Parsing Error: Redefining _error_dir");
 	_error_dir = value.getString();
 }
 
 void ServerSettings::parseClientMaxBodySize(const Token value)
 {
+	if (!_client_max_body_size.empty())
+		throw std::runtime_error(
+			"Parsing Error: Redefining _client_max_body_size");
 	_client_max_body_size = value.getString();
 }
 
@@ -158,8 +163,8 @@ void ServerSettings::printServerSettings() const
 	// printing Class variables:
 	logger.log(DEBUG, "\t_Listen:" + _listen);
 	logger.log(DEBUG, "\t_ServerName:" + _server_name);
-	logger.log(DEBUG, "\t_ErrorDir:" + _error_dir);
-	logger.log(DEBUG, "\t_ClientMaxBodySize:" + _client_max_body_size);
+	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
 	for (auto &location_instance : _location_settings)
 	{
 		logger.log(DEBUG, "\n");

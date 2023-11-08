@@ -13,6 +13,7 @@ enum class TokenType
 	SEMICOLON,
 	OPEN_BRACKET,
 	CLOSE_BRACKET,
+	PATH,
 	WORD,
 };
 
@@ -26,11 +27,12 @@ class Token
 	const Token &operator=(const Token &rhs) = delete;
 
 	TokenType getType() const;
+	void setType(TokenType);
 	const std::string &getString() const;
 	std::string typeToString() const;
 
   private:
-	const TokenType _type;
+	TokenType _type;
 	const std::string _string;
 };
 
