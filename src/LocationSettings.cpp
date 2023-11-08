@@ -9,13 +9,13 @@
 #include <vector>
 
 LocationSettings::LocationSettings()
-	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
+	: _directory(), _alias(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
 {
 }
 
 LocationSettings::LocationSettings(const LocationSettings &rhs)
-	: _directory(rhs._directory), _root(rhs._root), _index(rhs._index),
+	: _directory(rhs._directory), _alias(rhs._alias), _index(rhs._index),
 	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
 	  _auto_index(rhs._auto_index)
 {
@@ -26,7 +26,7 @@ LocationSettings::~LocationSettings()
 }
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
-	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
+	: _directory(), _alias(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
 {
 	_directory = token->getString();
@@ -40,7 +40,7 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 		while (token->getType() != TokenType::SEMICOLON)
 		{
 			if (key.getString() == "root")
-				parseRoot(*token);
+				parseAlias(*token);
 			else if (key.getString() == "index")
 				parseIndex(*token);
 			else if (key.getString() == "allowed_methods")
@@ -56,9 +56,9 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-void LocationSettings::parseRoot(const Token token)
+void LocationSettings::parseAlias(const Token token)
 {
-	_root.append(" " + token.getString());
+	_alias.append(" " + token.getString());
 }
 
 void LocationSettings::parseIndex(const Token token)
@@ -88,9 +88,9 @@ const std::string &LocationSettings::getDir() const
 	return (_directory);
 }
 
-const std::string &LocationSettings::getRoot() const
+const std::string &LocationSettings::getAlias() const
 {
-	return (_root);
+	return (_alias);
 }
 
 const std::string &LocationSettings::getIndex() const
@@ -126,7 +126,7 @@ void LocationSettings::printLocationSettings() const
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "\tLocation_ Instance: " + _directory);
-	logger.log(DEBUG, "\t\tRoot:\t\t\t" + _root);
+	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
 	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
 	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);

@@ -37,12 +37,6 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
-
-	if (token->getString() != "server")
-		throw std::runtime_error(
-			"unrecognised token in Configfile at token: " +
-			token->getString()); // TODO: Make unrecognised token exception
-								 // TODO: this needs to be moved to syntax
 	token += 2;
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
@@ -58,7 +52,7 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-// TODO: value confirmation and validation should happen here
+// TODO: value confirmation and validation should happen here or in syntax
 
 void ServerSettings::parseListen(const Token value)
 {
@@ -172,10 +166,14 @@ void ServerSettings::printServerSettings() const
 		location_instance.printLocationSettings();
 	}
 
-	logger.log(DEBUG, "\t_ClientMaxBodySize:");
-	std::stringstream ss(getListen());
-	for (; std::getline(ss, option, ' ');)
-		logger.log(DEBUG, "\t\t" + option);
+	// We can go over the different strings by using Getline
+	//
+	//	logger.log(DEBUG, "\t_ClientMaxBodySize:");
+	//
+	//	std::stringstream ss(getListen());
+	//
+	//	for (; std::getline(ss, option, ' ');)
+	//		logger.log(DEBUG, "\t\t" + option);
 
 	return;
 }

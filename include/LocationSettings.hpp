@@ -19,7 +19,7 @@ class LocationSettings
 	// Functionality:
 	//		getters:
 	const std::string &getDir() const;
-	const std::string &getRoot() const;
+	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
 	const std::string &getReturn() const;
@@ -34,14 +34,14 @@ class LocationSettings
   private:
 	std::string _directory;
 
-	std::string _root;
+	std::string _alias;
 	std::string _index;
 	std::string _allowed_methods;
 	std::string _cgi_path;
 	std::string _return;
 	bool _auto_index;
 
-	void parseRoot(const Token token);
+	void parseAlias(const Token token);
 	void parseIndex(const Token token);
 	void parseAllowedMethods(const Token token);
 	void parseCgiPath(const Token token);

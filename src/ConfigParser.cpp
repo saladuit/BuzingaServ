@@ -49,16 +49,22 @@ void ConfigParser::ParseConfig()
 
 	tokenizeStream(OpenFile(), tokenlist);
 
-	logger.log(INFO, "Tokenized FileStream: ");
-
+	size_t block_nbr = 0;
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
-		_server_settings.emplace_back(ServerSettings(it));
+	{
+		block_nbr++;
+		try
+		{
+			_server_settings.emplace_back(ServerSettings(it));
+		}
+		catch ()
+		{
+		}
+	}
 
-	logger.log(INFO, "Parsed Tokenlist: ");
-
-	for (auto &it : _server_settings)
-		it.printServerSettings();
+	//	for (auto &it : _server_settings)
+	//		it.printServerSettings();
 
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }
