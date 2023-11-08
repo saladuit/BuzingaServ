@@ -8,9 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-// this prototype is here so the Token constructor can use it;
-bool validateDirectory(const Token &path);
-
 LocationSettings::LocationSettings()
 	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
@@ -32,16 +29,6 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
 {
-	if (token->getString() != "location")
-		throw std::runtime_error(
-			"unrecognised token in Configfile at token: " +
-			token->getString()); // TODO: Make unrecognised token exception
-
-	token++;
-	//	if (!validateDirectory(token->getString()))
-	//		throw std::runtime_error("location block contains invalid direcotry:
-	//"
-	//+ 								 token->getString());
 	_directory = token->getString();
 	token += 2;
 
@@ -60,6 +47,8 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 				parseAllowedMethods(*token);
 			else if (key.getString() == "cgi_path")
 				parseCgiPath(*token);
+			else if (key.getString() == "return")
+				parseReturn(*token);
 
 			token++;
 		}
@@ -86,10 +75,11 @@ void LocationSettings::parseCgiPath(const Token token)
 {
 	_cgi_path.append(" " + token.getString());
 }
-// bool validateDirectory(const Token &path)
-//{
-//	return (false);
-// }
+
+void LocationSettings::parseReturn(const Token token)
+{
+	_return.append(" " + token.getString());
+}
 
 // Functionality:
 //		getters:
@@ -118,6 +108,11 @@ bool LocationSettings::getAutoIndex() const
 	return (_auto_index);
 }
 
+const std::string &LocationSettings::getReturn() const
+{
+	return (_return);
+}
+
 //		setters:
 void LocationSettings::setDir(const std::string &direcotry)
 {
@@ -135,6 +130,7 @@ void LocationSettings::printLocationSettings() const
 	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
 	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
+	logger.log(DEBUG, "\t\tReturn:\t\t" + _return);
 	logger.log(DEBUG,
 			   "\t\tAutoIndex:\t\t" +
 				   (_auto_index ? std::string(" ON") : std::string(" OFF")));

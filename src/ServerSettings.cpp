@@ -48,17 +48,17 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
 		const Token key = *token;
+		token++;
 
 		if (key.getString() == "location")
 			_location_settings.emplace_back(LocationSettings(token));
 		else
-		{
-			token++;
 			addValueToServerSettings(key, token);
-		}
 		token++;
 	}
 }
+
+// TODO: value confirmation and validation should happen here
 
 void ServerSettings::parseListen(const Token value)
 {
@@ -91,7 +91,7 @@ void ServerSettings::addValueToServerSettings(
 			parseServerName(*value);
 		else if (key.getString() == "error_dir")
 			parseErrorDir(*value);
-		else if (key.getString() == "_client_max_body_size")
+		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
 		value++;
 	}
@@ -114,6 +114,7 @@ methodToString(HTTPMethod method) // TODO: change data_types in function
 	}
 }
 
+//		getters:
 const std::string &ServerSettings::getListen() const
 {
 	return (_listen);
@@ -171,12 +172,10 @@ void ServerSettings::printServerSettings() const
 		location_instance.printLocationSettings();
 	}
 
-	return;
+	logger.log(DEBUG, "\t_ClientMaxBodySize:");
+	std::stringstream ss(getListen());
+	for (; std::getline(ss, option, ' ');)
+		logger.log(DEBUG, "\t\t" + option);
 
-	// This is possibly a usefull way to individually go over all the diffrent
-	// instances stored in one ServerSettings;
-	//		logger.log(DEBUG, "\t_ClientMaxBodySize:");
-	//		std::stringstream ss(getClientMaxBodySize());
-	//		for (; std::getline(ss, option);)
-	//			logger.log(DEBUG, "\t\t" + option);
+	return;
 }

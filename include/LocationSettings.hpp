@@ -22,6 +22,7 @@ class LocationSettings
 	const std::string &getRoot() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
+	const std::string &getReturn() const;
 	bool getAutoIndex() const;
 
 	//		setters:
@@ -37,11 +38,13 @@ class LocationSettings
 	std::string _index;
 	std::string _allowed_methods;
 	std::string _cgi_path;
+	std::string _return;
 	bool _auto_index;
 
 	void parseRoot(const Token token);
 	void parseIndex(const Token token);
 	void parseAllowedMethods(const Token token);
 	void parseCgiPath(const Token token);
+	void parseReturn(const Token token);
 };
 #endif // !LOCATIONSETTING_HPP
