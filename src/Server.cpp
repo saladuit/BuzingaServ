@@ -7,10 +7,12 @@ Server::Server(const ServerSettings &server_settings)
 {
 	Logger &logger = Logger::getInstance();
 
-	_socket.setupServer(server_settings.getListen()); // TODO: make sure setupServer is capable of having getListen as an input.
+	_socket.setupServer(
+		_server_settings.getListen()); // TODO: make sure setupServer is capable
+									   // of having getListen as an input.
 	logger.log(DEBUG, "Created Server on host:port " +
-						server_settings.getListen() +
-						" on fd: " + std::to_string(_socket.getFD()));
+						  _server_settings.getListen() +
+						  " on fd: " + std::to_string(_socket.getFD()));
 }
 
 Server::~Server()

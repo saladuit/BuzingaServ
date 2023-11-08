@@ -37,7 +37,6 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
-	Logger &logger = Logger::getInstance();
 
 	if (token->getString() != "server")
 		throw std::runtime_error(
@@ -50,15 +49,14 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	{
 		const Token key = *token;
 
-    logger.log(DEBUG, "\tTokens: Key:\t" + token->getString());
 		if (key.getString() == "location")
 			_location_settings.emplace_back(LocationSettings(token));
 		else
 		{
 			token++;
 			addValueToServerSettings(key, token);
-			token++;
 		}
+		token++;
 	}
 }
 
@@ -168,7 +166,10 @@ void ServerSettings::printServerSettings() const
 	logger.log(DEBUG, "\t_ErrorDir:" + _error_dir);
 	logger.log(DEBUG, "\t_ClientMaxBodySize:" + _client_max_body_size);
 	for (auto &location_instance : _location_settings)
+	{
+		logger.log(DEBUG, "\n");
 		location_instance.printLocationSettings();
+	}
 
 	return;
 

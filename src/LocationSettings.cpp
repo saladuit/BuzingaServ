@@ -12,13 +12,15 @@
 bool validateDirectory(const Token &path);
 
 LocationSettings::LocationSettings()
-	: _directory(), _root(), _index(), _allowed_methods(), _auto_index()
+	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
+	  _auto_index()
 {
 }
 
 LocationSettings::LocationSettings(const LocationSettings &rhs)
 	: _directory(rhs._directory), _root(rhs._root), _index(rhs._index),
-	  _allowed_methods(rhs._allowed_methods), _auto_index(rhs._auto_index)
+	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
+	  _auto_index(rhs._auto_index)
 {
 }
 
@@ -27,18 +29,15 @@ LocationSettings::~LocationSettings()
 }
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
-	: _directory(), _root(), _index(), _allowed_methods(), _auto_index()
+	: _directory(), _root(), _index(), _allowed_methods(), _cgi_path(),
+	  _auto_index()
 {
-	Logger &logger = Logger::getInstance();
-  logger.log(DEBUG, "\tLocationSettings:" + token->getString());
-
 	if (token->getString() != "location")
 		throw std::runtime_error(
 			"unrecognised token in Configfile at token: " +
 			token->getString()); // TODO: Make unrecognised token exception
 
 	token++;
-  logger.log(DEBUG, "\tSetting Request Target:" + token->getString());
 	//	if (!validateDirectory(token->getString()))
 	//		throw std::runtime_error("location block contains invalid direcotry:
 	//"
@@ -48,39 +47,45 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
-    const Token key = *token;
+		const Token key = *token;
+		token++;
 
-    while (token->getType() != TokenType::SEMICOLON)
-    {
-      if (key.getString() == "root")
-        parseRoot(*token);
-      else if (key.getString() == "index")
-        parseIndex(*token);
-      else if (key.getString() == "allowed_methods")
-        parseAllowedMethods(*token);
+		while (token->getType() != TokenType::SEMICOLON)
+		{
+			if (key.getString() == "root")
+				parseRoot(*token);
+			else if (key.getString() == "index")
+				parseIndex(*token);
+			else if (key.getString() == "allowed_methods")
+				parseAllowedMethods(*token);
+			else if (key.getString() == "cgi_path")
+				parseCgiPath(*token);
 
-
-      token++;
-    }
+			token++;
+		}
 		token++;
 	}
 }
 
-void parseRoot(const Token token)
+void LocationSettings::parseRoot(const Token token)
 {
-  _root.append(" " + token.getString());
+	_root.append(" " + token.getString());
 }
 
-void parseIndex(const Token token)
+void LocationSettings::parseIndex(const Token token)
 {
-  _index.append(" " + token.getString());
+	_index.append(" " + token.getString());
 }
 
-void parseAllowedMethods(const Token token)
+void LocationSettings::parseAllowedMethods(const Token token)
 {
-  _allowed_methods.append(" " + token.getString());
+	_allowed_methods.append(" " + token.getString());
 }
 
+void LocationSettings::parseCgiPath(const Token token)
+{
+	_cgi_path.append(" " + token.getString());
+}
 // bool validateDirectory(const Token &path)
 //{
 //	return (false);
@@ -123,14 +128,14 @@ void LocationSettings::setDir(const std::string &direcotry)
 
 void LocationSettings::printLocationSettings() const
 {
-
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "\tLocation_ Instance:");
-	logger.log(DEBUG, "\t\tRequest_target:\t" + _directory);
-	logger.log(DEBUG, "\t\tRoot:\t\t" + _root);
-	logger.log(DEBUG, "\t\tIndex:\t\t" + _index);
+	logger.log(DEBUG, "\tLocation_ Instance: " + _directory);
+	logger.log(DEBUG, "\t\tRoot:\t\t\t" + _root);
+	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
-	logger.log(DEBUG, "\t\tAutoIndex:\t" + (_auto_index ? std::string(" ON")
-														: std::string(" OFF")));
+	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
+	logger.log(DEBUG,
+			   "\t\tAutoIndex:\t\t" +
+				   (_auto_index ? std::string(" ON") : std::string(" OFF")));
 }

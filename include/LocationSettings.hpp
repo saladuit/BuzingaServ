@@ -36,11 +36,12 @@ class LocationSettings
 	std::string _root;
 	std::string _index;
 	std::string _allowed_methods;
+	std::string _cgi_path;
 	bool _auto_index;
 
-  void parseRoot(Token token);
-  void parseIndex(Token token);
-  void parseAllowedMethods(Token token);
-
+	void parseRoot(const Token token);
+	void parseIndex(const Token token);
+	void parseAllowedMethods(const Token token);
+	void parseCgiPath(const Token token);
 };
 #endif // !LOCATIONSETTING_HPP
