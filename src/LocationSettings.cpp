@@ -125,7 +125,7 @@ void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "\tLocation_ Instance: " + _directory);
+	logger.log(DEBUG, "\tLocation Prefix:\t" + _directory);
 	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
 	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);

@@ -4,6 +4,7 @@
 #include <LocationSettings.hpp>
 #include <ServerSettings.hpp>
 
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,6 +16,7 @@ class ConfigParser
 	std::vector<ServerSettings> _server_settings;
 
 	std::stringstream OpenFile();
+	void syntaxCheck(std::vector<Token>::iterator);
 
   public:
 	ConfigParser(const std::string &file_path);
