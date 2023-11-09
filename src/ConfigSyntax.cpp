@@ -6,8 +6,24 @@
 #include <stdexcept>
 #include <vector>
 
-std::vector<Token>::iterator findServerBlockEnd(std::vector<Token>::iterator it)
+// Finds the end of the block you are currently at the start of.
+std::vector<Token>::iterator findBlockEnd(std::vector<Token> tokenlist,
+										  std::vector<Token>::iterator it)
 {
+	int stack = 1;
+	Token &start_block = *it;
+
+	while (stack != 0 && it != tokenlist.end())
+	{
+		if (it->getType() == TokenType::OPEN_BRACKET)
+			stack++;
+		else if (it->getType() == TokenType::CLOSE_BRACKET)
+			stack--;
+		it++;
+	}
+	if (stack != 0)
+		throw std::runtime_error("Syntax Error: Unclosed Block: " +
+								 start_block.getString());
 	return (it);
 }
 
@@ -17,32 +33,17 @@ void skipTokenLine(std::vector<Token>::iterator &it)
 		it++;
 }
 
-void identifyLocationBlocks(std::vector<Token> tokenlist,
-							std::vector<Token>::iterator it,
-							const std::vector<Token>::iterator endBlock)
-{
-
-	while (it != endBlock)
-	{
-		if (it->getString() != "location")
-			skipTokenLine(it);
-		else
-		{
-			it++;
-			it->setType(TokenType::PATH);
-		}
-		it++;
-	}
-}
-
 void syntaxCheckServerBlock(std::vector<Token> tokenlist,
 							std::vector<Token>::iterator &it)
 {
+	Token &block_identifier = *it;
 	it++;
 
-	const std::vector<Token>::iterator endBlock = findServerBlockEnd(it);
+	if (it->getType() != TokenType::OPEN_BRACKET)
+		throw std::runtime_error("Syntax Error: identified block unopened " +
+								 block_identifier.getString());
 
-	identifyLocationBlocks(tokenlist, it, endBlock);
+	const std::vector<Token>::iterator end_block = findBlockEnd(tokenlist, it);
 }
 
 void ConfigParser::syntaxCheck(std::vector<Token> tokenlist)
