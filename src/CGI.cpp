@@ -25,11 +25,15 @@ void	CGI::execute(const char *executable, bool get, std::string &body)
 	Logger	&logger = Logger::getInstance();
 	int		fd[2];
 	pid_t	pid;
+
+	// WHEN POST: extra step --> parse body and write to pipe
+	// *return to poll with fd[] with addPollFD
 	
 	// STEP 1
 	if (pipe(fd) == SYSTEM_ERROR)
 		throw SystemException("Pipe");
-	// *return to poll with fd[write_end]
+	// *return to poll with fd[write_end] with addPollFD
+
 
 	// STEP 2
 	logger.log(INFO, "launching CGI");
@@ -54,7 +58,6 @@ void	CGI::execute(const char *executable, bool get, std::string &body)
 			logger.log(ERROR, "execve error" + std::string(strerror(errno)));
 			_exit(127);
 		}
-		// *return to poll with fd[read_end]
 
 		// STEP 3
 		char buffer[1024];

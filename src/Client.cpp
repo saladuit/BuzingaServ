@@ -27,7 +27,12 @@ ClientState Client::handleConnection(short events)
 	{
 		if (events & POLLIN)
 		{
+			// if pipe 
+			// - read pipe fd
+			// otherwise
 			_state = _request.receive(_socket.getFD());
+			// resolve location
+			// 
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
@@ -45,6 +50,8 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
+			// if pipe
+			// - write to body to pipe or execute program, otherwise:
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);
