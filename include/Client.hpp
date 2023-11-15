@@ -20,12 +20,12 @@ class Client
 	int getFD(void) const;
 
   private:
-	HTTPRequest _request;
-	HTTPResponse _response;
-	FileManager _file_manager;
-	CGI _cgi;
-	Socket _socket;
-	ClientState _state;
+	HTTPRequest		_request;
+	HTTPResponse	_response;
+	FileManager		_file_manager;
+	CGI				_cgi;
+	Socket			_socket;
+	ClientState		_state;
 };
 
 #endif

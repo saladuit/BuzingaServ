@@ -32,8 +32,6 @@ int HTTPServer::run()
 		logger.log(FATAL, e.what());
 		return (EXIT_FAILURE);
 	}
-	return (EXIT_SUCCESS);
-
 	while (true)
 	{
 		try
@@ -46,6 +44,7 @@ int HTTPServer::run()
 			return (EXIT_FAILURE);
 		}
 	}
+	return (EXIT_SUCCESS);
 }
 
 void HTTPServer::setupServers(void)
@@ -114,6 +113,12 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 	case ClientState::Sending:
 	case ClientState::Error:
 		_poll.setEvents(poll_fd.fd, POLLOUT);
+		break;
+	case ClientState::CGI_Write:
+			_poll.setEvents(poll_fd.fd, POLLOUT);
+		break;
+	case ClientState::CGI_Read:
+			_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
 	case ClientState::Done:
 		_poll.removeFD(poll_fd.fd);

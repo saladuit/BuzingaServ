@@ -11,6 +11,7 @@ class FileManager
   private:
 	std::string _response;
 	std::fstream _request_target;
+	// CGI			_cgi;
 
   public:
 	FileManager();
@@ -29,6 +30,8 @@ class FileManager
 	ClientState manageGet(void);
 	ClientState managePost(const std::string &body);
 	ClientState manageDelete(const std::string &reqest_target_path);
+
+	// CGI APPEND FUNCTION
 
 	const std::string &getResponse(void) const;
 };

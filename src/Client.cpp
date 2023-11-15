@@ -1,6 +1,7 @@
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
+#include <sys/stat.h>
 
 #include <sys/poll.h>
 
@@ -27,12 +28,17 @@ ClientState Client::handleConnection(short events)
 	{
 		if (events & POLLIN)
 		{
-			// if pipe 
-			// - read pipe fd
-			// otherwise
 			_state = _request.receive(_socket.getFD());
-			// resolve location
-			// 
+			return (_state);
+		}
+		else if (events & POLLOUT && _state == ClientState::CGI_Write)
+		{
+			_state = _cgi.send(int fd);
+			return (_state);
+		}
+		else if (events & POLLIN && _state == ClientState::CGI_Read)
+		{
+			_state = _cgi.receive(int fd);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)

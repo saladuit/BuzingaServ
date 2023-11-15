@@ -81,6 +81,30 @@ void	CGI::execute(const char *executable, bool get, std::string &body)
 	close(fd[WRITE_END]);
 }
 
+ClientState	CGI::send(int fd)
+{
+	// 1) write body to stdin (if it is a POST request)
+	// 		if method == post && body_has_been_sent == false
+	//		write body to stdin
+	//		set body_has_been_sent to true
+	// or (else) 
+	// 2) execve
+}
+
+ClientState	CGI::receive(int fd, std::string body)
+{
+	Logger &logger = Logger::getInstance();
+	char buffer[1024];
+	int read_bytes;
+	bzero(buffer, sizeof(buffer));
+	read_bytes = read(fd, buffer, sizeof(buffer));
+	logger.log(INFO, "Bytes read: " + std::to_string(read_bytes));
+	
+	body += buffer;
+	return (ClientState::Loading);
+}
+
+
 // void CGI::execute(const char *executable)
 // {
 	// int infile = open("in.txt", O_RDONLY, 0666);
