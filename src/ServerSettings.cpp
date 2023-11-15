@@ -9,68 +9,89 @@
 #include <array>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-ServerSettings::ServerSettings() : _server_setting(), _location_settings()
+ServerSettings::ServerSettings()
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	  _location_settings()
 {
 }
 
 ServerSettings::ServerSettings(const ServerSettings &rhs)
-	: _server_setting(rhs._server_setting),
+	: _listen(rhs._listen), _server_name(rhs._server_name),
+	  _error_dir(rhs._error_dir),
+	  _client_max_body_size(rhs._client_max_body_size),
 	  _location_settings(rhs._location_settings)
 {
-}
-
-ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _server_setting(), _location_settings()
-{
-	if (token->getString() != "server")
-		throw std::runtime_error(
-			"unrecognised token in Configfile at token: " +
-			token->getString()); // TODO: Make unrecognised token exception
-								 // TODO: this needs to be moved to syntax
-
-	token += 2;
-
-	while (token->getType() != TokenType::CLOSE_BRACKET)
-	{
-		ServerSettingOption key = identifyServerSetting(token->getString());
-		if (key == ServerSettingOption::Location)
-			_location_settings.emplace_back(LocationSettings(token));
-		else
-		{
-			token++;
-			setValue(key, token->getString());
-			token += 2;
-		}
-	}
 }
 
 ServerSettings::~ServerSettings()
 {
 }
 
-ServerSettingOption
-ServerSettings::identifyServerSetting(const std::string &token)
+// Parsing:
+// This constructor takes a vector of Tokens, goes over it and according to the
+// assigned values will fill in the ServerSettings.
+
+ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	  _location_settings()
 {
-	if (token == "port")
-		return (ServerSettingOption::Port);
-	else if (token == "host")
-		return (ServerSettingOption::Host);
-	else if (token == "server_name")
-		return (ServerSettingOption::ServerName);
-	else if (token == "client_max_body_size")
-		return (ServerSettingOption::ClientMaxBodySize);
-	else if (token == "error_pages")
-		return (ServerSettingOption::ErrorPages);
-	else if (token == "location")
-		return (ServerSettingOption::Location);
-	else
-		throw std::runtime_error("Unknow Key Token in ServerSetting " + token);
-	// TODO: this might need a costum exception
+	token += 2;
+
+	while (token->getType() != TokenType::CLOSE_BRACKET)
+	{
+		const Token key = *token;
+		token++;
+
+		if (key.getString() == "location")
+			_location_settings.emplace_back(LocationSettings(token));
+		else
+			addValueToServerSettings(key, token);
+		token++;
+	}
 }
 
+// TODO: value confirmation and validation should happen here or in syntax
+
+void ServerSettings::parseListen(const Token value)
+{
+	_listen.append(" " + value.getString());
+}
+
+void ServerSettings::parseServerName(const Token value)
+{
+	_server_name.append(" " + value.getString());
+}
+
+void ServerSettings::parseErrorDir(const Token value)
+{
+	_error_dir = value.getString();
+}
+
+void ServerSettings::parseClientMaxBodySize(const Token value)
+{
+	_client_max_body_size = value.getString();
+}
+
+void ServerSettings::addValueToServerSettings(
+	const Token &key, std::vector<Token>::iterator &value)
+{
+	while (value->getType() != TokenType::SEMICOLON)
+	{
+		if (key.getString() == "listen")
+			parseListen(*value);
+		else if (key.getString() == "server_name")
+			parseServerName(*value);
+		else if (key.getString() == "error_dir")
+			parseErrorDir(*value);
+		else if (key.getString() == "client_max_body_size")
+			parseClientMaxBodySize(*value);
+		value++;
+	}
+}
+
+// Functionality:
 const std::string
 methodToString(HTTPMethod method) // TODO: change data_types in function
 {
@@ -87,81 +108,72 @@ methodToString(HTTPMethod method) // TODO: change data_types in function
 	}
 }
 
-bool ServerSettings::resolveLocation(const std::string &path,
-									 HTTPMethod input_method)
+//		getters:
+const std::string &ServerSettings::getListen() const
+{
+	return (_listen);
+}
+
+const std::string &ServerSettings::getServerName() const
+{
+	return (_server_name);
+}
+
+const std::string &ServerSettings::getErrorDir() const
+{
+	return (_error_dir);
+}
+
+const std::string &ServerSettings::getClientMaxBodySize() const
+{
+	return (_client_max_body_size);
+}
+
+const LocationSettings *
+ServerSettings::resolveLocation(const std::string &request_target,
+								HTTPMethod input_method)
 {
 	for (auto &location_instance : _location_settings)
 	{
-		if (location_instance.getPath() != path)
+		if (location_instance.getDir() != request_target)
 			continue;
-		for (auto &methods :
-			 location_instance.getValues(LocationSettingOption::AllowedMethods))
-			if (methods == methodToString(input_method))
-				return (true);
+		std::stringstream ss(location_instance.getAllowedMethods());
+		std::string option;
+		for (; std::getline(ss, option, ' ');)
+			if (option == methodToString(input_method))
+				return (&location_instance);
 	}
-	return (false);
+	return (NULL);
 }
 
-const std::string &ServerSettings::getValue(ServerSettingOption setting) const
-{
-	return (_server_setting.at(setting));
-}
-
-void ServerSettings::setValue(ServerSettingOption key, const std::string &value)
-{
-	_server_setting.emplace(key, value);
-}
-
-// THIS IS PRINTING FUNCTION
-
-std::string keyToString(size_t Key)
-{
-	ServerSettingOption ss_key = static_cast<ServerSettingOption>(Key);
-
-	switch (ss_key)
-	{
-	case (ServerSettingOption::Port):
-		return ("Port\t\t");
-	case (ServerSettingOption::Host):
-		return ("Host\t\t");
-	case (ServerSettingOption::ServerName):
-		return ("ServerName\t");
-	case (ServerSettingOption::ClientMaxBodySize):
-		return ("ClientMaxBodySize");
-	case (ServerSettingOption::ErrorPages):
-		return ("ErrorPages\t");
-	case (ServerSettingOption::Location):
-		return ("Location\t");
-	default:
-		return ("OUT OF BOUND KEY");
-	}
-}
+// Printing:
 
 void ServerSettings::printServerSettings() const
 {
 	Logger &logger = Logger::getInstance();
-	size_t enum_size = sizeof(ServerSettingOption) /
-					   sizeof(std::underlying_type<ServerSettingOption>);
+	std::string option;
 
-	for (size_t i = 0; i <= enum_size + 1; i++)
+	logger.log(DEBUG, "ServerSettings:");
+
+	// printing Class variables:
+	logger.log(DEBUG, "\t_Listen:" + _listen);
+	logger.log(DEBUG, "\t_ServerName:" + _server_name);
+	logger.log(DEBUG, "\t_ErrorDir:" + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize:" + _client_max_body_size);
+	for (auto &location_instance : _location_settings)
 	{
-		try
-		{
-			logger.log(DEBUG,
-					   "\tServerSetting: Key:\t" + keyToString(i) +
-						   "\tValue:\t" +
-						   getValue(static_cast<ServerSettingOption>(i)));
-		}
-		catch (std::out_of_range &e)
-		{
-			logger.log(WARNING, "\tServerSetting: Key:\t" + keyToString(i) +
-									" Missed option: " + std::string(e.what()));
-		}
+		logger.log(DEBUG, "\n");
+		location_instance.printLocationSettings();
 	}
 
-	for (const LocationSettings &loc : _location_settings)
-	{
-		logger.log(DEBUG, "LocationSettings: ");
-		loc.printLocationSettings();
-	}
+	// We can go over the different strings by using Getline
+	//
+	//	logger.log(DEBUG, "\t_ClientMaxBodySize:");
+	//
+	//	std::stringstream ss(getListen());
+	//
+	//	for (; std::getline(ss, option, ' ');)
+	//		logger.log(DEBUG, "\t\t" + option);
+
+	return;
 }

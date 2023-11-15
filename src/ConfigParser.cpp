@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <ios>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -48,6 +47,7 @@ void ConfigParser::ParseConfig()
 	std::vector<Token> tokenlist;
 
 	tokenizeStream(OpenFile(), tokenlist);
+	syntaxCheck(tokenlist.begin());
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
