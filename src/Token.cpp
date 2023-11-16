@@ -74,6 +74,8 @@ void splitString(std::string &input, std::vector<Token> &list)
 		list.emplace_back(Token(identifyToken(token), token));
 		pos = input.find_first_of(TOKENLIST_SPECIAL_CHAR);
 	}
+	if (!input.empty())
+		list.emplace_back(Token(identifyToken(input), input));
 }
 
 void tokenizeStream(std::stringstream sstream, std::vector<Token> &list)

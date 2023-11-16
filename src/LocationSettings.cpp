@@ -90,7 +90,7 @@ void LocationSettings::parseAutoIndex(const Token token)
 {
 	if (token.getString() == "on")
 		_auto_index = true;
-	else if (token.getString() == "on")
+	else if (token.getString() == "off")
 		_auto_index = false;
 	else
 		throw std::runtime_error("Parsing Error: Unknown VALUE token at: " +

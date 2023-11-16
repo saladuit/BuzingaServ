@@ -67,7 +67,7 @@ void ServerSettings::parseServerName(const Token value)
 void ServerSettings::parseErrorDir(const Token value)
 {
 	if (!_error_dir.empty())
-		throw std::runtime_error("Parsing Error: Redefining _error_dir");
+		throw std::runtime_error("Parsing Error: Redefining error_dir");
 	_error_dir = value.getString();
 }
 
@@ -75,7 +75,7 @@ void ServerSettings::parseClientMaxBodySize(const Token value)
 {
 	if (!_client_max_body_size.empty())
 		throw std::runtime_error(
-			"Parsing Error: Redefining _client_max_body_size");
+			"Parsing Error: Redefining client_max_body_size");
 	_client_max_body_size = value.getString();
 }
 
