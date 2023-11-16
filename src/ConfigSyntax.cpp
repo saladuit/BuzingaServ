@@ -30,13 +30,17 @@ std::vector<Token>::iterator findBlockEnd(std::vector<Token> tokenlist,
 	if (start_block.getString() == "location")
 		it++;
 	if (it->getType() != TokenType::OPEN_BRACKET)
-		throw std::runtime_error("Syntax Error: identified block unopened " +
-								 start_block.getString());
+		throw std::runtime_error(
+			"Syntax Error: location block without request target");
 	stack = 1;
 
 	while (it != tokenlist.end() && stack != 0)
 	{
 		it++;
+		if (it->getType() == TokenType::OPEN_BRACKET &&
+			start_block.getString() == "locaiton")
+			throw std::runtime_error(
+				"Syntax Error: New Block inside of location block");
 		if (it->getType() == TokenType::OPEN_BRACKET)
 			stack++;
 		else if (it->getType() == TokenType::CLOSE_BRACKET)
