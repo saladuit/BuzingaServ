@@ -33,16 +33,16 @@ std::vector<Token>::iterator findBlockEnd(std::vector<Token> tokenlist,
 		throw std::runtime_error("Syntax Error: identified block unopened " +
 								 start_block.getString());
 	stack = 1;
-	it++;
 
 	while (it != tokenlist.end() && stack != 0)
 	{
+		it++;
 		if (it->getType() == TokenType::OPEN_BRACKET)
 			stack++;
 		else if (it->getType() == TokenType::CLOSE_BRACKET)
 			stack--;
-		it++;
 	}
+
 	if (stack != 0)
 		throw std::runtime_error("Syntax Error: Unclosed Block: " +
 								 start_block.getString());
@@ -66,6 +66,7 @@ void syntaxCheckLine(const Token &block_identifier,
 		words++;
 		it++;
 	}
+
 	if (words <= 1)
 		throw std::runtime_error(
 			"Syntax Error: Line doesn't contain KEY:VALUE pair in block: " +
@@ -78,7 +79,7 @@ void syntaxCheckLine(const Token &block_identifier,
 
 void syntaxCheckRequestTarget(std::string path)
 {
-	(void)path;
+	(void)path; // TODO: make
 }
 
 void syntaxCheckLocationBlock(std::vector<Token> tokenlist,
@@ -87,15 +88,12 @@ void syntaxCheckLocationBlock(std::vector<Token> tokenlist,
 	const Token &block_identifier = *it;
 	const std::vector<Token>::iterator end_block = findBlockEnd(tokenlist, it);
 
-	Logger &logger = Logger::getInstance();
-	logger.log(INFO, end_block->getString());
 	it++;
 	syntaxCheckRequestTarget(it->getString());
 	it += 2;
 
 	while (it != end_block)
 	{
-		printLine(it);
 		syntaxCheckLine(block_identifier, it);
 		it++;
 	}
@@ -106,11 +104,11 @@ void syntaxCheckServerBlock(std::vector<Token> tokenlist,
 {
 	const Token &block_identifier = *it;
 	const std::vector<Token>::iterator end_block = findBlockEnd(tokenlist, it);
+
 	it += 2;
 
 	while (it != end_block)
 	{
-		printLine(it);
 		if (it->getString() == "location")
 			syntaxCheckLocationBlock(tokenlist, it);
 		else
@@ -125,7 +123,6 @@ void ConfigParser::syntaxCheck(std::vector<Token> tokenlist)
 
 	while (it != tokenlist.end())
 	{
-		printLine(it);
 		if (it->getString() == "server")
 			syntaxCheckServerBlock(tokenlist, it);
 		else

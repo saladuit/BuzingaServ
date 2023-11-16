@@ -92,6 +92,9 @@ void ServerSettings::addValueToServerSettings(
 			parseErrorDir(*value);
 		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
+		else
+			throw std::runtime_error("Parsing Error: Unknown Key token at: " +
+									 key.getString());
 		value++;
 	}
 }

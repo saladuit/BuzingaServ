@@ -39,7 +39,7 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 		while (token->getType() != TokenType::SEMICOLON)
 		{
-			if (key.getString() == "root")
+			if (key.getString() == "alias")
 				parseAlias(*token);
 			else if (key.getString() == "index")
 				parseIndex(*token);
@@ -49,6 +49,11 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 				parseCgiPath(*token);
 			else if (key.getString() == "return")
 				parseReturn(*token);
+			else if (key.getString() == "autoindex")
+				parseAutoIndex(*token);
+			else
+				throw std::runtime_error(
+					"Parsing Error: Unknown KEY token at: " + key.getString());
 
 			token++;
 		}
@@ -79,6 +84,17 @@ void LocationSettings::parseCgiPath(const Token token)
 void LocationSettings::parseReturn(const Token token)
 {
 	_return.append(" " + token.getString());
+}
+
+void LocationSettings::parseAutoIndex(const Token token)
+{
+	if (token.getString() == "on")
+		_auto_index = true;
+	else if (token.getString() == "on")
+		_auto_index = false;
+	else
+		throw std::runtime_error("Parsing Error: Unknown VALUE token at: " +
+								 token.getString());
 }
 
 // Functionality:
@@ -125,12 +141,19 @@ void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "\tLocation Prefix:\t" + _directory);
-	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
-	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
-	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
-	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
-	logger.log(DEBUG, "\t\tReturn:\t\t" + _return);
+	logger.log(DEBUG, "\tLocation Prefix:\t" +
+						  (_directory.empty() ? " -[EMPTY]-" : _directory));
+	logger.log(DEBUG,
+			   "\t\tAlias:\t\t\t" + (_alias.empty() ? " -[EMPTY]-" : _alias));
+	logger.log(DEBUG,
+			   "\t\tIndex:\t\t\t" + (_index.empty() ? " -[EMPTY]-" : _index));
+	logger.log(DEBUG, "\t\tAllowed_methods:\t" + (_allowed_methods.empty()
+													  ? " -[EMPTY]-"
+													  : _allowed_methods));
+	logger.log(DEBUG, "\t\tCGI Path:\t\t" +
+						  (_cgi_path.empty() ? " -[EMPTY]-" : _cgi_path));
+	logger.log(DEBUG, "\t\tReturn:\t\t\t" +
+						  (_return.empty() ? " -[EMPTY]-" : _return));
 	logger.log(DEBUG,
 			   "\t\tAutoIndex:\t\t" +
 				   (_auto_index ? std::string(" ON") : std::string(" OFF")));
