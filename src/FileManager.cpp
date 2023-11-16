@@ -131,7 +131,7 @@ ClientState FileManager::manage(HTTPMethod method,
 			openGetFile(request_target_path);
 		return (manageGet());
 	}
-	else if (method == HTTPMethod::POST)
+	else if (method == HTTPMethod::POST) // && CGI == false
 	{
 		if (!_request_target.is_open())
 			openPostFile(request_target_path);

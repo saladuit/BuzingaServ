@@ -47,6 +47,8 @@ class HTTPRequest
 	const std::string &getBody(void) const;
 	ClientState receive(int fd);
 
+	bool	cgi;
+
   private:
 	ssize_t _bytes_read;
 	size_t _content_length;

@@ -9,6 +9,7 @@
 
 CGI::CGI()
 {
+	body_has_been_sent = false;
 }
 
 CGI::~CGI()
@@ -81,14 +82,38 @@ void	CGI::execute(const char *executable, bool get, std::string &body)
 	close(fd[WRITE_END]);
 }
 
-ClientState	CGI::send(int fd)
+ClientState	CGI::send(int fd, HTTPMethod methodType, std::string requestBody)
 {
-	// 1) write body to stdin (if it is a POST request)
-	// 		if method == post && body_has_been_sent == false
-	//		write body to stdin
-	//		set body_has_been_sent to true
-	// or (else) 
-	// 2) execve
+	pid_t	pid;
+
+	if (methodType == HTTPMethod::POST && body_has_been_sent == false)
+	{
+		write(STDIN_FILENO, &requestBody, sizeof(requestBody));
+		return (ClientState::CGI_Write);
+	}
+	else
+	{
+		// parse URI and optionally save PATH_INFO and QUERY_STRING in env
+		// char **env = NULL;
+		pid = fork();
+		if (pid == SYSTEM_ERROR)
+			throw SystemException("Fork");
+		else if (pid == 0) {
+			if (dup2(fd[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR)
+			{
+				logger.log(ERROR, "dup2 out[WRITE_END] error" +
+									std::string(strerror(errno)));
+				_exit(127);
+			}
+			std::string bin = "python3";
+			const char *const argv[] = {bin.c_str(), executable, NULL};
+			char *const envp[] = {NULL};
+			const char *path = "/usr/bin/python3";
+			execve(path, (char *const *)argv, envp);
+			logger.log(ERROR, "execve error" + std::string(strerror(errno)));
+			_exit(127);
+		}
+	}
 }
 
 ClientState	CGI::receive(int fd, std::string body)
@@ -101,6 +126,7 @@ ClientState	CGI::receive(int fd, std::string body)
 	logger.log(INFO, "Bytes read: " + std::to_string(read_bytes));
 	
 	body += buffer;
+	// is it necesssary to check here whether the eof is reached on the fd?
 	return (ClientState::Loading);
 }
 

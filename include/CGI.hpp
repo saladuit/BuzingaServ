@@ -2,6 +2,7 @@
 #define CGI_HPP
 
 #include <ClientState.hpp>
+#include <HTTPRequest.hpp>
 #include <string>
 
 #define READ_END 0
@@ -12,7 +13,7 @@
 class CGI
 {
   private:
-	std::string	_post_body;
+	// std::string	_body;
 
   public:
 	CGI();
@@ -24,7 +25,11 @@ class CGI
 	void execute(const char *executable, bool get, std::string &body);
 
 	ClientState	receive(int pipe_fd, std::string body);
-	ClientState	send(int fd);
+	ClientState	send(int fd, HTTPMethod methodType, std::string requestBody);
+
+	std::string	body;
+	bool		body_has_been_sent;
+	int			pipe_fd[2];
 };
 
 #endif

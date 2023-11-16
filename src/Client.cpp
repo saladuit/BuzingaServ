@@ -29,20 +29,29 @@ ClientState Client::handleConnection(short events)
 		if (events & POLLIN)
 		{
 			_state = _request.receive(_socket.getFD());
+			if (_request.cgi == true)
+			{
+				// create pipe to read to? how does this work with poll?
+				// if (pipe(fd) == SYSTEM_ERROR)
+				// 	throw SystemException("Pipe");
+			}
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		{
-			_state = _cgi.send(int fd);
+			_state = _cgi.send(_socket.getFD(), _request.getMethodType(), _request.getBody());
 			return (_state);
 		}
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
-			_state = _cgi.receive(int fd);
+			_state = _cgi.receive(_socket.getFD(), _cgi.body);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
+			// if (_request._cgi == true)
+			// _state = _cgi.createResponse();
+			// else 
 			_state = _file_manager.manage(
 				_request.getMethodType(),
 				"./data/www" + _request.getRequestTarget(),
@@ -56,8 +65,10 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
-			// if pipe
-			// - write to body to pipe or execute program, otherwise:
+			// if CGI
+			// _state =
+			//	_response.send(_socket.getFD(), _cgi.getResponse());
+			// else
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);
