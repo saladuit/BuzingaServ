@@ -3,6 +3,10 @@
 #include <Logger.hpp>
 #include <stdexcept>
 
+#include <iostream>
+#include <string>
+#include <vector>
+
 int main(int argc, char **argv)
 {
 	Logger &logger = Logger::getInstance();

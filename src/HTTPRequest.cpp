@@ -8,7 +8,9 @@
 
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _request_target(), _http_version(), _body(), _headers()
+	  _http_request(), _request_target(), _http_version(), _body(), _headers(),
+	  _executable()
+	//   ,_env(NULL)
 {
 }
 
@@ -151,4 +153,50 @@ ClientState HTTPRequest::receive(int client_fd)
 		pos = parseHeaders(i);
 	}
 	return (ClientState::Receiving);
+}
+
+void	HTTPRequest::parseURIForCGI(void) 
+{
+	Logger 		&logger = Logger::getInstance();
+    size_t		pyMarkPos = _request_target.find("py");
+    std::string	executable = _request_target.substr(0, pyMarkPos + 2);
+	bool		skip = false;
+	size_t		env_num = 1;
+	size_t		i = 0;
+
+	logger.log(DEBUG, "Executable is: " + executable);
+	if (pyMarkPos + 2 >= std::strlen(_request_target.c_str()) - 1)
+		return ;
+
+	std::string	remaining = _request_target.substr(pyMarkPos + 2, std::string::npos);
+	size_t		questionMarkPos = remaining.find('?');
+
+	if (remaining.at(0) == '/')
+	{
+		env_num++;
+		if (questionMarkPos != std::string::npos)
+			env_num++;
+	}
+	else if (remaining.at(0) == '?')
+		env_num++;
+	_env = new char *[env_num];
+	if (remaining.at(0) == '/' && !skip)
+	{
+		std::string pathInfo = "PATH_INFO=" + remaining.substr(0, questionMarkPos);
+		_env[i] = new char[pathInfo.length() + 1];
+		std::strcpy(_env[i], pathInfo.c_str());
+		if (env_num == 2)
+		{	_env[i + 1] = nullptr; skip = true;}
+		i++;
+	}
+	if (!skip) {
+	std::string queryString = "QUERY_STRING=" + remaining.substr(questionMarkPos, std::string::npos);
+	_env[i] = new char[queryString.length() + 1];
+	std::strcpy(_env[i], queryString.c_str());
+	_env[i + 1] = nullptr; }
+	
+	for (size_t i = 0; _env[i]; i++) {
+		logger.log(DEBUG, _env[i]);
+	}
+    // delete[] env;
 }

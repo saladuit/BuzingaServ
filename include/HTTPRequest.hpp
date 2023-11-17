@@ -47,6 +47,8 @@ class HTTPRequest
 	const std::string &getBody(void) const;
 	ClientState receive(int fd);
 
+	void	parseURIForCGI();
+
 	bool	cgi;
 
   private:
@@ -58,6 +60,8 @@ class HTTPRequest
 	std::string _http_version;
 	std::string _body;
 	std::unordered_map<std::string, std::string> _headers;
+	std::string	_executable;
+	char		**_env;
 
 	size_t parseStartLine(size_t &i);
 	size_t parseHeaders(size_t &i);

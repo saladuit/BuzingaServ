@@ -31,17 +31,23 @@ ClientState Client::handleConnection(short events)
 			_state = _request.receive(_socket.getFD());
 			if (_request.cgi == true)
 			{
-				// create pipe to read to? how does this work with poll?
-				// if (pipe(fd) == SYSTEM_ERROR)
-				// 	throw SystemException("Pipe");
+				_request.parseURIForCGI();
+				// parse request_line for:
+				//		- executable
+				//		- PATH_INFO
+				//		- QUERY_STRING
 			}
 			return (_state);
 		}
-		else if (events & POLLOUT && _state == ClientState::CGI_Write)
-		{
-			_state = _cgi.send(_socket.getFD(), _request.getMethodType(), _request.getBody());
-			return (_state);
-		}
+		// else if (events & POLLOUT && _state == ClientState::start_CGI)
+		// {
+		// 	_cgi.start_CGI(_request.getExecutable(), _request.getEnv(), _request.getBodyLength());
+		// }
+		// else if (events & POLLOUT && _state == ClientState::CGI_Write)
+		// {
+		// 	_state = _cgi.send(_socket.getFD(), _request.getMethodType(), _request.getBody());
+		// 	return (_state);
+		// }
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
 			_state = _cgi.receive(_socket.getFD(), _cgi.body);
