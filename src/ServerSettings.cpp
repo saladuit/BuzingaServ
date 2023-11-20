@@ -7,6 +7,8 @@
 #include <Token.hpp>
 
 #include <array>
+#include <exception>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -54,8 +56,42 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 
 // TODO: value confirmation and validation should happen here or in syntax
 
+void validateListen(const std::string &str)
+{
+	Logger &logger = Logger::getInstance();
+	size_t pos = str.find_first_of(":");
+	if (pos == std::string::npos || pos != str.find_last_of(":"))
+		throw std::runtime_error("Parsing Error: invalid value for listen");
+
+	const std::string ip = str.substr(0, pos);
+	const std::string port = str.substr(pos + 1, std::string::npos);
+
+	if (ip != "localhost")
+	{
+		const std::regex ip_regex(
+			"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}"
+			"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+
+		if (!std::regex_match(ip, ip_regex))
+			throw std::runtime_error(
+				"Parsing Error: invalid ipv4 found in listen");
+	}
+	try
+	{
+		int port_ = std::stoi(port);
+		logger.log(DEBUG, "ip:\t" + ip + "\tport:\t" + std::to_string(port_));
+		if (port_ < 1 || port_ > 65535) //
+			throw std::exception();
+	}
+	catch (std::exception &e)
+	{
+		throw std::runtime_error("Parsing Error: invalid port found in listen");
+	}
+}
+
 void ServerSettings::parseListen(const Token value)
 {
+	validateListen(value.getString());
 	_listen.append(" " + value.getString());
 }
 
