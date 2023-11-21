@@ -58,7 +58,6 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 
 void validateListen(const std::string &str)
 {
-	Logger &logger = Logger::getInstance();
 	size_t pos = str.find_first_of(":");
 	if (pos == std::string::npos || pos != str.find_last_of(":"))
 		throw std::runtime_error("Parsing Error: invalid value for listen");
@@ -79,7 +78,6 @@ void validateListen(const std::string &str)
 	try
 	{
 		int port_ = std::stoi(port);
-		logger.log(DEBUG, "ip:\t" + ip + "\tport:\t" + std::to_string(port_));
 		if (port_ < 1 || port_ > 65535) //
 			throw std::exception();
 	}
