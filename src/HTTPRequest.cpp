@@ -155,20 +155,24 @@ ClientState HTTPRequest::receive(int client_fd)
 	return (ClientState::Receiving);
 }
 
+// !! need to free _env and it's arguments somewhere !!
 void	HTTPRequest::parseURIForCGI(void) 
 {
+	std::string	fileToExecute = ".py"; // or something like: "data/www/python/test.py" to specify it better
+	size_t		lengthFileToExecute = std::strlen(fileToExecute.c_str());
 	Logger 		&logger = Logger::getInstance();
-    size_t		pyMarkPos = _request_target.find("py");
-    std::string	executable = _request_target.substr(0, pyMarkPos + 2);
+    size_t		pyMarkPos = _request_target.find(fileToExecute);
+	logger.log(DEBUG, "Length of fileToExecute: %", lengthFileToExecute);
+    std::string	executable = _request_target.substr(0, pyMarkPos + lengthFileToExecute);
 	bool		skip = false;
 	size_t		env_num = 1;
 	size_t		i = 0;
 
 	logger.log(DEBUG, "Executable is: " + executable);
-	if (pyMarkPos + 2 >= std::strlen(_request_target.c_str()) - 1)
+	if (pyMarkPos + lengthFileToExecute >= std::strlen(_request_target.c_str()) - 1)
 		return ;
 
-	std::string	remaining = _request_target.substr(pyMarkPos + 2, std::string::npos);
+	std::string	remaining = _request_target.substr(pyMarkPos + lengthFileToExecute, std::string::npos);
 	size_t		questionMarkPos = remaining.find('?');
 
 	if (remaining.at(0) == '/')
