@@ -9,8 +9,7 @@
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
 	  _http_request(), _request_target(), _http_version(), _body(), _headers(),
-	  _executable()
-	//   ,_env(NULL)
+	  _executable(),_env(NULL), _cgi(false)
 {
 }
 
@@ -69,6 +68,23 @@ const std::string &HTTPRequest::getBody(void) const
 {
 	return (_body);
 }
+
+const std::string &HTTPRequest::getExecutable(void) const {
+	return (_executable);
+}
+
+const char **HTTPRequest::getEnv(void) const {
+	return (_env);
+}
+
+void HTTPRequest::setCGIToTrue(void) {
+	_cgi = true;
+}
+
+const bool &HTTPRequest::CGITrue(void) const {
+	return (_cgi);
+}
+
 
 size_t HTTPRequest::parseStartLine(size_t &i)
 {
@@ -158,7 +174,7 @@ ClientState HTTPRequest::receive(int client_fd)
 // !! need to free _env and it's arguments somewhere !!
 void	HTTPRequest::parseURIForCGI(void) 
 {
-	std::string	fileToExecute = ".py"; // or something like: "data/www/python/test.py" to specify it better
+	std::string	fileToExecute = ".py"; // or something like: "data/www/python/test.py" to specify it better. OR give it as input. Discuss with the team!
 	size_t		lengthFileToExecute = std::strlen(fileToExecute.c_str());
 	Logger 		&logger = Logger::getInstance();
     size_t		pyMarkPos = _request_target.find(fileToExecute);
