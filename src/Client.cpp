@@ -35,7 +35,7 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::start_CGI)
 		{
-			_cgi.start_CGI(_request.getExecutable(), _request.getEnv(), _request.getBodyLength());
+			_cgi.start_CGI(_request.getExecutable().c_str(), _request.getEnv(), _request.getBodyLength());
 		}
 		// else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		// {

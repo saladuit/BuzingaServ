@@ -69,6 +69,10 @@ const std::string &HTTPRequest::getBody(void) const
 	return (_body);
 }
 
+const size_t &HTTPRequest::getBodyLength(void) const {
+	return (_content_length);
+}
+
 const std::string &HTTPRequest::getExecutable(void) const {
 	return (_executable);
 }

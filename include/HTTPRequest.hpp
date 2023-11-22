@@ -53,6 +53,7 @@ class HTTPRequest
 	const char			**getEnv(void) const;
 	void				setCGIToTrue(void);
 	const bool			&CGITrue(void) const;
+	const size_t		&getBodyLength(void) const;
 
 	
 
