@@ -154,8 +154,7 @@ ClientState	CGI::receive(int fd, std::string body)
 // 		//			****
 // }
 
-
-void CGI::start_CGI(const char *executable, const char **env, size_t body_length)
+void CGI::start_CGI(const char *executable, char **env, size_t body_length)
 {
 	(void)executable;
 	(void)env;

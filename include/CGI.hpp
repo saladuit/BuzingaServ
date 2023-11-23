@@ -22,7 +22,7 @@ class CGI
 	~CGI();
 
 	// execute is probably redundant
-	void	start_CGI(const char *executable, const char **env, size_t body_length);
+	void	start_CGI(const char *executable, char **env, size_t body_length);
 	// void	execute(const char *executable);
 
 	ClientState	receive(int pipe_fd, std::string body);

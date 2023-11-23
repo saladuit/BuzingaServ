@@ -50,7 +50,7 @@ class HTTPRequest
 	// CGI stuff
 	void				parseURIForCGI(void);
 	const std::string	&getExecutable(void) const;
-	const char			**getEnv(void) const;
+	char				**getEnv(void);
 	void				setCGIToTrue(void);
 	const bool			&CGITrue(void) const;
 	const size_t		&getBodyLength(void) const;

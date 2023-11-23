@@ -77,7 +77,7 @@ const std::string &HTTPRequest::getExecutable(void) const {
 	return (_executable);
 }
 
-const char **HTTPRequest::getEnv(void) const {
+char **HTTPRequest::getEnv(void) {
 	return (_env);
 }
 
