@@ -9,8 +9,9 @@
 class FileManager
 {
   private:
-	std::string _response;
-	std::fstream _request_target;
+	std::string		_response;
+	std::fstream	_request_target;
+	size_t			_bytes_sent;
 	// CGI			_cgi;
 
   public:

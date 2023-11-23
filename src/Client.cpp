@@ -29,24 +29,24 @@ ClientState Client::handleConnection(short events)
 		if (events & POLLIN)
 		{
 			_state = _request.receive(_socket.getFD());
-			if (_request.CGITrue() == true)
-				_request.parseURIForCGI();
+			// if (_request.CGITrue() == true)
+			// 	_request.parseURIForCGI();
 			return (_state);
 		}
-		else if (events & POLLOUT && _state == ClientState::start_CGI)
-		{
-			_cgi.start_CGI(_request.getExecutable().c_str(), _request.getEnv(), _request.getBodyLength());
-		}
+		// else if (events & POLLOUT && _state == ClientState::start_CGI)
+		// {
+		// 	_cgi.start_CGI(_request.getExecutable().c_str(), _request.getEnv(), _request.getBodyLength());
+		// }
 		// else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		// {
 		// 	_state = _cgi.send(_socket.getFD(), _request.getMethodType(), _request.getBody());
 		// 	return (_state);
 		// }
-		else if (events & POLLIN && _state == ClientState::CGI_Read)
-		{
-			_state = _cgi.receive(_socket.getFD(), _cgi.body);
-			return (_state);
-		}
+		// else if (events & POLLIN && _state == ClientState::CGI_Read)
+		// {
+		// 	_state = _cgi.receive(_socket.getFD(), _cgi.body);
+		// 	return (_state);
+		// }
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			// if (_request._cgi == true)

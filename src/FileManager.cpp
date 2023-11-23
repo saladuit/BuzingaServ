@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 
-FileManager::FileManager() : _response(), _request_target()
+FileManager::FileManager() : _response(), _request_target(), _bytes_sent(0)
 {
 }
 
@@ -95,14 +95,23 @@ ClientState FileManager::manageGet(void)
 ClientState FileManager::managePost(const std::string &body)
 {
 	Logger &logger = Logger::getInstance();
-	size_t pos = _request_target.tellp();
 
+	ssize_t pos = _request_target.tellp();
+	size_t bytes_to_send = 0;
+
+	
 	logger.log(DEBUG, "managePost method is called");
-	_request_target.write(body.c_str() + pos, BUFFER_SIZE);
-	logger.log(DEBUG, "post buffer: " + body.substr(pos, BUFFER_SIZE));
+	logger.log(DEBUG, "pos: %", pos);
+	if (body.length() - _bytes_sent < BUFFER_SIZE)
+		bytes_to_send = body.length() - _bytes_sent;
+	else
+		bytes_to_send = BUFFER_SIZE;
+
+	_request_target.write(body.c_str() + pos, bytes_to_send);
+	_bytes_sent += bytes_to_send;
 	if (_request_target.fail())
 		throw ClientException(StatusCode::InternalServerError);
-	if (_request_target.eof())
+			if (_bytes_sent == body.size())
 		return (ClientState::Sending);
 	return (ClientState::Loading);
 }
