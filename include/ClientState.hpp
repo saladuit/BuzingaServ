@@ -4,9 +4,10 @@
 enum class ClientState
 {
 	Receiving,
-	start_CGI,
+	CGI_Start,
 	CGI_Write,
 	CGI_Read,
+	CGI_Load,
 	Loading,
 	Sending,
 	Done,

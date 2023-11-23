@@ -29,19 +29,23 @@ ClientState Client::handleConnection(short events)
 		if (events & POLLIN)
 		{
 			_state = _request.receive(_socket.getFD());
-			// if (_request.CGITrue() == true)
-			// 	_request.parseURIForCGI();
+			// implement method Martijn for verifying that we are dealing with a CGI
+			_request.setCGIToTrue(); // settting CGI to true for testing purposes
+			logger.log(DEBUG, "request target from handleConnection: %", _request.getRequestTarget());
+			if (_request.CGITrue() == true)
+				_request.parseURIForCGI();
 			return (_state);
 		}
-		// else if (events & POLLOUT && _state == ClientState::start_CGI)
-		// {
-		// 	_cgi.start_CGI(_request.getExecutable().c_str(), _request.getEnv(), _request.getBodyLength());
-		// }
-		// else if (events & POLLOUT && _state == ClientState::CGI_Write)
-		// {
-		// 	_state = _cgi.send(_socket.getFD(), _request.getMethodType(), _request.getBody());
-		// 	return (_state);
-		// }
+		else if (events & POLLOUT && _state == ClientState::CGI_Start)
+		{
+			_state = _cgi.start(_request.getExecutable().c_str(), _request.getEnv(), _request.getBodyLength());
+			return (_state);
+		}
+		else if (events & POLLOUT && _state == ClientState::CGI_Write)
+		{
+			_state = _cgi.send(_request.getBody(), _request.getBodyLength());
+			return (_state);
+		}
 		// else if (events & POLLIN && _state == ClientState::CGI_Read)
 		// {
 		// 	_state = _cgi.receive(_socket.getFD(), _cgi.body);
@@ -71,6 +75,7 @@ ClientState Client::handleConnection(short events)
 			// else
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
+			logger.log(DEBUG, "request target from handleConnection: %", _request.getRequestTarget());
 			return (_state);
 		}
 	}
