@@ -65,16 +65,6 @@ void validateListen(const std::string &str)
 	const std::string ip = str.substr(0, pos);
 	const std::string port = str.substr(pos + 1, std::string::npos);
 
-	if (ip != "localhost")
-	{
-		const std::regex ip_regex(
-			"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}"
-			"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
-
-		if (!std::regex_match(ip, ip_regex))
-			throw std::runtime_error(
-				"Parsing Error: invalid ipv4 found in listen");
-	}
 	try
 	{
 		int port_ = std::stoi(port);
@@ -163,19 +153,39 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-const LocationSettings *
-ServerSettings::resolveLocation(const std::string &request_target,
-								HTTPMethod input_method)
+const std::string extractTargetfromURI(const std::string URI)
 {
+	size_t pos_dot = URI.find_last_of(".");
+	if (pos_dot == std::string::npos)
+		return (URI);
+
+	size_t pos_slash = URI.find_last_of("/");
+	if (pos_slash == std::string::npos)
+		throw std::runtime_error(
+			"resolveLocation: URI has unfamiliar structure");
+	if (pos_dot < pos_slash)
+		return (URI);
+
+	std::string target = URI.substr(0, pos_slash + 1);
+	return (target);
+}
+
+// TODO: maybe throw and error/exception here so the calling function can handle
+// it.
+//
+// URI has to request target with a '/' to show it's a direcotry. The URI will
+// be trimmed to remove the file if there is one.
+//
+const LocationSettings *ServerSettings::resolveLocation(const std::string &URI)
+{
+	Logger &logger = Logger::getInstance();
+	const std::string target = extractTargetfromURI(URI);
+
+	logger.log(WARNING, "target: " + target);
 	for (auto &location_instance : _location_settings)
 	{
-		if (location_instance.getDir() != request_target)
+		if (location_instance.getRequestTarget() != target)
 			continue;
-		std::stringstream ss(location_instance.getAllowedMethods());
-		std::string option;
-		for (; std::getline(ss, option, ' ');)
-			if (option == methodToString(input_method))
-				return (&location_instance);
 	}
 	return (NULL);
 }

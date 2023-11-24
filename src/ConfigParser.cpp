@@ -47,14 +47,14 @@ void ConfigParser::ParseConfig()
 	std::vector<Token> tokenlist;
 
 	tokenizeStream(OpenFile(), tokenlist);
-	syntaxCheck(tokenlist.begin());
+	//	syntaxCheck(tokenlist.begin());
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
 	for (auto &it : _server_settings)
-		it.printServerSettings();
+		it.resolveLocation("/pytho.n/test.py");
 
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

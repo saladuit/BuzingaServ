@@ -18,7 +18,7 @@ class LocationSettings
 
 	// Functionality:
 	//		getters:
-	const std::string &getDir() const;
+	const std::string &getRequestTarget() const;
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
@@ -32,7 +32,7 @@ class LocationSettings
 	void printLocationSettings() const;
 
   private:
-	std::string _directory;
+	std::string _requesttarget;
 
 	std::string _alias;
 	std::string _index;
