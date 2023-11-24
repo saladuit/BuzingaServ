@@ -115,6 +115,7 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 		_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
 	case ClientState::CGI_Write:
+	case ClientState::CGI_Start:
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
 	case ClientState::CGI_Read:

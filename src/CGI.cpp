@@ -5,10 +5,12 @@
 #include <cassert>
 #include <fcntl.h>
 #include <unistd.h>
+#include <filesystem>
 
 
 // TO DO
-// 	- make in startCGI connection (pollFD) for out[READ_END] and optionally for in[WRITE_END] (in case of post request)
+// 	- get execute functional
+// 	- make sure that the test.py is closing the STDIN if that is not already been done
 // 	- insert in handleConnection CGI_WRITE and CGI_READ
 //	- create some kind of a CGI_LOAD that serves as replacement for the file manager
 //	- create python program
@@ -20,42 +22,73 @@ CGI::~CGI() {}
 
 ClientState CGI::send(std::string body, size_t bodyLength)
 {
-	ssize_t	writeSize = 0;
+	Logger	&logger = Logger::getInstance();
+	ssize_t	bytesWritten = 0;
 
+	logger.log(INFO, "GCI::send is called");
 	if (!_bodyIsSent) 
-		writeSize = write(_serverToPython[WRITE_END], &body, BUFFER_SIZE);
-	if (writeSize == SYSTEM_ERROR)
+		bytesWritten = write(_serverToExternalProgram[WRITE_END], &body, BUFFER_SIZE);
+	if (bytesWritten == SYSTEM_ERROR)
 		throw SystemException("write to Python");
-	_bodyBytesWritten += writeSize;
+	_bodyBytesWritten += bytesWritten;
 	if (_bodyBytesWritten == bodyLength) 
 	{
-		close(_serverToPython[WRITE_END]);
+		close(_serverToExternalProgram[WRITE_END]);
 		return (ClientState::CGI_Read);
 	}
+	logger.log(INFO, "CGI body: " + std::to_string(bytesWritten));
 	return (ClientState::CGI_Write);
 }
 
-ClientState	CGI::receive(int fd, std::string body)
+ClientState	CGI::receive(std::string body)
 {
-	Logger &logger = Logger::getInstance();
-	char buffer[1024];
-	int read_bytes;
-	bzero(buffer, sizeof(buffer));
-	read_bytes = read(fd, buffer, sizeof(buffer));
-	logger.log(INFO, "Bytes read: " + std::to_string(read_bytes));
+	Logger	&logger = Logger::getInstance();
+	ssize_t	bytesRead = 0;
 	
+	logger.log(INFO, "GCI::receive is called");
+	char 	buffer[1024];
+	bzero(buffer, sizeof(buffer));
+	bytesRead = read(_externalProgramToServer[READ_END], buffer, sizeof(buffer));
+	logger.log(INFO, "Bytes read: " + std::to_string(bytesRead));
 	body += buffer;
-	// is it necesssary to check here whether the eof is reached on the fd?
+	if (bytesRead == 0)
+		return (ClientState::CGI_Read);
+	if (bytesRead == SYSTEM_ERROR)
+		return (ClientState::Error);
 	return (ClientState::Loading);
 }
 
-void	CGI::execute(const char *executable, char **env)
+bool CGI::fileExists(const std::string& filePath) {
+    return (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath));
+}
+
+bool CGI::isExecutable(const std::string& filePath) 
+{
+    std::filesystem::file_status fileStat = std::filesystem::status(filePath);
+
+    return std::filesystem::is_regular_file(fileStat) && (fileStat.permissions() &
+	std::filesystem::perms::owner_exec) != std::filesystem::perms::none;
+}
+
+void	CGI::execute(std::string executable, char **env)
 {
 	Logger &logger = Logger::getInstance();
 	std::string bin = "python3";
 	
-	const char *const argv[] = {bin.c_str(), executable, NULL};
-	const char *path = "/usr/bin/python3";
+	logger.log(ERROR, "CGI::execute is called");
+	logger.log(ERROR, "Executable: %", executable);
+	// if (!fileExists(std::string(executable))) {
+	// 	logger.log(ERROR, "Path to external program does not exist");
+	// 	_exit(127);
+	// }
+	// if (!isExecutable(std::string(executable))) {
+	// 	logger.log(ERROR, "External program is not executable");
+	// 	_exit(127);
+	// }
+
+	const char *const argv[] = {bin.c_str(), executable.c_str(), NULL};
+	const char *path = "/data/www";
+	// const char *path = "/usr/bin/python3";
 	execve(path, (char *const *)argv, env);
 
 	// if error throw exception?
@@ -63,43 +96,50 @@ void	CGI::execute(const char *executable, char **env)
 	_exit(127);
 }
 
-ClientState CGI::start(const char *executable, char **env, size_t bodyLength)
+ClientState CGI::start(std::string executable, char **env, size_t bodyLength)
 {
 	// int infile = open("in.txt", O_RDONLY, 0666);
 	// int outfile = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "CGI::start called");
-	return (ClientState::Loading);
+	logger.log(DEBUG, "Executable: %", executable);
 
-	logger.log(INFO, "launching CGI");
-	if (pipe(_serverToPython) == SYSTEM_ERROR)
-		throw SystemException("Pipe");
-	if (pipe(_pythonToServer) == SYSTEM_ERROR)
-		throw SystemException("Pipe");
+	// return (ClientState::Loading);
+
+	if (pipe(_serverToExternalProgram) == SYSTEM_ERROR) throw SystemException("Pipe");
+	if (pipe(_externalProgramToServer) == SYSTEM_ERROR) throw SystemException("Pipe");
 
 	_pid = fork();
 	if (_pid == SYSTEM_ERROR)
 		throw SystemException("Fork");
 	else if (_pid == 0)
 	{
-		if (close(_serverToPython[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-		if (close(_pythonToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(_serverToPython[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(_serverToPython[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(_pythonToServer[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(_pythonToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+		if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (dup2(_serverToExternalProgram[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (dup2(_externalProgramToServer[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 		
 		execute(executable, env);
 	}
-	assert(close(_serverToPython[READ_END]) && "close in[READ_END] error");
-	assert(close(_pythonToServer[WRITE_END]) && "close out[WRITE_END] error");
+	logger.log(DEBUG, "CGI::start after else if (_pid == 0)");
+	if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+	if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	//
+	// if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+	// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+	logger.log(DEBUG, "CGI::start after closing");
+	// assert(close(_serverToExternalProgram[READ_END]));
+	// assert(close(_externalProgramToServer[WRITE_END]));
 
 	if (bodyLength != 0)
 		return (ClientState::CGI_Write);
-	if (close(_serverToPython[WRITE_END]) == SYSTEM_ERROR) 
+	if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) 
 		throw SystemException("close");
 	return (ClientState::CGI_Read);
+	// return (ClientState::Done);
 
 
 	// are you alowed to execute and read in one function? NO

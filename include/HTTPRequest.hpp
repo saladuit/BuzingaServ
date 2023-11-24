@@ -48,7 +48,7 @@ class HTTPRequest
 	ClientState receive(int fd);
 
 	// CGI stuff
-	void				parseURIForCGI(void);
+	ClientState			parseURIForCGI(void);
 	const std::string	&getExecutable(void) const;
 	char				**getEnv(void);
 	void				setCGIToTrue(void);

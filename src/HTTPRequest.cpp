@@ -1,6 +1,7 @@
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
+#include "ClientState.hpp"
 
 #include <string>
 
@@ -95,6 +96,7 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 	Logger &logger = Logger::getInstance();
 	size_t pos;
 
+	logger.log(DEBUG, "_http_request: %", _http_request);
 	pos = _http_request.find(' ', i);
 	setMethodType(_http_request.substr(i, pos - i));
 	i = pos + 1;
@@ -134,8 +136,8 @@ ClientState HTTPRequest::receive(int client_fd)
 	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE];
 	std::string header_end;
-	size_t pos;
 	size_t i = 0;
+	size_t pos;
 
 	_bytes_read = read(client_fd, buffer, BUFFER_SIZE);
 	if (_bytes_read == SYSTEM_ERROR)
@@ -176,25 +178,37 @@ ClientState HTTPRequest::receive(int client_fd)
 }
 
 // !! need to free _env and it's arguments somewhere !!
-void	HTTPRequest::parseURIForCGI(void) 
+ClientState	HTTPRequest::parseURIForCGI(void)
 {
-	std::string	fileToExecute = ".py"; // or something like: "data/www/python/test.py" to specify it better. OR give it as input. Discuss with the team!
-	size_t		lengthFileToExecute = std::strlen(fileToExecute.c_str());
 	Logger 		&logger = Logger::getInstance();
-    size_t		pyMarkPos = _request_target.find(fileToExecute);
-	logger.log(DEBUG, "Length of fileToExecute: %", lengthFileToExecute);
-    std::string	executable = _request_target.substr(0, pyMarkPos + lengthFileToExecute);
+	logger.log(DEBUG, "parseURIForCGI is called");
+	logger.log(DEBUG, "_request_target: %", _request_target);
+	// return (ClientState::Loading);
+
+	std::string	filenameExtension = ".py"; // or something like: "data/www/python/test.py" to specify it better. OR give it as input. Discuss with the team!
+	size_t		lengthFilenameExtension = std::strlen(filenameExtension.c_str());
+    size_t		filenameExtensionPos = _request_target.find(filenameExtension);
+	logger.log(DEBUG, "Length of filenameExtension: %", lengthFilenameExtension);
+	if (filenameExtensionPos == std::string::npos)
+		return (ClientState::Error);
+		// return (ClientState::Done);
+
+    _executable = _request_target.substr(0, filenameExtensionPos + lengthFilenameExtension);
 	bool		skip = false;
 	size_t		env_num = 1;
 	size_t		i = 0;
 
-	logger.log(DEBUG, "Executable is: " + executable);
-	if (pyMarkPos + lengthFileToExecute >= std::strlen(_request_target.c_str()) - 1)
-		return ;
+	logger.log(DEBUG, "Executable is: " + _executable);
+	if (filenameExtensionPos + lengthFilenameExtension >= std::strlen(_request_target.c_str()) - 1) {
+		// logger.log(DEBUG, "filenameExtensionPos + lengthFilenameExtension >= std::strlen(_request_target.c_str()) - 1");
+		return (ClientState::CGI_Start);
+		// return (ClientState::Done);
+	}
 
-	std::string	remaining = _request_target.substr(pyMarkPos + lengthFileToExecute, std::string::npos);
+	logger.log(DEBUG, "filenameExtensionPos + lengthfilenameExtension: %", filenameExtensionPos + lengthFilenameExtension);
+	
+	std::string	remaining = _request_target.substr(filenameExtensionPos + lengthFilenameExtension, std::string::npos);
 	size_t		questionMarkPos = remaining.find('?');
-
 	if (remaining.at(0) == '/')
 	{
 		env_num++;
@@ -207,6 +221,7 @@ void	HTTPRequest::parseURIForCGI(void)
 	if (remaining.at(0) == '/' && !skip)
 	{
 		std::string pathInfo = "PATH_INFO=" + remaining.substr(0, questionMarkPos);
+		// vector string instead of new char shit
 		_env[i] = new char[pathInfo.length() + 1];
 		std::strcpy(_env[i], pathInfo.c_str());
 		if (env_num == 2)
@@ -214,7 +229,7 @@ void	HTTPRequest::parseURIForCGI(void)
 		i++;
 	}
 	if (!skip) {
-	std::string queryString = "QUERY_STRING=" + remaining.substr(questionMarkPos, std::string::npos);
+		std::string queryString = "QUERY_STRING=" + remaining.substr(questionMarkPos, std::string::npos);
 	_env[i] = new char[queryString.length() + 1];
 	std::strcpy(_env[i], queryString.c_str());
 	_env[i + 1] = nullptr; }
@@ -222,5 +237,7 @@ void	HTTPRequest::parseURIForCGI(void)
 	for (size_t i = 0; _env[i]; i++) {
 		logger.log(DEBUG, _env[i]);
 	}
-    // delete[] env;
+	logger.log(INFO, "Do we reach the end of parseURIForCGI");
+	return (ClientState::CGI_Start);
+	// return (ClientState::CGI_Start);
 }
