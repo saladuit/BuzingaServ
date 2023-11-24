@@ -3,7 +3,9 @@
 #include <Logger.hpp>
 #include <Token.hpp>
 
+#include <iterator>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 void printLine(std::vector<Token>::iterator it)
@@ -19,11 +21,17 @@ void printLine(std::vector<Token>::iterator it)
 	logger.log(DEBUG, line);
 }
 
-// Finds the end of the block. expects to be called at block_identifier token.
-std::vector<Token>::iterator findBlockEnd(std::vector<Token> tokenlist,
-										  std::vector<Token>::iterator it)
+std::vector<Token>::iterator findBlockEndLoop(std::vector<Token>::iterator &it)
 {
-	int stack;
+	return (it);
+}
+
+// Finds the end of the block. expects to be called at block_identifier token.
+std::vector<Token>::iterator &findBlockEnd(std::vector<Token> &tokenlist,
+										   ssize_t pos)
+{
+	std::vector<Token>::iterator &it = tokenlist.begin() + pos;
+	int stack = 1;
 	Token &start_block = *it;
 
 	it++;
@@ -32,25 +40,20 @@ std::vector<Token>::iterator findBlockEnd(std::vector<Token> tokenlist,
 	if (it->getType() != TokenType::OPEN_BRACKET)
 		throw std::runtime_error(
 			"Syntax Error: location block without request target");
-	stack = 1;
+	it++;
 
 	while (it != tokenlist.end() && stack != 0)
 	{
-		it++;
-		if (it->getType() == TokenType::OPEN_BRACKET &&
-			start_block.getString() == "locaiton")
-			throw std::runtime_error(
-				"Syntax Error: New Block inside of location block");
 		if (it->getType() == TokenType::OPEN_BRACKET)
 			stack++;
 		else if (it->getType() == TokenType::CLOSE_BRACKET)
 			stack--;
+		it++;
 	}
 
 	if (stack != 0)
 		throw std::runtime_error("Syntax Error: Unclosed Block: " +
 								 start_block.getString());
-
 	return (it);
 }
 
@@ -81,33 +84,41 @@ void syntaxCheckLine(const Token &block_identifier,
 			block_identifier.getString());
 }
 
-void syntaxCheckRequestTarget(std::string path)
+void syntaxCheckRequestTarget(std::string target)
 {
-	(void)path; // TODO: make
+	(void)target;
 }
 
-void syntaxCheckLocationBlock(std::vector<Token> tokenlist,
+void syntaxCheckLocationBlock(std::vector<Token> &tokenlist,
 							  std::vector<Token>::iterator &it)
 {
+	Logger &logger = Logger::getInstance();
 	const Token &block_identifier = *it;
-	const std::vector<Token>::iterator end_block = findBlockEnd(tokenlist, it);
+	const std::vector<Token>::iterator &end_block =
+		findBlockEnd(tokenlist, std::distance(tokenlist.begin(), it));
 
 	it++;
 	syntaxCheckRequestTarget(it->getString());
 	it += 2;
 
+	logger.log(WARNING, "end_block: " + end_block->getString());
+	logger.log(WARNING,
+			   "endblock == it: " +
+				   (end_block == it ? std::string("ja") : std::string("nee")));
 	while (it != end_block)
 	{
+		logger.log(WARNING, "before entering CheckLine: " + it->getString());
 		syntaxCheckLine(block_identifier, it);
 		it++;
 	}
 }
 
-void syntaxCheckServerBlock(std::vector<Token> tokenlist,
+void syntaxCheckServerBlock(std::vector<Token> &tokenlist,
 							std::vector<Token>::iterator &it)
 {
 	const Token &block_identifier = *it;
-	const std::vector<Token>::iterator end_block = findBlockEnd(tokenlist, it);
+	const std::vector<Token>::iterator end_block =
+		findBlockEnd(tokenlist, std::distance(tokenlist.begin(), it));
 
 	it += 2;
 

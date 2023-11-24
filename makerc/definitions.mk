@@ -8,7 +8,7 @@ CC				:=c++
 RM				:=rm -rf
 
 #	Compiler flags
-CFLAGS			=-Wall -Wextra -Werror -Wpedantic -Wfatal-errors -std=c++17
+CFLAGS			=-Wall -Wextra -Werror -Wpedantic -Wfatal-errors -std=c++17 -fstandalone-debug
 DFLAGS			:=-MMD -MP
 
 #	Directories
