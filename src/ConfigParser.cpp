@@ -54,8 +54,14 @@ void ConfigParser::ParseConfig()
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
-	for (auto &it : _server_settings)
-		it.resolveLocation("/pytho.n/test.py");
-
+	//	for (auto &it : _server_settings)
+	//	{
+	//		const LocationSettings &loc = it.resolveLocation("/t/");
+	//
+	//		logger.log(DEBUG, "LocationSettings.getRequestTarget: " +
+	//							  loc.getRequestTarget() +
+	//							  "\tcheck: " + loc.getIndex());
+	//	}
+	//
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }
