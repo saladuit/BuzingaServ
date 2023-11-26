@@ -43,6 +43,7 @@ class LocationSettings
 
 	void parseAlias(const Token token);
 	void parseIndex(const Token token);
+	void parseAutoIndex(const Token token);
 	void parseAllowedMethods(const Token token);
 	void parseCgiPath(const Token token);
 	void parseReturn(const Token token);

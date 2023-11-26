@@ -111,6 +111,10 @@ void ServerSettings::addValueToServerSettings(
 			parseErrorDir(*value);
 		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
+		else
+			throw std::runtime_error("ServerSettings: unknown KEY token: " +
+									 key.getString());
+
 		value++;
 	}
 }
@@ -153,41 +157,52 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-const std::string extractTargetfromURI(const std::string URI)
-{
-	size_t pos_dot = URI.find_last_of(".");
-	if (pos_dot == std::string::npos)
-		return (URI);
-
-	size_t pos_slash = URI.find_last_of("/");
-	if (pos_slash == std::string::npos)
-		throw std::runtime_error(
-			"resolveLocation: URI has unfamiliar structure");
-	if (pos_dot < pos_slash)
-		return (URI);
-
-	std::string target = URI.substr(0, pos_slash + 1);
-	return (target);
-}
-
-// TODO: maybe throw and error/exception here so the calling function can handle
-// it.
+// Funcion: find the longest possible locationblock form the URI.
+// URI will be stripped from it's trailing file. (line 3)
+// and expects LocationBlock requesttarget to always start with a '/'
 //
-// URI has to request target with a '/' to show it's a direcotry. The URI will
-// be trimmed to remove the file if there is one.
+//	server {
+//	location / {}
+//	location /images/ {}
+//	location /images/png/ {}
+//	}
 //
-const LocationSettings *ServerSettings::resolveLocation(const std::string &URI)
-{
-	Logger &logger = Logger::getInstance();
-	const std::string target = extractTargetfromURI(URI);
+// /image				=> /
+// /some/example.jpg	=> /
+// /images				=> /
+// /images/				=> /images/
+// /images/jpg/			=> /images/
+// /images/pn/			=> /images/png/
+// /jpg/images/			=> /
+//
 
-	logger.log(WARNING, "target: " + target);
-	for (auto &location_instance : _location_settings)
+// TODO: @saladuit does the return type actually return the right memory? as in
+// a reference to the original locationblock
+
+const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
+{
+	LocationSettings *ret = nullptr;
+	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+
+	for (auto &instance : _location_settings)
 	{
-		if (location_instance.getRequestTarget() != target)
+		const size_t pos = requesttarget.find(instance.getRequestTarget());
+
+		if (pos != 0)
 			continue;
+		if (ret != nullptr)
+		{
+			if (instance.getRequestTarget().length() >
+				ret->getRequestTarget().length())
+				ret = &instance;
+		}
+		else
+			ret = &instance;
 	}
-	return (NULL);
+	if (ret == nullptr)
+		throw std::runtime_error("Couldn't resolve Location in server: " +
+								 _server_name);
+	return (*ret);
 }
 
 // Printing:

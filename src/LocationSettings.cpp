@@ -39,16 +39,21 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 		while (token->getType() != TokenType::SEMICOLON)
 		{
-			if (key.getString() == "root")
+			if (key.getString() == "alias")
 				parseAlias(*token);
 			else if (key.getString() == "index")
 				parseIndex(*token);
+			else if (key.getString() == "autoindex")
+				parseAutoIndex(*token);
 			else if (key.getString() == "allowed_methods")
 				parseAllowedMethods(*token);
 			else if (key.getString() == "cgi_path")
 				parseCgiPath(*token);
 			else if (key.getString() == "return")
 				parseReturn(*token);
+			else
+				throw std::runtime_error(
+					"LocationSettings: unknown KEY token: " + key.getString());
 
 			token++;
 		}
@@ -64,6 +69,17 @@ void LocationSettings::parseAlias(const Token token)
 void LocationSettings::parseIndex(const Token token)
 {
 	_index.append(" " + token.getString());
+}
+
+void LocationSettings::parseAutoIndex(const Token token)
+{
+	if (token.getString() == "on")
+		_auto_index = true;
+	else if (token.getString() == "off")
+		_auto_index = false;
+	else
+		throw std::runtime_error("ConfigParser: Unknown VALUE for autoindex: " +
+								 token.getString());
 }
 
 void LocationSettings::parseAllowedMethods(const Token token)

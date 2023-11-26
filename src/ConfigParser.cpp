@@ -1,4 +1,5 @@
 
+#include "LocationSettings.hpp"
 #include <ConfigParser.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>

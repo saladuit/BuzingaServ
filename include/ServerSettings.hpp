@@ -19,7 +19,7 @@ class ServerSettings
 	ServerSettings &operator=(const ServerSettings &rhs) = delete;
 
 	// Functionality:
-	const LocationSettings *resolveLocation(const std::string &request_target);
+	const LocationSettings &resolveLocation(const std::string &request_target);
 	const std::string &getListen() const;
 	const std::string &getServerName() const;
 	const std::string &getErrorDir() const;
