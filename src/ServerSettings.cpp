@@ -7,6 +7,8 @@
 #include <Token.hpp>
 
 #include <array>
+#include <exception>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -54,8 +56,30 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 
 // TODO: value confirmation and validation should happen here or in syntax
 
+void validateListen(const std::string &str)
+{
+	size_t pos = str.find_first_of(":");
+	if (pos == std::string::npos || pos != str.find_last_of(":"))
+		throw std::runtime_error("Parsing Error: invalid value for listen");
+
+	const std::string ip = str.substr(0, pos);
+	const std::string port = str.substr(pos + 1, std::string::npos);
+
+	try
+	{
+		int port_ = std::stoi(port);
+		if (port_ < 1 || port_ > 65535) //
+			throw std::exception();
+	}
+	catch (std::exception &e)
+	{
+		throw std::runtime_error("Parsing Error: invalid port found in listen");
+	}
+}
+
 void ServerSettings::parseListen(const Token value)
 {
+	validateListen(value.getString());
 	_listen.append(" " + value.getString());
 }
 
@@ -93,8 +117,9 @@ void ServerSettings::addValueToServerSettings(
 		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
 		else
-			throw std::runtime_error("Parsing Error: Unknown Key token at: " +
+			throw std::runtime_error("ServerSettings: unknown KEY token: " +
 									 key.getString());
+
 		value++;
 	}
 }
@@ -137,21 +162,52 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-const LocationSettings *
-ServerSettings::resolveLocation(const std::string &request_target,
-								HTTPMethod input_method)
+// Funcion: find the longest possible locationblock form the URI.
+// URI will be stripped from it's trailing file. (line 3)
+// and expects LocationBlock requesttarget to always start with a '/'
+//
+//	server {
+//	location / {}
+//	location /images/ {}
+//	location /images/png/ {}
+//	}
+//
+// /image				=> /
+// /some/example.jpg	=> /
+// /images				=> /
+// /images/				=> /images/
+// /images/jpg/			=> /images/
+// /images/pn/			=> /images/png/
+// /jpg/images/			=> /
+//
+
+// TODO: @saladuit does the return type actually return the right memory? as in
+// a reference to the original locationblock
+
+const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 {
-	for (auto &location_instance : _location_settings)
+	LocationSettings *ret = nullptr;
+	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+
+	for (auto &instance : _location_settings)
 	{
-		if (location_instance.getDir() != request_target)
+		const size_t pos = requesttarget.find(instance.getRequestTarget());
+
+		if (pos != 0)
 			continue;
-		std::stringstream ss(location_instance.getAllowedMethods());
-		std::string option;
-		for (; std::getline(ss, option, ' ');)
-			if (option == methodToString(input_method))
-				return (&location_instance);
+		if (ret != nullptr)
+		{
+			if (instance.getRequestTarget().length() >
+				ret->getRequestTarget().length())
+				ret = &instance;
+		}
+		else
+			ret = &instance;
 	}
-	return (NULL);
+	if (ret == nullptr)
+		throw std::runtime_error("Couldn't resolve Location in server: " +
+								 _server_name);
+	return (*ret);
 }
 
 // Printing:

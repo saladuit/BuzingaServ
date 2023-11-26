@@ -9,15 +9,15 @@
 #include <vector>
 
 LocationSettings::LocationSettings()
-	: _directory(), _alias(), _index(), _allowed_methods(), _cgi_path(),
+	: _requesttarget(), _alias(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
 {
 }
 
 LocationSettings::LocationSettings(const LocationSettings &rhs)
-	: _directory(rhs._directory), _alias(rhs._alias), _index(rhs._index),
-	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
-	  _auto_index(rhs._auto_index)
+	: _requesttarget(rhs._requesttarget), _alias(rhs._alias),
+	  _index(rhs._index), _allowed_methods(rhs._allowed_methods),
+	  _cgi_path(rhs._cgi_path), _auto_index(rhs._auto_index)
 {
 }
 
@@ -26,10 +26,10 @@ LocationSettings::~LocationSettings()
 }
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
-	: _directory(), _alias(), _index(), _allowed_methods(), _cgi_path(),
+	: _requesttarget(), _alias(), _index(), _allowed_methods(), _cgi_path(),
 	  _auto_index()
 {
-	_directory = token->getString();
+	_requesttarget = token->getString();
 	token += 2;
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
@@ -43,17 +43,17 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 				parseAlias(*token);
 			else if (key.getString() == "index")
 				parseIndex(*token);
+			else if (key.getString() == "autoindex")
+				parseAutoIndex(*token);
 			else if (key.getString() == "allowed_methods")
 				parseAllowedMethods(*token);
 			else if (key.getString() == "cgi_path")
 				parseCgiPath(*token);
 			else if (key.getString() == "return")
 				parseReturn(*token);
-			else if (key.getString() == "autoindex")
-				parseAutoIndex(*token);
 			else
 				throw std::runtime_error(
-					"Parsing Error: Unknown KEY token at: " + key.getString());
+					"LocationSettings: unknown KEY token: " + key.getString());
 
 			token++;
 		}
@@ -69,6 +69,17 @@ void LocationSettings::parseAlias(const Token token)
 void LocationSettings::parseIndex(const Token token)
 {
 	_index.append(" " + token.getString());
+}
+
+void LocationSettings::parseAutoIndex(const Token token)
+{
+	if (token.getString() == "on")
+		_auto_index = true;
+	else if (token.getString() == "off")
+		_auto_index = false;
+	else
+		throw std::runtime_error("ConfigParser: Unknown VALUE for autoindex: " +
+								 token.getString());
 }
 
 void LocationSettings::parseAllowedMethods(const Token token)
@@ -99,9 +110,9 @@ void LocationSettings::parseAutoIndex(const Token token)
 
 // Functionality:
 //		getters:
-const std::string &LocationSettings::getDir() const
+const std::string &LocationSettings::getRequestTarget() const
 {
-	return (_directory);
+	return (_requesttarget);
 }
 
 const std::string &LocationSettings::getAlias() const
@@ -130,9 +141,9 @@ const std::string &LocationSettings::getReturn() const
 }
 
 //		setters:
-void LocationSettings::setDir(const std::string &direcotry)
+void LocationSettings::setDir(const std::string &requesttarget)
 {
-	_directory = direcotry;
+	_requesttarget = requesttarget;
 }
 
 // THIS IS PRINTING FUNCTION
@@ -141,19 +152,12 @@ void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "\tLocation Prefix:\t" +
-						  (_directory.empty() ? " -[EMPTY]-" : _directory));
-	logger.log(DEBUG,
-			   "\t\tAlias:\t\t\t" + (_alias.empty() ? " -[EMPTY]-" : _alias));
-	logger.log(DEBUG,
-			   "\t\tIndex:\t\t\t" + (_index.empty() ? " -[EMPTY]-" : _index));
-	logger.log(DEBUG, "\t\tAllowed_methods:\t" + (_allowed_methods.empty()
-													  ? " -[EMPTY]-"
-													  : _allowed_methods));
-	logger.log(DEBUG, "\t\tCGI Path:\t\t" +
-						  (_cgi_path.empty() ? " -[EMPTY]-" : _cgi_path));
-	logger.log(DEBUG, "\t\tReturn:\t\t\t" +
-						  (_return.empty() ? " -[EMPTY]-" : _return));
+	logger.log(DEBUG, "\tLocation Prefix:\t" + _requesttarget);
+	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
+	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
+	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
+	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
+	logger.log(DEBUG, "\t\tReturn:\t\t" + _return);
 	logger.log(DEBUG,
 			   "\t\tAutoIndex:\t\t" +
 				   (_auto_index ? std::string(" ON") : std::string(" OFF")));
