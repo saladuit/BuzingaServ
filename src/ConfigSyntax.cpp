@@ -27,10 +27,10 @@ std::vector<Token>::iterator findBlockEndLoop(std::vector<Token>::iterator &it)
 }
 
 // Finds the end of the block. expects to be called at block_identifier token.
-std::vector<Token>::iterator &findBlockEnd(std::vector<Token> &tokenlist,
-										   ssize_t pos)
+std::vector<Token>::iterator findBlockEnd(std::vector<Token> &tokenlist,
+										  ssize_t pos)
 {
-	std::vector<Token>::iterator &it = tokenlist.begin() + pos;
+	std::vector<Token>::iterator it = tokenlist.begin() + pos;
 	int stack = 1;
 	Token &start_block = *it;
 
@@ -119,7 +119,7 @@ void syntaxCheckServerBlock(std::vector<Token> &tokenlist,
 							std::vector<Token>::iterator &it)
 {
 	const Token &block_identifier = *it;
-	const std::vector<Token>::iterator end_block =
+	const std::vector<Token>::iterator &end_block =
 		findBlockEnd(tokenlist, std::distance(tokenlist.begin(), it));
 
 	it += 2;

@@ -47,6 +47,5 @@ class LocationSettings
 	void parseAllowedMethods(const Token token);
 	void parseCgiPath(const Token token);
 	void parseReturn(const Token token);
-	void parseAutoIndex(const Token token);
 };
 #endif // !LOCATIONSETTING_HPP
