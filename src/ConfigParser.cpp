@@ -1,6 +1,6 @@
 
-#include "LocationSettings.hpp"
 #include <ConfigParser.hpp>
+#include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
 #include <Token.hpp>

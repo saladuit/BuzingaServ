@@ -86,7 +86,9 @@ void syntaxCheckLine(const Token &block_identifier,
 
 void syntaxCheckRequestTarget(std::string target)
 {
-	(void)target;
+	if (target.find_first_of("/") != 1)
+		throw std::runtime_error(
+			"Syntax Error: Line doesn't end with ';' in block: ");
 }
 
 void syntaxCheckLocationBlock(std::vector<Token> &tokenlist,
