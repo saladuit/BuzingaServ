@@ -49,7 +49,8 @@ void ConfigParser::ParseConfig()
 
 	tokenizeStream(OpenFile(), tokenlist);
 
-	syntaxCheck(tokenlist);
+	syntax(tokenlist);
+	logger.log(INFO, "Syntax of " + _config_file_path + " finished");
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)

@@ -16,7 +16,7 @@ class ConfigParser
 	std::vector<ServerSettings> _server_settings;
 
 	std::stringstream OpenFile();
-	void syntaxCheck(std::vector<Token> token);
+	void syntax(std::vector<Token> token);
 
   public:
 	ConfigParser(const std::string &file_path);

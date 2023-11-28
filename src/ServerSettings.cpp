@@ -177,12 +177,9 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 // /images				=> /
 // /images/				=> /images/
 // /images/jpg/			=> /images/
-// /images/pn/			=> /images/png/
-// /jpg/images/			=> /
+// /images/png/			=> /images/png/
+// /png/images/			=> /
 //
-
-// TODO: @saladuit does the return type actually return the right memory? as in
-// a reference to the original locationblock
 
 const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 {
@@ -205,8 +202,8 @@ const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 			ret = &instance;
 	}
 	if (ret == nullptr)
-		throw std::runtime_error("Couldn't resolve Location in server: " +
-								 _server_name);
+		throw std::logic_error("Couldn't resolve Location in server: " +
+							   _server_name);
 	return (*ret);
 }
 
@@ -231,8 +228,6 @@ void ServerSettings::printServerSettings() const
 	}
 
 	// We can go over the different strings by using Getline
-	//
-	//	logger.log(DEBUG, "\t_ClientMaxBodySize:");
 	//
 	//	std::stringstream ss(getListen());
 	//

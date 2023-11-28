@@ -8,64 +8,64 @@
 #include <string>
 #include <vector>
 
-void printLine(std::vector<Token>::iterator it)
+std::vector<Token>::iterator findBlockEnd(std::vector<Token> &tokens,
+										  size_t pos)
 {
-	Logger &logger = Logger::getInstance();
-
-	std::string line;
-	while (it->getType() == TokenType::WORD)
-	{
-		line += " " + it->getString();
-		it++;
-	}
-	logger.log(DEBUG, line);
-}
-
-std::vector<Token>::iterator findBlockEndLoop(std::vector<Token>::iterator &it)
-{
-	return (it);
-}
-
-// Finds the end of the block. expects to be called at block_identifier token.
-std::vector<Token>::iterator findBlockEnd(std::vector<Token> &tokenlist,
-										  ssize_t pos)
-{
-	std::vector<Token>::iterator it = tokenlist.begin() + pos;
-	int stack = 1;
-	Token &start_block = *it;
+	std::vector<Token>::iterator it = tokens.begin() + pos;
+	std::vector<Token>::iterator blockidentifier = it;
 
 	it++;
-	if (start_block.getString() == "location")
-		it++;
+	if (blockidentifier->getString() == "location")
+		it++; // to skip the directory specified in locationblock
+
 	if (it->getType() != TokenType::OPEN_BRACKET)
-		throw std::runtime_error(
-			"Syntax Error: location block without request target");
+		throw std::runtime_error("Syntax Error: '" +
+								 blockidentifier->getString() +
+								 "' Block isn't opened");
 	it++;
 
-	while (it != tokenlist.end() && stack != 0)
+	size_t stack = 1;
+	while (it != tokens.end() && stack != 0)
 	{
+		it++;
 		if (it->getType() == TokenType::OPEN_BRACKET)
 			stack++;
 		else if (it->getType() == TokenType::CLOSE_BRACKET)
 			stack--;
-		it++;
 	}
 
 	if (stack != 0)
-		throw std::runtime_error("Syntax Error: Unclosed Block: " +
-								 start_block.getString());
+		throw std::runtime_error(
+			"Syntax Error: " + blockidentifier->getString() +
+			" Block isn't closed");
+
 	return (it);
 }
 
-void skipTokenLine(std::vector<Token>::iterator &it)
+void syntaxRequestTarget(std::vector<Token>::iterator &it)
 {
-	while (it->getType() != TokenType::SEMICOLON)
-		it++;
+	const std::string reqtarget = it->getString();
+
+	if (reqtarget.find_first_of("/") != 0)
+		throw std::runtime_error("Syntax Error: locationBlock RequestTarget "
+								 "doesn't start with '/' : " +
+								 reqtarget);
+	if (reqtarget.length() == 1)
+		return;
+
+	if (reqtarget.find_last_of("/") != reqtarget.length() - 1)
+		throw std::runtime_error("Syntax Error: locationBlock RequestTarget "
+								 "doesn't end with '/' : " +
+								 reqtarget);
 }
 
-void syntaxCheckLine(const Token &block_identifier,
-					 std::vector<Token>::iterator &it)
+void syntaxLine(std::vector<Token>::iterator &it)
 {
+	if (it->getType() != TokenType::WORD)
+		throw std::runtime_error(
+			"Syntax Error: Line doesn't start with TokenType WORD" +
+			it->getString());
+	Token &lineidentifier = *it;
 	size_t words = 0;
 
 	while (it->getType() == TokenType::WORD)
@@ -77,71 +77,68 @@ void syntaxCheckLine(const Token &block_identifier,
 	if (words <= 1)
 		throw std::runtime_error(
 			"Syntax Error: Line doesn't contain KEY:VALUE pair in block: " +
-			block_identifier.getString());
+			lineidentifier.getString());
 	else if (it->getType() != TokenType::SEMICOLON)
 		throw std::runtime_error(
-			"Syntax Error: Line doesn't end with ';' in block: " +
-			block_identifier.getString());
+			"Syntax Error: Line doesn't end with ';' in block. near token: " +
+			lineidentifier.getString());
 }
 
-void syntaxCheckRequestTarget(std::string target)
+void syntaxLocationBlock(std::vector<Token> &tokens,
+						 std::vector<Token>::iterator &it)
 {
-	if (target.find_first_of("/") != 1)
+	std::vector<Token>::iterator closing_token =
+		findBlockEnd(tokens, std::distance(tokens.begin(), it));
+
+	if (it->getString() != "location")
 		throw std::runtime_error(
-			"Syntax Error: Line doesn't end with ';' in block: ");
-}
-
-void syntaxCheckLocationBlock(std::vector<Token> &tokenlist,
-							  std::vector<Token>::iterator &it)
-{
-	Logger &logger = Logger::getInstance();
-	const Token &block_identifier = *it;
-	const std::vector<Token>::iterator &end_block =
-		findBlockEnd(tokenlist, std::distance(tokenlist.begin(), it));
-
+			"Syntax Error: locationBlock starts with unfamiliar identifier: " +
+			it->getString());
 	it++;
-	syntaxCheckRequestTarget(it->getString());
+	syntaxRequestTarget(it);
 	it += 2;
 
-	logger.log(WARNING, "end_block: " + end_block->getString());
-	logger.log(WARNING,
-			   "endblock == it: " +
-				   (end_block == it ? std::string("ja") : std::string("nee")));
-	while (it != end_block)
+	while (it != closing_token)
 	{
-		logger.log(WARNING, "before entering CheckLine: " + it->getString());
-		syntaxCheckLine(block_identifier, it);
+
+		syntaxLine(it);
 		it++;
 	}
 }
 
-void syntaxCheckServerBlock(std::vector<Token> &tokenlist,
-							std::vector<Token>::iterator &it)
+void syntaxServerBlock(std::vector<Token> &tokens,
+					   std::vector<Token>::iterator &it)
 {
-	const Token &block_identifier = *it;
-	const std::vector<Token>::iterator &end_block =
-		findBlockEnd(tokenlist, std::distance(tokenlist.begin(), it));
+	std::vector<Token>::iterator closing_token;
+	if (it == tokens.begin())
+		closing_token = findBlockEnd(tokens, 0);
+	else
+		closing_token = findBlockEnd(tokens, std::distance(tokens.begin(), it));
 
+	if (it->getString() != "server")
+		throw std::runtime_error(
+			"Syntax Error: ServerBlock starts with unfamiliar identifier: " +
+			it->getString());
 	it += 2;
 
-	while (it != end_block)
+	while (it != closing_token)
 	{
 		if (it->getString() == "location")
-			syntaxCheckLocationBlock(tokenlist, it);
+			syntaxLocationBlock(tokens, it);
 		else
-			syntaxCheckLine(block_identifier, it);
+			syntaxLine(it);
 		it++;
 	}
 }
 
-void ConfigParser::syntaxCheck(std::vector<Token> tokenlist)
+void ConfigParser::syntax(std::vector<Token> tokenlist)
 {
 	std::vector<Token>::iterator it = tokenlist.begin();
 
 	while (it != tokenlist.end())
 	{
 		if (it->getString() == "server")
-			syntaxCheckServerBlock(tokenlist, it);
+			syntaxServerBlock(tokenlist, it);
 		else
 			throw std::runtime_error(
 				"Syntax Error: unknown block identifier: " + it->getString());
