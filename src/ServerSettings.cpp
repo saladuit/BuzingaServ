@@ -90,16 +90,19 @@ void ServerSettings::parseServerName(const Token value)
 
 void ServerSettings::parseErrorDir(const Token value)
 {
+	Logger &logger = Logger::getInstance();
+
 	if (!_error_dir.empty())
-		throw std::runtime_error("Parsing Error: Redefining error_dir");
+		logger.log(WARNING, "parser: redefining error_dir");
 	_error_dir = value.getString();
 }
 
 void ServerSettings::parseClientMaxBodySize(const Token value)
 {
+	Logger &logger = Logger::getInstance();
+
 	if (!_client_max_body_size.empty())
-		throw std::runtime_error(
-			"Parsing Error: Redefining client_max_body_size");
+		logger.log(WARNING, "parser: redefining clientmaxbodysize");
 	_client_max_body_size = value.getString();
 }
 

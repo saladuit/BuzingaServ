@@ -63,12 +63,22 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 void LocationSettings::parseAlias(const Token token)
 {
-	_alias.append(" " + token.getString());
+	Logger &logger = Logger::getInstance();
+
+	if (!_alias.empty())
+		logger.log(WARNING, "parser: redefining alias in locationblock: " +
+								_requesttarget);
+	_alias = token.getString();
 }
 
 void LocationSettings::parseIndex(const Token token)
 {
-	_index.append(" " + token.getString());
+	Logger &logger = Logger::getInstance();
+
+	if (!_index.empty())
+		logger.log(WARNING, "parser: redefining index in locationblock: " +
+								_requesttarget);
+	_index = token.getString();
 }
 
 void LocationSettings::parseAutoIndex(const Token token)
@@ -84,11 +94,17 @@ void LocationSettings::parseAutoIndex(const Token token)
 
 void LocationSettings::parseAllowedMethods(const Token token)
 {
+	if (token.getString() != "GET" && token.getString() != "POST" &&
+		token.getString() != "DELETE")
+		throw std::runtime_error(
+			"ConfigParser: Unknown VALUE for allowed_methods: " +
+			token.getString());
 	_allowed_methods.append(" " + token.getString());
 }
 
 void LocationSettings::parseCgiPath(const Token token)
 {
+
 	_cgi_path.append(" " + token.getString());
 }
 
