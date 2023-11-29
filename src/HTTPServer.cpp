@@ -1,6 +1,7 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
+#include <cstddef>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
@@ -87,10 +88,17 @@ void HTTPServer::handleActivePollFDs()
 		logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
+		/* for (size_t i = 0; i < _active_clients.size(); i++) */
+		/* { */
+		/* 	poll_fd.fd = _active_clients.at(i)->isCGI(poll_fd.fd); */
+		/* 	handleExistingConnection(poll_fd); */
+		/* } */
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(poll_fd.fd);
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
+		{
 			handleExistingConnection(poll_fd);
+		}
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
@@ -110,6 +118,10 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 	case ClientState::Receiving:
 		_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
+		/* 	case ClientState::CGI: */
+		/* _active_clients.at(poll_fd.fd)->getCGIFDS(poll_fd.events */
+		/* 		_poll.addPollFD(poll_fd.fd, POLLOUT); */
+		/* 		break; */
 	case ClientState::Loading:
 	case ClientState::Sending:
 	case ClientState::Error:

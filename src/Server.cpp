@@ -11,6 +11,7 @@ Server::Server(const ServerSettings &server_settings)
 	const std::string &port =
 		server_settings.getValue(ServerSettingOption::Port);
 
+	std::string listen_directives = server_settings.getListen();
 	_socket.setupServer(host, port);
 	logger.log(DEBUG, "Created Server on host:port " +
 						  _server_settings.getValue(ServerSettingOption::Host) +
