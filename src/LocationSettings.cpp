@@ -5,8 +5,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 LocationSettings::LocationSettings()
 	: _requesttarget(), _alias(), _index(), _allowed_methods(), _cgi_path(),
@@ -34,6 +32,8 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 
 	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
+		Logger &logger = Logger::getInstance();
+
 		const Token key = *token;
 		token++;
 
@@ -52,8 +52,8 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 			else if (key.getString() == "return")
 				parseReturn(*token);
 			else
-				throw std::runtime_error(
-					"LocationSettings: unknown KEY token: " + key.getString());
+				logger.log(WARNING, "LocationSettings: unknown KEY token: " +
+										key.getString());
 
 			token++;
 		}
@@ -66,8 +66,9 @@ void LocationSettings::parseAlias(const Token token)
 	Logger &logger = Logger::getInstance();
 
 	if (!_alias.empty())
-		logger.log(WARNING, "parser: redefining alias in locationblock: " +
-								_requesttarget);
+		logger.log(WARNING,
+				   "ConfigParser: redefining alias in locationblock: " +
+					   _requesttarget);
 	_alias = token.getString();
 }
 
@@ -76,8 +77,9 @@ void LocationSettings::parseIndex(const Token token)
 	Logger &logger = Logger::getInstance();
 
 	if (!_index.empty())
-		logger.log(WARNING, "parser: redefining index in locationblock: " +
-								_requesttarget);
+		logger.log(WARNING,
+				   "ConfigParser: redefining index in locationblock: " +
+					   _requesttarget);
 	_index = token.getString();
 }
 
@@ -110,6 +112,12 @@ void LocationSettings::parseCgiPath(const Token token)
 
 void LocationSettings::parseReturn(const Token token)
 {
+	Logger &logger = Logger::getInstance();
+
+	if (!_return.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining return in locationblock: " +
+					   _requesttarget);
 	_return.append(" " + token.getString());
 }
 

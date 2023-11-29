@@ -5,9 +5,7 @@
 #include <LocationSettings.hpp>
 #include <Token.hpp>
 
-#include <regex>
 #include <string>
-#include <vector>
 
 class ServerSettings
 {

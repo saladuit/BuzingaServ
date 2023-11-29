@@ -6,12 +6,8 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
-#include <array>
-#include <exception>
-#include <regex>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 ServerSettings::ServerSettings()
 	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
@@ -54,8 +50,6 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-// TODO: value confirmation and validation should happen here or in syntax
-
 void validateListen(const std::string &str)
 {
 	size_t pos = str.find_first_of(":");
@@ -93,7 +87,7 @@ void ServerSettings::parseErrorDir(const Token value)
 	Logger &logger = Logger::getInstance();
 
 	if (!_error_dir.empty())
-		logger.log(WARNING, "parser: redefining error_dir");
+		logger.log(WARNING, "ConfigParser: redefining error_dir");
 	_error_dir = value.getString();
 }
 
@@ -102,13 +96,15 @@ void ServerSettings::parseClientMaxBodySize(const Token value)
 	Logger &logger = Logger::getInstance();
 
 	if (!_client_max_body_size.empty())
-		logger.log(WARNING, "parser: redefining clientmaxbodysize");
+		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
 	_client_max_body_size = value.getString();
 }
 
 void ServerSettings::addValueToServerSettings(
 	const Token &key, std::vector<Token>::iterator &value)
 {
+	Logger &logger = Logger::getInstance();
+
 	while (value->getType() != TokenType::SEMICOLON)
 	{
 		if (key.getString() == "listen")
@@ -120,9 +116,8 @@ void ServerSettings::addValueToServerSettings(
 		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
 		else
-			throw std::runtime_error("ServerSettings: unknown KEY token: " +
-									 key.getString());
-
+			logger.log(WARNING,
+					   "ServerSettings: unknown KEY token: " + key.getString());
 		value++;
 	}
 }
@@ -224,6 +219,7 @@ void ServerSettings::printServerSettings() const
 	logger.log(DEBUG, "\t_ServerName:" + _server_name);
 	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
 	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
+
 	for (auto &location_instance : _location_settings)
 	{
 		logger.log(DEBUG, "\n");
