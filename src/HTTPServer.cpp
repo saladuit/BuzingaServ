@@ -107,19 +107,17 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
 	{
 	case ClientState::Receiving:
-		_poll.setEvents(poll_fd.fd, POLLIN);
+	case ClientState::CGI_Read:
+		{
+			_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
+		}
 	case ClientState::Loading:
 	case ClientState::Sending:
 	case ClientState::Error:
-		_poll.setEvents(poll_fd.fd, POLLOUT);
-		break;
 	case ClientState::CGI_Write:
 	case ClientState::CGI_Start:
-			_poll.setEvents(poll_fd.fd, POLLOUT);
-		break;
-	case ClientState::CGI_Read:
-			_poll.setEvents(poll_fd.fd, POLLIN);
+		_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
 	case ClientState::Done:
 		_poll.removeFD(poll_fd.fd);

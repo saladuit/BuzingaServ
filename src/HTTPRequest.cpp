@@ -10,7 +10,7 @@
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
 	  _http_request(), _request_target(), _http_version(), _body(), _headers(),
-	  _executable(),_env(NULL), _cgi(false)
+	  _cgi(false)
 {
 }
 
@@ -72,14 +72,6 @@ const std::string &HTTPRequest::getBody(void) const
 
 const size_t &HTTPRequest::getBodyLength(void) const {
 	return (_content_length);
-}
-
-const std::string &HTTPRequest::getExecutable(void) const {
-	return (_executable);
-}
-
-char **HTTPRequest::getEnv(void) {
-	return (_env);
 }
 
 void HTTPRequest::setCGIToTrue(void) {
@@ -175,69 +167,4 @@ ClientState HTTPRequest::receive(int client_fd)
 		pos = parseHeaders(i);
 	}
 	return (ClientState::Receiving);
-}
-
-// !! need to free _env and it's arguments somewhere !!
-ClientState	HTTPRequest::parseURIForCGI(void)
-{
-	Logger 		&logger = Logger::getInstance();
-	logger.log(DEBUG, "parseURIForCGI is called");
-	logger.log(DEBUG, "_request_target: %", _request_target);
-	// return (ClientState::Loading);
-
-	std::string	filenameExtension = ".py"; // or something like: "data/www/python/test.py" to specify it better. OR give it as input. Discuss with the team!
-	size_t		lengthFilenameExtension = std::strlen(filenameExtension.c_str());
-    size_t		filenameExtensionPos = _request_target.find(filenameExtension);
-	logger.log(DEBUG, "Length of filenameExtension: %", lengthFilenameExtension);
-	if (filenameExtensionPos == std::string::npos)
-		return (ClientState::Error);
-		// return (ClientState::Done);
-
-    _executable = _request_target.substr(0, filenameExtensionPos + lengthFilenameExtension);
-	bool		skip = false;
-	size_t		env_num = 1;
-	size_t		i = 0;
-
-	logger.log(DEBUG, "Executable is: " + _executable);
-	if (filenameExtensionPos + lengthFilenameExtension >= std::strlen(_request_target.c_str()) - 1) {
-		// logger.log(DEBUG, "filenameExtensionPos + lengthFilenameExtension >= std::strlen(_request_target.c_str()) - 1");
-		return (ClientState::CGI_Start);
-		// return (ClientState::Done);
-	}
-
-	logger.log(DEBUG, "filenameExtensionPos + lengthfilenameExtension: %", filenameExtensionPos + lengthFilenameExtension);
-	
-	std::string	remaining = _request_target.substr(filenameExtensionPos + lengthFilenameExtension, std::string::npos);
-	size_t		questionMarkPos = remaining.find('?');
-	if (remaining.at(0) == '/')
-	{
-		env_num++;
-		if (questionMarkPos != std::string::npos)
-			env_num++;
-	}
-	else if (remaining.at(0) == '?')
-		env_num++;
-	_env = new char *[env_num];
-	if (remaining.at(0) == '/' && !skip)
-	{
-		std::string pathInfo = "PATH_INFO=" + remaining.substr(0, questionMarkPos);
-		// vector string instead of new char shit
-		_env[i] = new char[pathInfo.length() + 1];
-		std::strcpy(_env[i], pathInfo.c_str());
-		if (env_num == 2)
-		{	_env[i + 1] = nullptr; skip = true;}
-		i++;
-	}
-	if (!skip) {
-		std::string queryString = "QUERY_STRING=" + remaining.substr(questionMarkPos, std::string::npos);
-	_env[i] = new char[queryString.length() + 1];
-	std::strcpy(_env[i], queryString.c_str());
-	_env[i + 1] = nullptr; }
-	
-	for (size_t i = 0; _env[i]; i++) {
-		logger.log(DEBUG, _env[i]);
-	}
-	logger.log(INFO, "Do we reach the end of parseURIForCGI");
-	return (ClientState::CGI_Start);
-	// return (ClientState::CGI_Start);
 }

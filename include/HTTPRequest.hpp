@@ -47,16 +47,11 @@ class HTTPRequest
 	const std::string &getBody(void) const;
 	ClientState receive(int fd);
 
-	// CGI stuff
-	ClientState			parseURIForCGI(void);
 	const std::string	&getExecutable(void) const;
-	char				**getEnv(void);
 	void				setCGIToTrue(void);
 	const bool			&CGITrue(void) const;
 	const size_t		&getBodyLength(void) const;
-
 	
-
   private:
 	ssize_t _bytes_read;
 	size_t _content_length;
@@ -66,8 +61,6 @@ class HTTPRequest
 	std::string _http_version;
 	std::string _body;
 	std::unordered_map<std::string, std::string> _headers;
-	std::string	_executable;
-	char		**_env;
 	bool		_cgi;
 
 	size_t parseStartLine(size_t &i);

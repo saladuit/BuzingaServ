@@ -2,6 +2,7 @@
 #include <ClientException.hpp>
 #include <Logger.hpp>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include <sys/poll.h>
 
@@ -26,7 +27,7 @@ ClientState Client::handleConnection(short events)
 						 std::to_string(_socket.getFD()));
 	try
 	{
-		if (events & POLLIN)
+		if (events & POLLIN && _state == ClientState::Receiving)
 		{
 			_state = _request.receive(_socket.getFD());
 			// implement method Martijn for verifying that we are dealing with a CGI
@@ -38,13 +39,13 @@ ClientState Client::handleConnection(short events)
 			// _request.setRequestTarget("/python/test.py");
 			logger.log(DEBUG, "request target from handleConnection: %", _request.getRequestTarget());
 			if (_state == ClientState::Loading && _request.CGITrue() == true)
-				_state = _request.parseURIForCGI();
+				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
 		{
-			logger.log(DEBUG, "Executable of external program is: %", _request.getExecutable());
-			_state = _cgi.start(_request.getExecutable(), _request.getEnv(), _request.getBodyLength());
+			logger.log(DEBUG, "Executable of external program is: %", _cgi.getExecutable());
+			_state = _cgi.start(_request.getBodyLength());
 			// _state = ClientState::Done;
 			return (_state);
 		}
@@ -55,8 +56,12 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
+			logger.log(ERROR, "TEST FROM HANDLECONNECTION");
 			_state = _cgi.receive(_cgi.body);
 			logger.log(INFO, "_cgi.body: %", _cgi.body);
+			// int status;
+			// waitpid(_cgi.getPid(), &status, 0);
+			// WEXITSTATUS(status);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)

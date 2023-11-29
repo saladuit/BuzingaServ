@@ -13,11 +13,12 @@
 class CGI
 {
 private:
-	pid_t	_pid;
-	int		_serverToExternalProgram[2];
-	int		_externalProgramToServer[2];
-	bool	_bodyIsSent;
-	size_t	_bodyBytesWritten;
+	pid_t		_pid;
+	int			_serverToExternalProgram[2];
+	int			_externalProgramToServer[2];
+	bool		_bodyIsSent;
+	size_t		_bodyBytesWritten;
+	std::string	_executable;
 
   public:
 	CGI();
@@ -26,10 +27,14 @@ private:
 	~CGI();
 
 	// execute is probably redundant
-	ClientState	start(std::string executable, char **env, size_t body_length);
+	ClientState	start(size_t body_length);
+	ClientState	parseURIForCGI(std::string requestTarget);
 	void	execute(std::string executable, char **env);
 	bool	fileExists(const std::string& filePath);
 	bool	isExecutable(const std::string& filePath);
+
+	const std::string&	getExecutable(void) const;
+	const pid_t&		getPid(void) const;
 
 	ClientState	send(std::string body, size_t bodyLength);
 
@@ -38,6 +43,7 @@ private:
 
 	std::string	body;
 	int			pipe_fd[2];
+	char		**_env;
 };
 
 #endif
