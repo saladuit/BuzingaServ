@@ -152,6 +152,11 @@ ClientState CGI::start(size_t bodyLength)
 	if (pipe(_serverToExternalProgram) == SYSTEM_ERROR) throw SystemException("Pipe");
 	if (pipe(_externalProgramToServer) == SYSTEM_ERROR) throw SystemException("Pipe");
 
+	if (fcntl(_serverToExternalProgram[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	if (fcntl(_serverToExternalProgram[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	if (fcntl(_externalProgramToServer[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+
 	_pid = fork();
 	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
 	if (_pid == 0)
@@ -185,8 +190,8 @@ ClientState CGI::start(size_t bodyLength)
 		// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
 		// int	status;
 		// waitpid()
-		return (receive());
-		// return (ClientState::CGI_Read);
+		// return (receive());
+		return (ClientState::CGI_Read);
 		// return (ClientState::Done);
 	}
 	return (ClientState::CGI_Read);
