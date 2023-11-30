@@ -26,6 +26,8 @@ class Client
 	CGI				_cgi;
 	Socket			_socket;
 	ClientState		_state;
+	// int				_serverToExternalProgram[2];
+	// int				_externalProgramToServer[2];
 };
 
 #endif

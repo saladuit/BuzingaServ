@@ -135,10 +135,6 @@ void	CGI::execute(std::string executable, char **env)
 	const char *path = "/usr/bin/python3";
 	// execve(path, (char *const *)argv, env);
 	if (execve(path, (char *const *)argv, NULL) == SYSTEM_ERROR) throw SystemException("Execve");
-
-	// if error throw exception?
-	logger.log(ERROR, "execve error" + std::string(strerror(errno)));
-	_exit(127);
 }
 
 ClientState CGI::start(size_t bodyLength)
@@ -152,10 +148,10 @@ ClientState CGI::start(size_t bodyLength)
 	if (pipe(_serverToExternalProgram) == SYSTEM_ERROR) throw SystemException("Pipe");
 	if (pipe(_externalProgramToServer) == SYSTEM_ERROR) throw SystemException("Pipe");
 
-	if (fcntl(_serverToExternalProgram[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	if (fcntl(_serverToExternalProgram[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	if (fcntl(_externalProgramToServer[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(_serverToExternalProgram[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(_serverToExternalProgram[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(_externalProgramToServer[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
 
 	_pid = fork();
 	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
@@ -170,31 +166,25 @@ ClientState CGI::start(size_t bodyLength)
 		if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 		
 		execute(_executable, _env);
-		logger.log(DEBUG, "after execute");
 	}
-	else
-	{
+	logger.log(DEBUG, "CGI::start after else if (_pid == 0)");
+	if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+	if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	logger.log(DEBUG, "CGI::start after closing");
 
-		logger.log(DEBUG, "CGI::start after else if (_pid == 0)");
-		if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-		if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
-		logger.log(DEBUG, "CGI::start after closing");
+	if (bodyLength != 0)
+		return (ClientState::CGI_Write);
+	logger.log(DEBUG, "GCI::start after writing");
+	if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	if (dup2(_externalProgramToServer[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+	logger.log(DEBUG, "CGI::start after closing WRITE_END and start reading");
 
-		if (bodyLength != 0)
-			return (ClientState::CGI_Write);
-		logger.log(DEBUG, "GCI::start after writing");
-		if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(_externalProgramToServer[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		logger.log(DEBUG, "CGI::start after closing WRITE_END and start reading");
-
-		// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		// int	status;
-		// waitpid()
-		// return (receive());
-		return (ClientState::CGI_Read);
-		// return (ClientState::Done);
-	}
+	// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+	// int	status;
+	// waitpid()
+	// return (receive());
 	return (ClientState::CGI_Read);
+	// return (ClientState::Done);
 }
 
 // !! need to free _env and it's arguments somewhere !!

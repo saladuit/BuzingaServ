@@ -17,6 +17,19 @@ HTTPServer::~HTTPServer()
 {
 }
 
+std::shared_ptr<Client> HTTPServer::findClientByFd(int targetFd)
+{
+    auto it = _active_clients.find(targetFd);
+
+    if (it != _active_clients.end()) {
+        // Found the Client with the specified fd
+        return it->second;
+    } else {
+        // Client with the specified fd not found
+        return nullptr;
+    }
+}
+
 int HTTPServer::run()
 {
 	Logger &logger = Logger::getInstance();
@@ -34,6 +47,7 @@ int HTTPServer::run()
 	}
 	while (true)
 	{
+		logger.log(DEBUG, "while loop HTTPServer::run");
 		try
 		{
 			handleActivePollFDs();
@@ -72,6 +86,7 @@ void HTTPServer::handleActivePollFDs()
 	_poll.pollFDs();
 	for (const auto &poll_fd : _poll.getPollFDs())
 	{
+		logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- in for loop");
 		if (poll_fd.revents == 0)
 			continue;
 		try
@@ -95,10 +110,14 @@ void HTTPServer::handleActivePollFDs()
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
+	logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- after for loop");
 }
 
 void HTTPServer::handleNewConnection(int fd)
 {
+	Logger &logger = Logger::getInstance();
+	logger.log(DEBUG, "HTTPServer::handleNewConnection");
+
 	std::shared_ptr<Client> client = std::make_shared<Client>(fd);
 	_active_clients.emplace(client->getFD(), client);
 	_poll.addPollFD(client->getFD(), POLLIN);
@@ -109,17 +128,32 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
 
+	Client &client = *(findClientByFd(poll_fd.fd));
+	logger.log(DEBUG, "client.getFD: %", client.getFD());
+	logger.log(DEBUG, "poll_fd %", poll_fd.fd);
+
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
 	{
 	case ClientState::Receiving:
 	case ClientState::CGI_Read:
+		// if (!fd_to_client.contains(poll_fd.fd))
+		// {
+			// poll_fd.fd refers to a Server instead of a Client, so error!
+		// }
+		// Client &client = *(findClientByFd(poll_fd.fd));
+		// logger.log(DEBUG, "client.getFD: %", client.getFD());
+		// logger.log(DEBUG, "poll_fd": poll_fd);
+		// _poll.setEvents(client._externalProgramToServer[READ_END], POLLIN);
 		_poll.setEvents(poll_fd.fd, POLLIN);
+
 		break;
 	case ClientState::Loading:
 	case ClientState::Sending:
 	case ClientState::Error:
 	case ClientState::CGI_Write:
 	case ClientState::CGI_Start:
+	case ClientState::CGI_Load:
+		// does it make sense to set POLLOUT here? 
 		_poll.setEvents(poll_fd.fd, POLLOUT);
 		break;
 	case ClientState::Done:

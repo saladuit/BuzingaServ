@@ -30,6 +30,7 @@ class HTTPServer
 	void handleActivePollFDs();
 	void handleNewConnection(int fd);
 	void handleExistingConnection(const pollfd &poll_fd);
+	std::shared_ptr<Client>	findClientByFd(int targetFd);
 };
 
 #endif

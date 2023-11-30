@@ -3,7 +3,6 @@
 #include <Logger.hpp>
 #include <sys/stat.h>
 #include <sys/wait.h>
-
 #include <sys/poll.h>
 
 Client::Client(const int &server_fd) : _socket(server_fd)
