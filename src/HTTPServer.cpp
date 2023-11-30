@@ -67,6 +67,8 @@ void HTTPServer::setupServers(void)
 void HTTPServer::handleActivePollFDs()
 {
 	Logger &logger = Logger::getInstance();
+	logger.log(DEBUG, "HTTPServer::handleActivePollFDs");
+
 	_poll.pollFDs();
 	for (const auto &poll_fd : _poll.getPollFDs())
 	{
@@ -104,14 +106,15 @@ void HTTPServer::handleNewConnection(int fd)
 
 void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
 {
+	Logger &logger = Logger::getInstance();
+	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
+
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
 	{
 	case ClientState::Receiving:
 	case ClientState::CGI_Read:
-		{
-			_poll.setEvents(poll_fd.fd, POLLIN);
+		_poll.setEvents(poll_fd.fd, POLLIN);
 		break;
-		}
 	case ClientState::Loading:
 	case ClientState::Sending:
 	case ClientState::Error:

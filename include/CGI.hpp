@@ -38,7 +38,8 @@ private:
 
 	ClientState	send(std::string body, size_t bodyLength);
 
-	ClientState	receive(std::string body);
+	// ClientState	receive(std::string body);
+	ClientState	receive(void);
 	// ClientState	send(int fd, HTTPMethod methodType, std::string requestBody);
 
 	std::string	body;

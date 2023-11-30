@@ -9,6 +9,7 @@
 Client::Client(const int &server_fd) : _socket(server_fd)
 {
 	_socket.setupClient();
+	_state = ClientState::Receiving;
 }
 
 Client::~Client()
@@ -29,35 +30,33 @@ ClientState Client::handleConnection(short events)
 	{
 		if (events & POLLIN && _state == ClientState::Receiving)
 		{
+			logger.log(ERROR, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
+			logger.log(DEBUG, "_request_target: " + _request.getRequestTarget());
+			
 			// implement method Martijn for verifying that we are dealing with a CGI
 			// also get fileExtension from Martijn and save in HTTPRequest class
 			
 			_request.setCGIToTrue(); // settting CGI to true for testing purposes
-			// if load then if cgi 
-
-			// _request.setRequestTarget("/python/test.py");
-			logger.log(DEBUG, "request target from handleConnection: %", _request.getRequestTarget());
-			if (_state == ClientState::Loading && _request.CGITrue() == true)
-				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
 		{
-			logger.log(DEBUG, "Executable of external program is: %", _cgi.getExecutable());
+			logger.log(ERROR, "ClientState::CGI_Start");
 			_state = _cgi.start(_request.getBodyLength());
 			// _state = ClientState::Done;
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		{
+			logger.log(ERROR, "ClientState::CGI_Write");
 			_state = _cgi.send(_request.getBody(), _request.getBodyLength());
 			return (_state);
 		}
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
-			logger.log(ERROR, "TEST FROM HANDLECONNECTION");
-			_state = _cgi.receive(_cgi.body);
+			logger.log(ERROR, "ClientState::CGI_Read");
+			_state = _cgi.receive();
 			logger.log(INFO, "_cgi.body: %", _cgi.body);
 			// int status;
 			// waitpid(_cgi.getPid(), &status, 0);
@@ -66,6 +65,12 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
+			logger.log(DEBUG, "ClientState::Loading");
+			if (_state == ClientState::Loading && _request.CGITrue() == true) {
+				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
+				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
+				return (_state);
+			}
 			// if (_request._cgi == true)
 			// _state = _cgi.createResponse();
 			// else 
@@ -74,6 +79,15 @@ ClientState Client::handleConnection(short events)
 				_request.getMethodType(),
 				"./data/www" + _request.getRequestTarget(),
 				_request.getBody()); // TODO: resolve location
+			return (_state);
+		}
+		else if (events & POLLOUT && _state == ClientState::CGI_Load)
+		{
+			logger.log(DEBUG, "ClientState::CGI_Load");
+			_state = _file_manager.manage(
+				_request.getMethodType(),
+				"./data/www" + _request.getRequestTarget(),
+				_cgi.body);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)

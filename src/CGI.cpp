@@ -50,29 +50,50 @@ ClientState CGI::send(std::string body, size_t bodyLength)
 	return (ClientState::CGI_Write);
 }
 
-ClientState	CGI::receive(std::string body)
+ClientState	CGI::receive(void)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesRead = 0;
-	
-	logger.log(INFO, "GCI::receive is called");
 	char 	buffer[1024];
+	
+	// if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) {
+    //     perror("fcntl");
+    //     throw SystemException("fcntl");
+    // }
+
 	bzero(buffer, sizeof(buffer));
+	logger.log(INFO, "CGI::receive is called");
 	bytesRead = read(_externalProgramToServer[READ_END], buffer, sizeof(buffer));
-	if (bytesRead == SYSTEM_ERROR) throw SystemException("Read");
-	logger.log(INFO, "Bytes read: " + std::to_string(bytesRead));
-	body += buffer;
-	if (bytesRead != 0)
-		return (ClientState::CGI_Read);
-	// if (bytesRead == SYSTEM_ERROR)
-	// 	return (ClientState::Error);
-	logger.log(DEBUG, "body in GCI::receive:\n" + body);
-	close(_externalProgramToServer[READ_END]);
-	// int status;
-	// waitpid(_pid, &status, 0);
-	// if (WEXITSTATUS(status) == -1)
-	// 	return (ClientState::Error);
-	return (ClientState::Loading);
+
+	// if (bytesRead == -1) {
+    //     if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	// 		logger.log(DEBUG, "No data available to read.\n");
+	// 		return (ClientState::CGI_Read);
+
+    //     } else {
+    //         // Handle other errors
+    //         perror("read");
+    //         throw SystemException("errno");
+    //     }
+    // }
+	// else {
+		// bytesRead = read(STDIN_FILENO, buffer, sizeof(buffer));
+		// if (bytesRead == SYSTEM_ERROR) throw SystemException("Read");
+		logger.log(DEBUG, "Bytes read: " + std::to_string(bytesRead));
+		logger.log(DEBUG, "buffer:\n" + std::string(buffer));
+		body += buffer;
+		if (bytesRead != 0)
+			return (ClientState::CGI_Read);
+		// if (bytesRead == SYSTEM_ERROR)
+		// 	return (ClientState::Error);
+		logger.log(DEBUG, "body in GCI::receive:\n" + body);
+		close(_externalProgramToServer[READ_END]);
+		// int status;
+		// waitpid(_pid, &status, 0);
+		// if (WEXITSTATUS(status) == -1)
+		// 	return (ClientState::Error);
+	// }
+	return (ClientState::CGI_Load);
 }
 
 bool CGI::fileExists(const std::string& filePath) {
@@ -135,6 +156,7 @@ ClientState CGI::start(size_t bodyLength)
 	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
 	if (_pid == 0)
 	{
+		logger.log(ERROR, "_pid == 0");
 		if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
 		if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
 		if (dup2(_serverToExternalProgram[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
@@ -143,6 +165,7 @@ ClientState CGI::start(size_t bodyLength)
 		if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 		
 		execute(_executable, _env);
+		logger.log(DEBUG, "after execute");
 	}
 	else
 	{
@@ -158,12 +181,15 @@ ClientState CGI::start(size_t bodyLength)
 		if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 		if (dup2(_externalProgramToServer[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
 		logger.log(DEBUG, "CGI::start after closing WRITE_END and start reading");
+
+		// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
 		// int	status;
 		// waitpid()
-		return (ClientState::CGI_Read);
+		return (receive());
+		// return (ClientState::CGI_Read);
 		// return (ClientState::Done);
 	}
-	return (ClientState::Error);
+	return (ClientState::CGI_Read);
 }
 
 // !! need to free _env and it's arguments somewhere !!
