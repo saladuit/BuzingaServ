@@ -1,4 +1,5 @@
 
+#include <HTTPRequest.hpp>
 #include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
@@ -70,7 +71,36 @@ ServerSettings::identifyServerSetting(const std::string &token)
 	// TODO: this might need a costum exception
 }
 
-// TODO: void addLocationSetting(LocationSettings settings);
+const std::string
+methodToString(HTTPMethod method) // TODO: change data_types in function
+{
+	switch (method)
+	{
+	case (HTTPMethod::GET):
+		return ("GET");
+	case (HTTPMethod::POST):
+		return ("POST");
+	case (HTTPMethod::DELETE):
+		return ("DELETE");
+	default:
+		throw std::runtime_error("Unknown HTTPMethod");
+	}
+}
+
+bool ServerSettings::resolveLocation(const std::string &path,
+									 HTTPMethod input_method)
+{
+	for (auto &location_instance : _location_settings)
+	{
+		if (location_instance.getPath() != path)
+			continue;
+		for (auto &methods :
+			 location_instance.getValues(LocationSettingOption::AllowedMethods))
+			if (methods == methodToString(input_method))
+				return (true);
+	}
+	return (false);
+}
 
 const std::string &ServerSettings::getValue(ServerSettingOption setting) const
 {
@@ -84,22 +114,24 @@ void ServerSettings::setValue(ServerSettingOption key, const std::string &value)
 
 // THIS IS PRINTING FUNCTION
 
-std::string keyToString(ServerSettingOption Key)
+std::string keyToString(size_t Key)
 {
-	switch (Key)
+	ServerSettingOption ss_key = static_cast<ServerSettingOption>(Key);
+
+	switch (ss_key)
 	{
 	case (ServerSettingOption::Port):
-		return ("Port");
+		return ("Port\t\t");
 	case (ServerSettingOption::Host):
-		return ("Host");
+		return ("Host\t\t");
 	case (ServerSettingOption::ServerName):
-		return ("ServerName");
+		return ("ServerName\t");
 	case (ServerSettingOption::ClientMaxBodySize):
 		return ("ClientMaxBodySize");
 	case (ServerSettingOption::ErrorPages):
-		return ("ErrorPages");
+		return ("ErrorPages\t");
 	case (ServerSettingOption::Location):
-		return ("Location");
+		return ("Location\t");
 	default:
 		return ("OUT OF BOUND KEY");
 	}
@@ -108,22 +140,22 @@ std::string keyToString(ServerSettingOption Key)
 void ServerSettings::printServerSettings() const
 {
 	Logger &logger = Logger::getInstance();
+	size_t enum_size = sizeof(ServerSettingOption) /
+					   sizeof(std::underlying_type<ServerSettingOption>);
 
-	for (int i = static_cast<int>(ServerSettingOption::Port);
-		 i < static_cast<int>(ServerSettingOption::Count); i++)
+	for (size_t i = 0; i <= enum_size + 1; i++)
 	{
-		logger.log(DEBUG, "ServerSetting: Key:\t" +
-							  keyToString(static_cast<ServerSettingOption>(i)));
 		try
 		{
 			logger.log(DEBUG,
-					   "ServerSetting: Value:\t" +
+					   "\tServerSetting: Key:\t" + keyToString(i) +
+						   "\tValue:\t" +
 						   getValue(static_cast<ServerSettingOption>(i)));
 		}
 		catch (std::out_of_range &e)
 		{
-			logger.log(WARNING, "ServerSettings : Missing option: " +
-									std::string(e.what()));
+			logger.log(WARNING, "\tServerSetting: Key:\t" + keyToString(i) +
+									" Missed option: " + std::string(e.what()));
 		}
 	}
 
