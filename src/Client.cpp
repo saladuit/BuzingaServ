@@ -1,7 +1,9 @@
-#include <CGI.hpp>
-#include <Client.hpp>
-#include <ClientException.hpp>
-#include <Logger.hpp>
+#include "CGI.hpp"
+#include "Poll.hpp"
+#include "Client.hpp"
+#include "ClientException.hpp"
+#include "Logger.hpp"
+
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/poll.h>
@@ -10,6 +12,7 @@ Client::Client(const int &server_fd) : _socket(server_fd)
 {
 	_socket.setupClient();
 	_state = ClientState::Receiving;
+	cgiHasBeenRead = false;
 }
 
 Client::~Client()
@@ -31,14 +34,12 @@ int	*Client::getServerToCgiFd(void) {
 
 // implement method Martijn for verifying that we are dealing with a CGI
 // also get fileExtension from Martijn and save in HTTPRequest class
-ClientState Client::handleConnection(short events, Client &client)
+ClientState Client::handleConnection(short events, Poll &poll, Client &client, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Handling client connection on fd: " +
 						 std::to_string(_socket.getFD()));
-
-	
-
 	try
 	{
 		if (events & POLLIN && _state == ClientState::Receiving)
@@ -52,7 +53,7 @@ ClientState Client::handleConnection(short events, Client &client)
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
 		{
 			logger.log(ERROR, "ClientState::CGI_Start");
-			_state = _cgi.start(_request.getBodyLength(), client);
+			_state = _cgi.start(poll, client, _request.getBodyLength(), active_pipes);
 			// _state = ClientState::Done;
 			return (_state);
 		}
@@ -67,6 +68,13 @@ ClientState Client::handleConnection(short events, Client &client)
 			logger.log(ERROR, "ClientState::CGI_Read");
 			_state = _cgi.receive(client);
 			logger.log(INFO, "_cgi.body: %", _cgi.body);
+
+			// maybe the CGI should have it's own fileManager
+			logger.log(DEBUG, "ClientState::CGI_Load inside CGI_Read");
+			_state = _file_manager.manage(
+				_request.getMethodType(),
+				"./data/www" + _request.getRequestTarget(),
+				_cgi.body);
 			// int status;
 			// waitpid(_cgi.getPid(), &status, 0);
 			// WEXITSTATUS(status);
@@ -90,15 +98,15 @@ ClientState Client::handleConnection(short events, Client &client)
 				_request.getBody()); // TODO: resolve location
 			return (_state);
 		}
-		else if (events & POLLOUT && _state == ClientState::CGI_Load)
-		{
-			logger.log(DEBUG, "ClientState::CGI_Load");
-			_state = _file_manager.manage(
-				_request.getMethodType(),
-				"./data/www" + _request.getRequestTarget(),
-				_cgi.body);
-			return (_state);
-		}
+		// else if (events & POLLOUT && _state == ClientState::CGI_Load)
+		// {
+		// 	logger.log(DEBUG, "ClientState::CGI_Load");
+		// 	_state = _file_manager.manage(
+		// 		_request.getMethodType(),
+		// 		"./data/www" + _request.getRequestTarget(),
+		// 		_cgi.body);
+		// 	return (_state);
+		// }
 		else if (events & POLLOUT && _state == ClientState::Error)
 		{
 			_state = _file_manager.loadErrorPage();
@@ -106,6 +114,7 @@ ClientState Client::handleConnection(short events, Client &client)
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
+			logger.log(DEBUG, "ClientState::Sending");
 			// if CGI
 			// _state =
 			//	_response.send(_socket.getFD(), _cgi.getResponse());

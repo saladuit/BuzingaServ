@@ -6,6 +6,8 @@
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
 #include <Socket.hpp>
+#include <memory>
+#include <unordered_map>
 
 class Client
 {
@@ -16,11 +18,13 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	ClientState handleConnection(short events, Client &client);
+	ClientState handleConnection(short events, Poll &poll, Client &client, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	int getFD(void) const;
 	int	*getCgiToServerFd(void);
 	int	*getServerToCgiFd(void);
 
+	bool	cgiHasBeenRead;
 
   private:
 	HTTPRequest		_request;

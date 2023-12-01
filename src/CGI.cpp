@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "Poll.hpp"
 #include "CGI.hpp"
 #include "Logger.hpp"
 #include "SystemException.hpp"
@@ -56,44 +57,29 @@ ClientState	CGI::receive(Client &client)
 	ssize_t	bytesRead = 0;
 	char 	buffer[1024];
 	
-	// if (fcntl(client.getCgiToServerFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) {
-    //     perror("fcntl");
-    //     throw SystemException("fcntl");
-    // }
-
 	bzero(buffer, sizeof(buffer));
 	logger.log(INFO, "CGI::receive is called");
 	bytesRead = read(client.getCgiToServerFd()[READ_END], buffer, sizeof(buffer));
 
-	// if (bytesRead == -1) {
-    //     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-	// 		logger.log(DEBUG, "No data available to read.\n");
-	// 		return (ClientState::CGI_Read);
+	if (bytesRead == SYSTEM_ERROR) throw SystemException("Read");
+	logger.log(DEBUG, "Bytes read: " + std::to_string(bytesRead));
+	logger.log(DEBUG, "buffer:\n" + std::string(buffer));
+	body += buffer;
+	// if (bytesRead >= 1024)
+	// 	return (ClientState::CGI_Read);
+	client.cgiHasBeenRead = true;
+	// if (bytesRead == SYSTEM_ERROR)
+	// 	return (ClientState::Error);
+	logger.log(DEBUG, "body in GCI::receive:\n" + body);
+	close(client.getCgiToServerFd()[READ_END]);
+	// _poll.removeFD(poll_fd.fd); // optional
 
-    //     } else {
-    //         // Handle other errors
-    //         perror("read");
-    //         throw SystemException("errno");
-    //     }
-    // }
-	// else {
-		// bytesRead = read(STDIN_FILENO, buffer, sizeof(buffer));
-		// if (bytesRead == SYSTEM_ERROR) throw SystemException("Read");
-		logger.log(DEBUG, "Bytes read: " + std::to_string(bytesRead));
-		logger.log(DEBUG, "buffer:\n" + std::string(buffer));
-		body += buffer;
-		if (bytesRead != 0)
-			return (ClientState::CGI_Read);
-		// if (bytesRead == SYSTEM_ERROR)
-		// 	return (ClientState::Error);
-		logger.log(DEBUG, "body in GCI::receive:\n" + body);
-		close(client.getCgiToServerFd()[READ_END]);
-		// int status;
-		// waitpid(_pid, &status, 0);
-		// if (WEXITSTATUS(status) == -1)
-		// 	return (ClientState::Error);
-	// }
-	return (ClientState::CGI_Load);
+	// int status;
+	// waitpid(_pid, &status, 0);
+	// if (WEXITSTATUS(status) == -1)
+	// 	return (ClientState::Error);
+// }
+	return (ClientState::Sending);
 }
 
 bool CGI::fileExists(const std::string& filePath) {
@@ -137,7 +123,8 @@ void	CGI::execute(std::string executable, char **env)
 	if (execve(path, (char *const *)argv, NULL) == SYSTEM_ERROR) throw SystemException("Execve");
 }
 
-ClientState CGI::start(size_t bodyLength, Client &client)
+ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
 	(void)client;
 	Logger &logger = Logger::getInstance();
@@ -178,6 +165,10 @@ ClientState CGI::start(size_t bodyLength, Client &client)
 	logger.log(DEBUG, "GCI::start after writing");
 	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 	if (dup2(client.getCgiToServerFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+
+	std::shared_ptr<int> pipe = std::make_shared<int>(client.getCgiToServerFd()[READ_END]);
+	active_pipes.emplace(client.getCgiToServerFd()[READ_END], pipe);
+	poll.addPollFD(client.getCgiToServerFd()[READ_END], POLLIN);
 	logger.log(DEBUG, "CGI::start after closing WRITE_END and start reading");
 
 	// if (close(client.getCgiToServerFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");

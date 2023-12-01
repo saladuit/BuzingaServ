@@ -3,7 +3,7 @@
 #include <ServerSettings.hpp>
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
-try : _parser(config_file_path), _poll(), _active_servers(), _active_clients()
+try : _parser(config_file_path), _poll(), _active_servers(), _active_clients(), _active_pipes()
 {
 }
 catch (const std::runtime_error &e)
@@ -23,7 +23,17 @@ Client &HTTPServer::findClientByFd(int targetFd)
 
     if (it != _active_clients.end())
         return *(it->second);
-    throw std::runtime_error("Error: poll_fd.fd refers to a Server instead of a Client");
+    throw std::runtime_error("Error: findClientByFd");
+}
+
+Client &HTTPServer::getClientByPipeFd(int pipe_fd) {
+    for (const auto& entry : _active_clients) {
+        const auto& client = entry.second;
+        if (client->getCgiToServerFd()[READ_END] == pipe_fd) {
+            return *client;
+        }
+    }
+	throw std::runtime_error("Error: getClientByPipeFd");
 }
 
 int HTTPServer::run()
@@ -102,14 +112,33 @@ void HTTPServer::handleActivePollFDs()
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(poll_fd.fd);
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end()) {
+			logger.log(DEBUG, "_active_clients.find(poll_fd.fd) != _active_clients.end()");
 			Client &client = findClientByFd(poll_fd.fd);
-			handleExistingConnection(poll_fd, client);
+			handleExistingConnection(poll_fd, _poll, client, _active_pipes);
+		}
+		else if (_active_pipes.find(poll_fd.fd) != _active_pipes.end()) {
+			logger.log(DEBUG, "_active_pipes.find(poll_fd.fd) != _active_pipes.end()");
+			Client &client = getClientByPipeFd(poll_fd.fd);
+			logger.log(DEBUG, "Client found with pipe");
+			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
+			// if (client.cgiHasBeenRead)
+				_poll.removeFD(poll_fd.fd);
 		}
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
 	logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- after for loop");
 }
+
+// void HTTPServer::handleNewPipe(int fd, int pipeState)
+// {
+// 	Logger &logger = Logger::getInstance();
+// 	logger.log(DEBUG, "HTTPServer::handleNewPipe");
+
+// 	std::shared_ptr<int> pipe = std::make_shared<int>(fd);
+// 	_active_pipes.emplace(fd, pipe);
+// 	_poll.addPollFD(fd, pipeState);
+// }
 
 void HTTPServer::handleNewConnection(int fd)
 {
@@ -121,12 +150,17 @@ void HTTPServer::handleNewConnection(int fd)
 	_poll.addPollFD(client->getFD(), POLLIN);
 }
 
-void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Client &client)
+void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Client &client, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
 
-	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events, client))
+	logger.log(DEBUG, "_active_clients.at(poll_fd.fd): %", _active_clients.at(poll_fd.fd));
+	logger.log(DEBUG, "client: %", &client);
+
+
+	switch ((&client)->handleConnection(poll_fd.events, poll, client, active_pipes))
 	{
 		case ClientState::Receiving:
 			_poll.setEvents(poll_fd.fd, POLLIN);
@@ -134,8 +168,11 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Client &client)
 		case ClientState::CGI_Read:
 			logger.log(DEBUG, "client.getFD: %", client.getFD());
 			logger.log(DEBUG, "poll_fd %", poll_fd.fd);
-			_poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
-			break;
+			logger.log(DEBUG, "client.getCgiToServerFd()[READ_END] %", client.getCgiToServerFd()[READ_END]);
+			if (poll_fd.fd != client.getCgiToServerFd()[READ_END]) {
+			// _poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
+				_poll.setEvents(poll_fd.fd, POLLIN);
+				break; }
 		case ClientState::Loading:
 		case ClientState::Sending:
 		case ClientState::Error:

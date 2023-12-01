@@ -4,11 +4,14 @@
 #include <ClientState.hpp>
 #include <HTTPRequest.hpp>
 #include <string>
+#include <memory>
+#include <unordered_map>
 
 #define READ_END 0
 #define WRITE_END 1
 
 class Client;
+class Poll;
 
 // Common gateway interface
 
@@ -16,8 +19,6 @@ class CGI
 {
 private:
 	pid_t		_pid;
-	// int			_serverToExternalProgram[2];
-	// int			_externalProgramToServer[2];
 	bool		_bodyIsSent;
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
@@ -28,8 +29,8 @@ private:
 	CGI &operator=(const CGI &rhs) = delete;
 	~CGI();
 
-	// execute is probably redundant
-	ClientState	start(size_t body_length, Client &client);
+	ClientState	start(Poll &poll, Client &client, size_t body_length, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	ClientState	parseURIForCGI(std::string requestTarget);
 	void		execute(std::string executable, char **env);
 	bool		fileExists(const std::string& filePath);
