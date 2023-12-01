@@ -4,8 +4,6 @@
 #include <Token.hpp>
 
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 class LocationSettings
 {
@@ -18,7 +16,7 @@ class LocationSettings
 
 	// Functionality:
 	//		getters:
-	const std::string &getDir() const;
+	const std::string &getRequestTarget() const;
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
@@ -32,7 +30,7 @@ class LocationSettings
 	void printLocationSettings() const;
 
   private:
-	std::string _directory;
+	std::string _requesttarget;
 
 	std::string _alias;
 	std::string _index;
@@ -43,6 +41,7 @@ class LocationSettings
 
 	void parseAlias(const Token token);
 	void parseIndex(const Token token);
+	void parseAutoIndex(const Token token);
 	void parseAllowedMethods(const Token token);
 	void parseCgiPath(const Token token);
 	void parseReturn(const Token token);

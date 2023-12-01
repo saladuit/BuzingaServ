@@ -6,10 +6,8 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
-#include <array>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 ServerSettings::ServerSettings()
 	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
@@ -52,10 +50,30 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-// TODO: value confirmation and validation should happen here or in syntax
+void validateListen(const std::string &str)
+{
+	size_t pos = str.find_first_of(":");
+	if (pos == std::string::npos || pos != str.find_last_of(":"))
+		throw std::runtime_error("Parsing Error: invalid value for listen");
+
+	const std::string ip = str.substr(0, pos);
+	const std::string port = str.substr(pos + 1, std::string::npos);
+
+	try
+	{
+		int port_ = std::stoi(port);
+		if (port_ < 1 || port_ > 65535) //
+			throw std::exception();
+	}
+	catch (std::exception &e)
+	{
+		throw std::runtime_error("Parsing Error: invalid port found in listen");
+	}
+}
 
 void ServerSettings::parseListen(const Token value)
 {
+	validateListen(value.getString());
 	_listen.append(" " + value.getString());
 }
 
@@ -66,17 +84,27 @@ void ServerSettings::parseServerName(const Token value)
 
 void ServerSettings::parseErrorDir(const Token value)
 {
+	Logger &logger = Logger::getInstance();
+
+	if (!_error_dir.empty())
+		logger.log(WARNING, "ConfigParser: redefining error_dir");
 	_error_dir = value.getString();
 }
 
 void ServerSettings::parseClientMaxBodySize(const Token value)
 {
+	Logger &logger = Logger::getInstance();
+
+	if (!_client_max_body_size.empty())
+		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
 	_client_max_body_size = value.getString();
 }
 
 void ServerSettings::addValueToServerSettings(
 	const Token &key, std::vector<Token>::iterator &value)
 {
+	Logger &logger = Logger::getInstance();
+
 	while (value->getType() != TokenType::SEMICOLON)
 	{
 		if (key.getString() == "listen")
@@ -87,6 +115,9 @@ void ServerSettings::addValueToServerSettings(
 			parseErrorDir(*value);
 		else if (key.getString() == "client_max_body_size")
 			parseClientMaxBodySize(*value);
+		else
+			logger.log(WARNING,
+					   "ServerSettings: unknown KEY token: " + key.getString());
 		value++;
 	}
 }
@@ -129,21 +160,49 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-const LocationSettings *
-ServerSettings::resolveLocation(const std::string &request_target,
-								HTTPMethod input_method)
+// Funcion: find the longest possible locationblock form the URI.
+// URI will be stripped from it's trailing file. (line 3)
+// and expects LocationBlock requesttarget to always start with a '/'
+//
+//	server {
+//	location / {}
+//	location /images/ {}
+//	location /images/png/ {}
+//	}
+//
+// /image				=> /
+// /some/example.jpg	=> /
+// /images				=> /
+// /images/				=> /images/
+// /images/jpg/			=> /images/
+// /images/png/			=> /images/png/
+// /png/images/			=> /
+//
+
+const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 {
-	for (auto &location_instance : _location_settings)
+	LocationSettings *ret = nullptr;
+	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+
+	for (auto &instance : _location_settings)
 	{
-		if (location_instance.getDir() != request_target)
+		const size_t pos = requesttarget.find(instance.getRequestTarget());
+
+		if (pos != 0)
 			continue;
-		std::stringstream ss(location_instance.getAllowedMethods());
-		std::string option;
-		for (; std::getline(ss, option, ' ');)
-			if (option == methodToString(input_method))
-				return (&location_instance);
+		if (ret != nullptr)
+		{
+			if (instance.getRequestTarget().length() >
+				ret->getRequestTarget().length())
+				ret = &instance;
+		}
+		else
+			ret = &instance;
 	}
-	return (NULL);
+	if (ret == nullptr)
+		throw std::logic_error("Couldn't resolve Location in server: " +
+							   _server_name);
+	return (*ret);
 }
 
 // Printing:
@@ -158,8 +217,9 @@ void ServerSettings::printServerSettings() const
 	// printing Class variables:
 	logger.log(DEBUG, "\t_Listen:" + _listen);
 	logger.log(DEBUG, "\t_ServerName:" + _server_name);
-	logger.log(DEBUG, "\t_ErrorDir:" + _error_dir);
-	logger.log(DEBUG, "\t_ClientMaxBodySize:" + _client_max_body_size);
+	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
+
 	for (auto &location_instance : _location_settings)
 	{
 		logger.log(DEBUG, "\n");
@@ -167,8 +227,6 @@ void ServerSettings::printServerSettings() const
 	}
 
 	// We can go over the different strings by using Getline
-	//
-	//	logger.log(DEBUG, "\t_ClientMaxBodySize:");
 	//
 	//	std::stringstream ss(getListen());
 	//

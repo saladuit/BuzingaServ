@@ -1,5 +1,6 @@
 
 #include <ConfigParser.hpp>
+#include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
 #include <Token.hpp>
@@ -47,14 +48,22 @@ void ConfigParser::ParseConfig()
 	std::vector<Token> tokenlist;
 
 	tokenizeStream(OpenFile(), tokenlist);
-	syntaxCheck(tokenlist.begin());
+
+	syntax(tokenlist);
+	logger.log(INFO, "Syntax of " + _config_file_path + " finished");
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
-	for (auto &it : _server_settings)
-		it.printServerSettings();
-
+	//	{
+	//		const LocationSettings &loc = it.resolveLocation("/t/");
+	//
+	//		logger.log(DEBUG, "LocationSettings.getRequestTarget: " +
+	//							  loc.getRequestTarget() +
+	//							  "\tcheck: " + loc.getIndex());
+	//	}
+	//
+	//
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

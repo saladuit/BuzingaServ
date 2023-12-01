@@ -27,6 +27,11 @@ TokenType Token::getType() const
 	return (_type);
 }
 
+void Token::setType(TokenType type)
+{
+	_type = type;
+}
+
 TokenType identifyToken(const std::string &str)
 {
 	if (str == "}")
@@ -69,6 +74,8 @@ void splitString(std::string &input, std::vector<Token> &list)
 		list.emplace_back(Token(identifyToken(token), token));
 		pos = input.find_first_of(TOKENLIST_SPECIAL_CHAR);
 	}
+	if (!input.empty())
+		list.emplace_back(Token(identifyToken(input), input));
 }
 
 void tokenizeStream(std::stringstream sstream, std::vector<Token> &list)
@@ -91,8 +98,6 @@ void tokenizeStream(std::stringstream sstream, std::vector<Token> &list)
 		else
 			list.emplace_back(Token(identifyToken(tmp), tmp));
 	}
-	/* for (auto &token : _tokens) */
-	/* 	logger.log(DEBUG, "TOKEN: " + token.getString()); */
 }
 
 std::string Token::typeToString() const
@@ -105,6 +110,8 @@ std::string Token::typeToString() const
 		return ("OPEN_BRACKET");
 	case TokenType::CLOSE_BRACKET:
 		return ("CLOSE_BRACKET");
+	case TokenType::PATH:
+		return ("PATH");
 	case TokenType::WORD:
 		return ("WORD");
 	}
