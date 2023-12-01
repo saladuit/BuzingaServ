@@ -1,3 +1,4 @@
+#include <CGI.hpp>
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
@@ -20,7 +21,15 @@ int Client::getFD(void) const
 	return (_socket.getFD());
 }
 
-ClientState Client::handleConnection(short events)
+int	const *Client::getCgiToServerFd(void) const {
+	return (_cgiToServerFd);
+}
+
+int	const *Client::getServerToCgiFd(void) const {
+	return (_serverToCgiFd);
+}
+
+ClientState Client::handleConnection(short events, Client &client)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Handling client connection on fd: " +
@@ -42,7 +51,7 @@ ClientState Client::handleConnection(short events)
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
 		{
 			logger.log(ERROR, "ClientState::CGI_Start");
-			_state = _cgi.start(_request.getBodyLength());
+			_state = _cgi.start(_request.getBodyLength(), client);
 			// _state = ClientState::Done;
 			return (_state);
 		}

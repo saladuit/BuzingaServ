@@ -29,8 +29,8 @@ class HTTPServer
 	void setupServers(void);
 	void handleActivePollFDs();
 	void handleNewConnection(int fd);
-	void handleExistingConnection(const pollfd &poll_fd);
-	std::shared_ptr<Client>	findClientByFd(int targetFd);
+	void handleExistingConnection(const pollfd &poll_fd, Client &client);
+	Client &findClientByFd(int targetFd);
 };
 
 #endif

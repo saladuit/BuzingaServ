@@ -17,17 +17,13 @@ HTTPServer::~HTTPServer()
 {
 }
 
-std::shared_ptr<Client> HTTPServer::findClientByFd(int targetFd)
+Client &HTTPServer::findClientByFd(int targetFd)
 {
     auto it = _active_clients.find(targetFd);
 
-    if (it != _active_clients.end()) {
-        // Found the Client with the specified fd
-        return it->second;
-    } else {
-        // Client with the specified fd not found
-        return nullptr;
-    }
+    if (it != _active_clients.end())
+        return *(it->second);
+    throw std::runtime_error("Error: poll_fd.fd refers to a Server instead of a Client");
 }
 
 int HTTPServer::run()
@@ -105,8 +101,10 @@ void HTTPServer::handleActivePollFDs()
 							  _poll.pollEventsToString(poll_fd.revents));
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(poll_fd.fd);
-		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
-			handleExistingConnection(poll_fd);
+		else if (_active_clients.find(poll_fd.fd) != _active_clients.end()) {
+			Client &client = findClientByFd(poll_fd.fd);
+			handleExistingConnection(poll_fd, client);
+		}
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
@@ -123,45 +121,36 @@ void HTTPServer::handleNewConnection(int fd)
 	_poll.addPollFD(client->getFD(), POLLIN);
 }
 
-void HTTPServer::handleExistingConnection(const pollfd &poll_fd)
+void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Client &client)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
-
-	Client &client = *(findClientByFd(poll_fd.fd));
-	logger.log(DEBUG, "client.getFD: %", client.getFD());
-	logger.log(DEBUG, "poll_fd %", poll_fd.fd);
-
-	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events))
+	
+	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events, client))
 	{
-	case ClientState::Receiving:
-	case ClientState::CGI_Read:
-		// if (!fd_to_client.contains(poll_fd.fd))
-		// {
-			// poll_fd.fd refers to a Server instead of a Client, so error!
-		// }
-		// Client &client = *(findClientByFd(poll_fd.fd));
-		// logger.log(DEBUG, "client.getFD: %", client.getFD());
-		// logger.log(DEBUG, "poll_fd": poll_fd);
-		// _poll.setEvents(client._externalProgramToServer[READ_END], POLLIN);
-		_poll.setEvents(poll_fd.fd, POLLIN);
-
-		break;
-	case ClientState::Loading:
-	case ClientState::Sending:
-	case ClientState::Error:
-	case ClientState::CGI_Write:
-	case ClientState::CGI_Start:
-	case ClientState::CGI_Load:
-		// does it make sense to set POLLOUT here? 
-		_poll.setEvents(poll_fd.fd, POLLOUT);
-		break;
-	case ClientState::Done:
-		_poll.removeFD(poll_fd.fd);
-		_active_clients.erase(poll_fd.fd);
-		break;
-	default:
-		throw std::runtime_error(
-			"Unknown client state"); // TODO custom exception
-	}
+		case ClientState::Receiving:
+			_poll.setEvents(poll_fd.fd, POLLIN);
+			break;
+		case ClientState::CGI_Read:
+			logger.log(DEBUG, "client.getFD: %", client.getFD());
+			logger.log(DEBUG, "poll_fd %", poll_fd.fd);
+			_poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
+			break;
+		case ClientState::Loading:
+		case ClientState::Sending:
+		case ClientState::Error:
+		case ClientState::CGI_Write:
+		case ClientState::CGI_Start:
+		case ClientState::CGI_Load:
+			// does it make sense to set POLLOUT here? 
+			_poll.setEvents(poll_fd.fd, POLLOUT);
+			break;
+		case ClientState::Done:
+			_poll.removeFD(poll_fd.fd);
+			_active_clients.erase(poll_fd.fd);
+			break;
+		default:
+			throw std::runtime_error(
+				"Unknown client state"); // TODO custom exception
+		}
 }

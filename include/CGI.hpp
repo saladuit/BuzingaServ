@@ -8,6 +8,8 @@
 #define READ_END 0
 #define WRITE_END 1
 
+class Client;
+
 // Common gateway interface
 
 class CGI
@@ -27,7 +29,7 @@ private:
 	~CGI();
 
 	// execute is probably redundant
-	ClientState	start(size_t body_length);
+	ClientState	start(size_t body_length, Client &client);
 	ClientState	parseURIForCGI(std::string requestTarget);
 	void	execute(std::string executable, char **env);
 	bool	fileExists(const std::string& filePath);

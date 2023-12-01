@@ -137,8 +137,9 @@ void	CGI::execute(std::string executable, char **env)
 	if (execve(path, (char *const *)argv, NULL) == SYSTEM_ERROR) throw SystemException("Execve");
 }
 
-ClientState CGI::start(size_t bodyLength)
+ClientState CGI::start(size_t bodyLength, Client &client)
 {
+	(void)client;
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "CGI::start called");

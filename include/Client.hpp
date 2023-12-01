@@ -16,8 +16,11 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	ClientState handleConnection(short events);
+	ClientState handleConnection(short events, Client &client);
 	int getFD(void) const;
+	int	const *getCgiToServerFd(void) const;
+	int	const *getServerToCgiFd(void) const;
+
 
   private:
 	HTTPRequest		_request;
@@ -26,8 +29,8 @@ class Client
 	CGI				_cgi;
 	Socket			_socket;
 	ClientState		_state;
-	// int				_serverToExternalProgram[2];
-	// int				_externalProgramToServer[2];
+	int				_serverToCgiFd[2];
+	int				_cgiToServerFd[2];
 };
 
 #endif
