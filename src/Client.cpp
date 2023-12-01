@@ -21,19 +21,24 @@ int Client::getFD(void) const
 	return (_socket.getFD());
 }
 
-int	const *Client::getCgiToServerFd(void) const {
+int	*Client::getCgiToServerFd(void) {
 	return (_cgiToServerFd);
 }
 
-int	const *Client::getServerToCgiFd(void) const {
+int	*Client::getServerToCgiFd(void) {
 	return (_serverToCgiFd);
 }
 
+// implement method Martijn for verifying that we are dealing with a CGI
+// also get fileExtension from Martijn and save in HTTPRequest class
 ClientState Client::handleConnection(short events, Client &client)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Handling client connection on fd: " +
 						 std::to_string(_socket.getFD()));
+
+	
+
 	try
 	{
 		if (events & POLLIN && _state == ClientState::Receiving)
@@ -41,11 +46,7 @@ ClientState Client::handleConnection(short events, Client &client)
 			logger.log(ERROR, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			logger.log(DEBUG, "_request_target: " + _request.getRequestTarget());
-			
-			// implement method Martijn for verifying that we are dealing with a CGI
-			// also get fileExtension from Martijn and save in HTTPRequest class
-			
-			_request.setCGIToTrue(); // settting CGI to true for testing purposes
+			_request.setCGIToTrue();
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
@@ -58,13 +59,13 @@ ClientState Client::handleConnection(short events, Client &client)
 		else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		{
 			logger.log(ERROR, "ClientState::CGI_Write");
-			_state = _cgi.send(_request.getBody(), _request.getBodyLength());
+			_state = _cgi.send(client, _request.getBody(), _request.getBodyLength());
 			return (_state);
 		}
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
 			logger.log(ERROR, "ClientState::CGI_Read");
-			_state = _cgi.receive();
+			_state = _cgi.receive(client);
 			logger.log(INFO, "_cgi.body: %", _cgi.body);
 			// int status;
 			// waitpid(_cgi.getPid(), &status, 0);

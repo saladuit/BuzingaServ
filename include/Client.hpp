@@ -18,8 +18,8 @@ class Client
 
 	ClientState handleConnection(short events, Client &client);
 	int getFD(void) const;
-	int	const *getCgiToServerFd(void) const;
-	int	const *getServerToCgiFd(void) const;
+	int	*getCgiToServerFd(void);
+	int	*getServerToCgiFd(void);
 
 
   private:

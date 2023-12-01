@@ -16,8 +16,8 @@ class CGI
 {
 private:
 	pid_t		_pid;
-	int			_serverToExternalProgram[2];
-	int			_externalProgramToServer[2];
+	// int			_serverToExternalProgram[2];
+	// int			_externalProgramToServer[2];
 	bool		_bodyIsSent;
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
@@ -31,18 +31,15 @@ private:
 	// execute is probably redundant
 	ClientState	start(size_t body_length, Client &client);
 	ClientState	parseURIForCGI(std::string requestTarget);
-	void	execute(std::string executable, char **env);
-	bool	fileExists(const std::string& filePath);
-	bool	isExecutable(const std::string& filePath);
+	void		execute(std::string executable, char **env);
+	bool		fileExists(const std::string& filePath);
+	bool		isExecutable(const std::string& filePath);
 
 	const std::string&	getExecutable(void) const;
 	const pid_t&		getPid(void) const;
 
-	ClientState	send(std::string body, size_t bodyLength);
-
-	// ClientState	receive(std::string body);
-	ClientState	receive(void);
-	// ClientState	send(int fd, HTTPMethod methodType, std::string requestBody);
+	ClientState	send(Client &client ,std::string body, size_t bodyLength);
+	ClientState	receive(Client &client);
 
 	std::string	body;
 	int			pipe_fd[2];

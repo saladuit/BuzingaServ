@@ -1,14 +1,14 @@
-#include <CGI.hpp>
-#include <Logger.hpp>
-#include <SystemException.hpp>
-#include <sys/wait.h>
+#include "Client.hpp"
+#include "CGI.hpp"
+#include "Logger.hpp"
+#include "SystemException.hpp"
 
+#include <sys/wait.h>
 #include <cassert>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <filesystem>
-
 
 // TO DO
 // 	- get execute functional
@@ -30,40 +30,40 @@ const pid_t &CGI::getPid(void) const {
 	return (_pid);
 }
 
-ClientState CGI::send(std::string body, size_t bodyLength)
+ClientState CGI::send(Client &client ,std::string body, size_t bodyLength)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesWritten = 0;
 
 	logger.log(INFO, "GCI::send is called");
 	if (!_bodyIsSent) 
-		bytesWritten = write(_serverToExternalProgram[WRITE_END], body.c_str(), BUFFER_SIZE);
+		bytesWritten = write(client.getServerToCgiFd()[WRITE_END], body.c_str(), BUFFER_SIZE);
 	if (bytesWritten == SYSTEM_ERROR)
 		throw SystemException("write to Python");
 	_bodyBytesWritten += bytesWritten;
 	if (_bodyBytesWritten == bodyLength) 
 	{
-		close(_serverToExternalProgram[WRITE_END]);
+		close(client.getServerToCgiFd()[WRITE_END]);
 		return (ClientState::CGI_Read);
 	}
 	logger.log(INFO, "CGI body: " + std::to_string(bytesWritten));
 	return (ClientState::CGI_Write);
 }
 
-ClientState	CGI::receive(void)
+ClientState	CGI::receive(Client &client)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesRead = 0;
 	char 	buffer[1024];
 	
-	// if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) {
+	// if (fcntl(client.getCgiToServerFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) {
     //     perror("fcntl");
     //     throw SystemException("fcntl");
     // }
 
 	bzero(buffer, sizeof(buffer));
 	logger.log(INFO, "CGI::receive is called");
-	bytesRead = read(_externalProgramToServer[READ_END], buffer, sizeof(buffer));
+	bytesRead = read(client.getCgiToServerFd()[READ_END], buffer, sizeof(buffer));
 
 	// if (bytesRead == -1) {
     //     if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -87,7 +87,7 @@ ClientState	CGI::receive(void)
 		// if (bytesRead == SYSTEM_ERROR)
 		// 	return (ClientState::Error);
 		logger.log(DEBUG, "body in GCI::receive:\n" + body);
-		close(_externalProgramToServer[READ_END]);
+		close(client.getCgiToServerFd()[READ_END]);
 		// int status;
 		// waitpid(_pid, &status, 0);
 		// if (WEXITSTATUS(status) == -1)
@@ -146,41 +146,41 @@ ClientState CGI::start(size_t bodyLength, Client &client)
 	logger.log(DEBUG, "Executable: %", _executable);
 
 
-	if (pipe(_serverToExternalProgram) == SYSTEM_ERROR) throw SystemException("Pipe");
-	if (pipe(_externalProgramToServer) == SYSTEM_ERROR) throw SystemException("Pipe");
+	if (pipe(client.getServerToCgiFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
+	if (pipe(client.getCgiToServerFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
 
-	// if (fcntl(_serverToExternalProgram[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(_serverToExternalProgram[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(_externalProgramToServer[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(_externalProgramToServer[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(client.getServerToCgiFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(client.getServerToCgiFd()[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(client.getCgiToServerFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
+	// if (fcntl(client.getCgiToServerFd()[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
 
 	_pid = fork();
 	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
 	if (_pid == 0)
 	{
 		logger.log(ERROR, "_pid == 0");
-		if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-		if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(_serverToExternalProgram[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(_externalProgramToServer[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+		if (close(client.getCgiToServerFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (dup2(client.getServerToCgiFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+		if (dup2(client.getCgiToServerFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 		
 		execute(_executable, _env);
 	}
 	logger.log(DEBUG, "CGI::start after else if (_pid == 0)");
-	if (close(_serverToExternalProgram[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-	if (close(_externalProgramToServer[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
+	if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 	logger.log(DEBUG, "CGI::start after closing");
 
 	if (bodyLength != 0)
 		return (ClientState::CGI_Write);
 	logger.log(DEBUG, "GCI::start after writing");
-	if (close(_serverToExternalProgram[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
-	if (dup2(_externalProgramToServer[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	if (dup2(client.getCgiToServerFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
 	logger.log(DEBUG, "CGI::start after closing WRITE_END and start reading");
 
-	// if (close(_externalProgramToServer[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
+	// if (close(client.getCgiToServerFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
 	// int	status;
 	// waitpid()
 	// return (receive());

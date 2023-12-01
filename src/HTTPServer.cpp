@@ -125,7 +125,7 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Client &client)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
-	
+
 	switch (_active_clients.at(poll_fd.fd)->handleConnection(poll_fd.events, client))
 	{
 		case ClientState::Receiving:
@@ -142,7 +142,7 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Client &client)
 		case ClientState::CGI_Write:
 		case ClientState::CGI_Start:
 		case ClientState::CGI_Load:
-			// does it make sense to set POLLOUT here? 
+			// does it make sense to set GCI_Load POLLOUT here? 
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 			break;
 		case ClientState::Done:
