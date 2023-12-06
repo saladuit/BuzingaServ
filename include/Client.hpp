@@ -24,6 +24,7 @@ class Client
 	int	*getCgiToServerFd(void);
 	int	*getServerToCgiFd(void);
 
+	bool	cgiBodyIsSent;
 	bool	cgiHasBeenRead;
 
   private:

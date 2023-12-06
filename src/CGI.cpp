@@ -19,12 +19,16 @@
 //	- create python program
 // 	* check out the wiki and github that Sander has sent
 
-CGI::CGI() : _bodyIsSent(false), _bodyBytesWritten(0) {}
+CGI::CGI() : _bodyBytesWritten(0) {}
 
 CGI::~CGI() {}
 
 const std::string &CGI::getExecutable(void) const {
 	return (_executable);
+}
+
+void	CGI::setExecutable(std::string executable) {
+	_executable = executable;
 }
 
 const pid_t &CGI::getPid(void) const {
@@ -37,13 +41,14 @@ ClientState CGI::send(Client &client ,std::string body, size_t bodyLength)
 	ssize_t	bytesWritten = 0;
 
 	logger.log(INFO, "GCI::send is called");
-	if (!_bodyIsSent) 
+	if (!client.cgiBodyIsSent)
 		bytesWritten = write(client.getServerToCgiFd()[WRITE_END], body.c_str(), BUFFER_SIZE);
 	if (bytesWritten == SYSTEM_ERROR)
 		throw SystemException("write to Python");
 	_bodyBytesWritten += bytesWritten;
 	if (_bodyBytesWritten == bodyLength) 
 	{
+		client.cgiBodyIsSent = true;
 		close(client.getServerToCgiFd()[WRITE_END]);
 		return (ClientState::CGI_Read);
 	}
@@ -101,14 +106,6 @@ void	CGI::execute(std::string executable, char **env)
 	
 	logger.log(ERROR, "CGI::execute is called");
 	logger.log(ERROR, "Executable: %", executable);
-	// if (!fileExists(std::string(executable))) {
-	// 	logger.log(ERROR, "Path to external program does not exist");
-	// 	_exit(127);
-	// }
-	// if (!isExecutable(std::string(executable))) {
-	// 	logger.log(ERROR, "External program is not executable");
-	// 	_exit(127);
-	// }
 
 	std::string	executableWithPath = "data/www" + executable;
 	logger.log(ERROR, "executableWithPath: " + executableWithPath);
@@ -130,14 +127,8 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 	logger.log(DEBUG, "CGI::start called");
 	logger.log(DEBUG, "Executable: %", _executable);
 
-
 	if (pipe(client.getServerToCgiFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
 	if (pipe(client.getCgiToServerFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
-
-	// if (fcntl(client.getServerToCgiFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(client.getServerToCgiFd()[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(client.getCgiToServerFd()[READ_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
-	// if (fcntl(client.getCgiToServerFd()[WRITE_END], F_SETFL, O_NONBLOCK) == SYSTEM_ERROR) { perror("fcntl"); throw SystemException("fcntl");}
 
 	_pid = fork();
 	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
@@ -158,8 +149,16 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 	if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 	logger.log(DEBUG, "CGI::start after closing");
 
-	if (bodyLength != 0)
+	logger.log(DEBUG, "bodyLength: %", bodyLength);
+	logger.log(DEBUG, "cgiBodyIsSent: %", client.cgiBodyIsSent);
+	if (bodyLength != 0 && !client.cgiBodyIsSent)
+	{
+		if (dup2(client.getServerToCgiFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		std::shared_ptr<int> pipe = std::make_shared<int>(client.getServerToCgiFd()[WRITE_END]);
+		active_pipes.emplace(client.getServerToCgiFd()[WRITE_END], pipe);
+		poll.addPollFD(client.getServerToCgiFd()[WRITE_END], POLLOUT);
 		return (ClientState::CGI_Write);
+	}
 	logger.log(DEBUG, "GCI::start after writing");
 	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
 	if (dup2(client.getCgiToServerFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");

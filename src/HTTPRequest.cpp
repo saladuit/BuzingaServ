@@ -134,6 +134,7 @@ ClientState HTTPRequest::receive(int client_fd)
 	_bytes_read = read(client_fd, buffer, BUFFER_SIZE);
 	if (_bytes_read == SYSTEM_ERROR)
 		throw SystemException("Read failed on: " + std::to_string(client_fd));
+	logger.log(DEBUG, "in receive _bytes_read is: %", _bytes_read);
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);

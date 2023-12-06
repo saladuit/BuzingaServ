@@ -12,6 +12,7 @@ Client::Client(const int &server_fd) : _socket(server_fd)
 {
 	_socket.setupClient();
 	_state = ClientState::Receiving;
+	cgiBodyIsSent = false;
 	cgiHasBeenRead = false;
 }
 
@@ -47,7 +48,13 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 			logger.log(ERROR, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			logger.log(DEBUG, "_request_target: " + _request.getRequestTarget());
+			logger.log(DEBUG, "_request.getBodyLength(): %", _request.getBodyLength());
+			logger.log(DEBUG, "_request.getBody(): %", _request.getBody());
 			_request.setCGIToTrue();
+			if (_request.getMethodType() == HTTPMethod::POST) {
+				_cgi.setExecutable(_request.getRequestTarget());
+				_state = ClientState::CGI_Start;
+			}
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
@@ -69,7 +76,6 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 			if (client.cgiHasBeenRead == true) {
 				_state = _file_manager.manageCgi(_request.getHTTPVersion(), _cgi.body);
 				logger.log(DEBUG, "response:\n\n" + _file_manager.getResponse());
-
 			}
 	
 			// logger.log(DEBUG, "cgiBody: " + _cgi.body);
@@ -82,8 +88,8 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			logger.log(DEBUG, "ClientState::Loading");
-			if (_state == ClientState::Loading && _request.CGITrue() == true) {
+			logger.log(ERROR, "ClientState::Loading");
+			if (_request.CGITrue() == true) {
 				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
 				return (_state);
@@ -114,11 +120,12 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
-			logger.log(DEBUG, "ClientState::Sending");
+			logger.log(ERROR, "ClientState::Sending");
 			// if CGI
 			// _state =
 			//	_response.send(_socket.getFD(), _cgi.getResponse());
 			// else
+			logger.log(DEBUG, "Response: " + _file_manager.getResponse());
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			logger.log(DEBUG, "request target from handleConnection: %", _request.getRequestTarget());

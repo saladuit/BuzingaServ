@@ -19,7 +19,7 @@ class CGI
 {
 private:
 	pid_t		_pid;
-	bool		_bodyIsSent;
+	// bool		_bodyIsSent;
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
 
@@ -37,6 +37,7 @@ private:
 	bool		isExecutable(const std::string& filePath);
 
 	const std::string&	getExecutable(void) const;
+	void				setExecutable(std::string executable);
 	const pid_t&		getPid(void) const;
 
 	ClientState	send(Client &client ,std::string body, size_t bodyLength);
