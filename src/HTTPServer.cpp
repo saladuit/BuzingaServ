@@ -119,14 +119,14 @@ void HTTPServer::handleActivePollFDs()
 		else if (_active_pipes.find(poll_fd.fd) != _active_pipes.end()) {
 			logger.log(DEBUG, "_active_pipes.find(poll_fd.fd) != _active_pipes.end()");
 			Client &client = getClientByPipeFd(poll_fd.fd);
-			logger.log(DEBUG, "Client: %", &client);
-			logger.log(DEBUG, "poll_fd.fd: %", poll_fd.fd);
-			logger.log(DEBUG, "Client found with pipe");
+			logger.log(DEBUG, "Client % found on poll_fd.fd (pipe): %", &client, poll_fd.fd);
 			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
 			if (client.cgiHasBeenRead)
 			{
-				logger.log(DEBUG, "cgiHasBeenRead == true");	
+				logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
 				_poll.removeFD(poll_fd.fd);
+				_active_pipes.erase(poll_fd.fd);
+				_poll.setEvents(client.getFD(), POLLOUT);
 			}
 		}
 		else
@@ -161,23 +161,24 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Cli
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
 
-	logger.log(DEBUG, "_active_clients.at(poll_fd.fd): %", _active_clients.at(poll_fd.fd));
+	// logger.log(DEBUG, "_active_clients.at(poll_fd.fd): %", _active_clients.at(poll_fd.fd));
 	logger.log(DEBUG, "client: %", &client);
 
 
 	switch ((&client)->handleConnection(poll_fd.events, poll, client, active_pipes))
 	{
 		case ClientState::Receiving:
+		case ClientState::CGI_Read:
 			_poll.setEvents(poll_fd.fd, POLLIN);
 			break;
-		case ClientState::CGI_Read:
-			logger.log(DEBUG, "client.getFD: %", client.getFD());
-			logger.log(DEBUG, "poll_fd %", poll_fd.fd);
-			logger.log(DEBUG, "client.getCgiToServerFd()[READ_END] %", client.getCgiToServerFd()[READ_END]);
-			if (poll_fd.fd != client.getCgiToServerFd()[READ_END]) {
-			// _poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
-				_poll.setEvents(poll_fd.fd, POLLIN);
-				break; }
+		// case ClientState::CGI_Read:
+		// 	logger.log(DEBUG, "client.getFD: %", client.getFD());
+		// 	logger.log(DEBUG, "poll_fd %", poll_fd.fd);
+		// 	logger.log(DEBUG, "client.getCgiToServerFd()[READ_END] %", client.getCgiToServerFd()[READ_END]);
+		// 	if (poll_fd.fd != client.getCgiToServerFd()[READ_END]) {
+		// 		// _poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
+		// 		_poll.setEvents(poll_fd.fd, POLLIN);
+		// 		break; }
 		case ClientState::Loading:
 		case ClientState::Sending:
 		case ClientState::Error:

@@ -55,7 +55,7 @@ ClientState	CGI::receive(Client &client)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesRead = 0;
-	char 	buffer[5];
+	char 	buffer[1024];
 	
 	bzero(buffer, sizeof(buffer));
 	logger.log(INFO, "CGI::receive is called");

@@ -1,7 +1,7 @@
 import sys
 
 def main():
-
+    
     print('Error message 1', file=sys.stderr)
 
     print("Hello World!", file=sys.stdout)
