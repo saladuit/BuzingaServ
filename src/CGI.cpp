@@ -55,7 +55,7 @@ ClientState	CGI::receive(Client &client)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesRead = 0;
-	char 	buffer[1024];
+	char 	buffer[5];
 	
 	bzero(buffer, sizeof(buffer));
 	logger.log(INFO, "CGI::receive is called");
@@ -65,21 +65,19 @@ ClientState	CGI::receive(Client &client)
 	logger.log(DEBUG, "Bytes read: " + std::to_string(bytesRead));
 	logger.log(DEBUG, "buffer:\n" + std::string(buffer));
 	body += buffer;
-	// if (bytesRead >= 1024)
-	// 	return (ClientState::CGI_Read);
-	client.cgiHasBeenRead = true;
-	// if (bytesRead == SYSTEM_ERROR)
-	// 	return (ClientState::Error);
-	logger.log(DEBUG, "body in GCI::receive:\n" + body);
-	close(client.getCgiToServerFd()[READ_END]);
-	// _poll.removeFD(poll_fd.fd); // optional
-
-	// int status;
-	// waitpid(_pid, &status, 0);
-	// if (WEXITSTATUS(status) == -1)
-	// 	return (ClientState::Error);
-// }
-	return (ClientState::Sending);
+	logger.log(DEBUG, "sizeof(buffer): %", sizeof(buffer));
+	if (bytesRead < (ssize_t) sizeof(buffer)) 
+	{
+		client.cgiHasBeenRead = true;
+		logger.log(DEBUG, "body in GCI::receive:\n" + body);
+		close(client.getCgiToServerFd()[READ_END]);
+		// int status;
+		// waitpid(_pid, &status, 0);
+		// if (WEXITSTATUS(status) == -1)
+		// 	return (ClientState::Error);
+		return (ClientState::Sending);
+	}
+	return (ClientState::CGI_Read);
 }
 
 bool CGI::fileExists(const std::string& filePath) {

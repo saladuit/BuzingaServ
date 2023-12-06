@@ -28,6 +28,7 @@ class FileManager
 	ClientState loadErrorPage(void);
 	ClientState manage(HTTPMethod method, const std::string &filename,
 					   const std::string &body);
+	ClientState manageCgi(std::string http_version, const std::string &body);
 	ClientState manageGet(void);
 	ClientState managePost(const std::string &body);
 	ClientState manageDelete(const std::string &reqest_target_path);

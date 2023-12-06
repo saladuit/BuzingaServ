@@ -149,6 +149,12 @@ ClientState FileManager::manage(HTTPMethod method,
 	return (ClientState::Unkown);
 }
 
+ClientState FileManager::manageCgi(std::string http_version, const std::string &body)
+{
+	_response = http_version + " 200 OK\t\n\t\n" + body;
+	return (ClientState::Sending);
+}
+
 const std::string &FileManager::getResponse(void) const
 {
 	return (_response);

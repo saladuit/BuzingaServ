@@ -119,10 +119,15 @@ void HTTPServer::handleActivePollFDs()
 		else if (_active_pipes.find(poll_fd.fd) != _active_pipes.end()) {
 			logger.log(DEBUG, "_active_pipes.find(poll_fd.fd) != _active_pipes.end()");
 			Client &client = getClientByPipeFd(poll_fd.fd);
+			logger.log(DEBUG, "Client: %", &client);
+			logger.log(DEBUG, "poll_fd.fd: %", poll_fd.fd);
 			logger.log(DEBUG, "Client found with pipe");
 			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
-			// if (client.cgiHasBeenRead)
+			if (client.cgiHasBeenRead)
+			{
+				logger.log(DEBUG, "cgiHasBeenRead == true");	
 				_poll.removeFD(poll_fd.fd);
+			}
 		}
 		else
 			throw std::runtime_error("Unknown file descriptor");
@@ -178,8 +183,6 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Cli
 		case ClientState::Error:
 		case ClientState::CGI_Write:
 		case ClientState::CGI_Start:
-		case ClientState::CGI_Load:
-			// does it make sense to set GCI_Load POLLOUT here? 
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 			break;
 		case ClientState::Done:
