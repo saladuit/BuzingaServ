@@ -7,7 +7,6 @@ enum class ClientState
 	CGI_Start,
 	CGI_Write,
 	CGI_Read,
-	CGI_Load,
 	Loading,
 	Sending,
 	Done,

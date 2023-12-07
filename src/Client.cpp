@@ -47,26 +47,26 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 	{
 		if (events & POLLIN && _state == ClientState::Receiving)
 		{
-			logger.log(INFO, "ClientState::Receiving");
+			logger.log(DEBUG, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			_request.setCGIToTrue();
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
 		{
-			logger.log(INFO, "ClientState::CGI_Start");
+			logger.log(DEBUG, "ClientState::CGI_Start");
 			_state = _cgi.start(poll, client, _request.getBodyLength(), active_pipes);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Write)
 		{
-			logger.log(INFO, "ClientState::CGI_Write");
+			logger.log(DEBUG, "ClientState::CGI_Write");
 			_state = _cgi.send(client, _request.getBody(), _request.getBodyLength());
 			return (_state);
 		}
 		else if (events & POLLIN && _state == ClientState::CGI_Read)
 		{
-			logger.log(INFO, "ClientState::CGI_Read");
+			logger.log(DEBUG, "ClientState::CGI_Read");
 			_state = _cgi.receive(client);
 			if (client.cgiHasBeenRead == true) {
 				_state = _file_manager.manageCgi(_request.getHTTPVersion(), _cgi.body);
@@ -76,7 +76,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			logger.log(INFO, "ClientState::Loading");
+			logger.log(DEBUG, "ClientState::Loading");
 			if (_request.CGITrue() == true) {
 				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
@@ -95,7 +95,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
-			logger.log(INFO, "ClientState::Sending");
+			logger.log(DEBUG, "ClientState::Sending");
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);

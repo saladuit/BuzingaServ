@@ -34,7 +34,8 @@ class HTTPServer
 			std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	Client &findClientByFd(int targetFd);
 	Client &getClientByPipeFd(int pipe_fd);
-	// void handleNewPipe(int fd, int pipeState);
+	void	handlePipeConnection(const pollfd &poll_fd, Poll &poll, Client &client, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 };
 
 #endif

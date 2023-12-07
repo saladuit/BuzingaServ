@@ -93,7 +93,6 @@ void HTTPServer::handleActivePollFDs()
 	_poll.pollFDs();
 	for (const auto &poll_fd : _poll.getPollFDs())
 	{
-		logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- in for loop");
 		if (poll_fd.revents == 0)
 			continue;
 		try
@@ -113,31 +112,12 @@ void HTTPServer::handleActivePollFDs()
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(poll_fd.fd);
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end()) {
-			logger.log(DEBUG, "_active_clients.find(poll_fd.fd) != _active_clients.end()");
 			Client &client = findClientByFd(poll_fd.fd);
 			handleExistingConnection(poll_fd, _poll, client, _active_pipes);
 		}
 		else if (_active_pipes.find(poll_fd.fd) != _active_pipes.end()) {
-			logger.log(DEBUG, "_active_pipes.find(poll_fd.fd) != _active_pipes.end()");
-			logger.log(DEBUG, "poll_fd.fd: %", poll_fd.fd);
 			Client &client = getClientByPipeFd(poll_fd.fd);
-			logger.log(DEBUG, "Client % found on poll_fd.fd (pipe): %", &client, poll_fd.fd);
-
-			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
-			if (client.cgiBodyIsSent)
-			{
-				logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
-				_poll.removeFD(poll_fd.fd);
-				_active_pipes.erase(poll_fd.fd);
-				_poll.setEvents(client.getFD(), POLLIN);
-			}
-			if (client.cgiHasBeenRead)
-			{
-				logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
-				_poll.removeFD(poll_fd.fd);
-				_active_pipes.erase(poll_fd.fd);
-				_poll.setEvents(client.getFD(), POLLOUT);
-			}
+			handlePipeConnection(poll_fd, _poll, client, _active_pipes);
 		}
 		else
 			throw std::runtime_error("Unknown file descriptor");
@@ -145,15 +125,28 @@ void HTTPServer::handleActivePollFDs()
 	logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- after for loop");
 }
 
-// void HTTPServer::handleNewPipe(int fd, int pipeState)
-// {
-// 	Logger &logger = Logger::getInstance();
-// 	logger.log(DEBUG, "HTTPServer::handleNewPipe");
+void HTTPServer::handlePipeConnection(const pollfd &poll_fd, Poll &poll, Client &client, 
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
+{
+	Logger &logger = Logger::getInstance();
+	logger.log(DEBUG, "Client % found on poll_fd.fd (pipe): %", &client, poll_fd.fd);
 
-// 	std::shared_ptr<int> pipe = std::make_shared<int>(fd);
-// 	_active_pipes.emplace(fd, pipe);
-// 	_poll.addPollFD(fd, pipeState);
-// }
+	(&client)->handleConnection(poll_fd.events, poll, client, active_pipes);
+	if (client.cgiBodyIsSent)
+	{
+		logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
+		_poll.removeFD(poll_fd.fd);
+		active_pipes.erase(poll_fd.fd);
+		_poll.setEvents(client.getFD(), POLLIN);
+	}
+	if (client.cgiHasBeenRead)
+	{
+		logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
+		_poll.removeFD(poll_fd.fd);
+		active_pipes.erase(poll_fd.fd);
+		_poll.setEvents(client.getFD(), POLLOUT);
+	}
+}
 
 void HTTPServer::handleNewConnection(int fd)
 {
@@ -171,31 +164,17 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Cli
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleExistingConnection");
 
-	// logger.log(DEBUG, "_active_clients.at(poll_fd.fd): %", _active_clients.at(poll_fd.fd));
-	logger.log(DEBUG, "client: %", &client);
-
-
 	switch ((&client)->handleConnection(poll_fd.events, poll, client, active_pipes))
 	{
 		case ClientState::Receiving:
 		case ClientState::CGI_Read:
 			_poll.setEvents(poll_fd.fd, POLLIN);
 			break;
-		// case ClientState::CGI_Read:
-		// 	logger.log(DEBUG, "client.getFD: %", client.getFD());
-		// 	logger.log(DEBUG, "poll_fd %", poll_fd.fd);
-		// 	logger.log(DEBUG, "client.getCgiToServerFd()[READ_END] %", client.getCgiToServerFd()[READ_END]);
-		// 	if (poll_fd.fd != client.getCgiToServerFd()[READ_END]) {
-		// 		// _poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
-		// 		_poll.setEvents(poll_fd.fd, POLLIN);
-		// 		break; }
-		case ClientState::CGI_Write:
-			// _poll.setEvents(client.getServerToCgiFd()[WRITE_END], POLLOUT);
-			// break;
 		case ClientState::Loading:
 		case ClientState::Sending:
 		case ClientState::Error:
 		case ClientState::CGI_Start:
+		case ClientState::CGI_Write:
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 			break;
 		case ClientState::Done:
