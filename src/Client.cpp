@@ -50,6 +50,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 			logger.log(DEBUG, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			_request.setCGIToTrue();
+			
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
@@ -78,6 +79,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		{
 			logger.log(DEBUG, "ClientState::Loading");
 			if (_request.CGITrue() == true) {
+
 				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
 				return (_state);
@@ -85,7 +87,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 			_state = _file_manager.manage(
 				_request.getMethodType(),
 				"./data/www" + _request.getRequestTarget(),
-				_request.getBody()); // TODO: resolve location
+				_request.getBody());
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)
@@ -107,7 +109,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		_response.clear();
 		_response.append(e.what());
 		_state = _file_manager.openErrorPage(
-			"./data/errors", e.getStatusCode()); // TODO: resolve location
+			"./data/errors", e.getStatusCode());
 		return (_state);
 	}
 	return (ClientState::Unkown);

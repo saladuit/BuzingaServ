@@ -20,6 +20,7 @@ private:
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
 	std::string	_pathInfo;
+	std::string	_subPathInfo;
 	std::string	_queryString;
 
   public:

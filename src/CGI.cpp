@@ -13,6 +13,7 @@
 
 CGI::CGI() : _bodyBytesWritten(0) {
 	_pathInfo = "";
+	_subPathInfo = "";
 	_queryString = "";
 }
 
@@ -95,6 +96,7 @@ bool CGI::isExecutable(const std::string& filePath)
 
 void	CGI::execute(std::string executable)
 {
+	// "PATH_INFO=/with/additional/path"
 	const char  *env[] = {_pathInfo.c_str(), _queryString.c_str(), NULL};
 	Logger &logger = Logger::getInstance();
 	std::string bin = "python3";
@@ -105,7 +107,7 @@ void	CGI::execute(std::string executable)
 	logger.log(ERROR, "Executable: %", executable);
 	std::string	executableWithPath = "data/www" + executable;
 	logger.log(ERROR, "executableWithPath: " + executableWithPath);
-	const char *const argv[] = {bin.c_str(), executableWithPath.c_str(), NULL};
+	const char *const argv[] = {bin.c_str(), executableWithPath.c_str(), _subPathInfo.c_str(), NULL};
 	const char *path = "/usr/bin/python3";
 	if (execve(path, (char *const *)argv, (char *const*) env) == SYSTEM_ERROR) throw SystemException("Execve");
 }
@@ -175,8 +177,10 @@ ClientState	CGI::parseURIForCGI(std::string requestTarget)
 	}
 	std::string	remaining = requestTarget.substr(filenameExtensionPos + lengthFilenameExtension, std::string::npos);
 	size_t		questionMarkPos = remaining.find('?');
-	if (remaining.at(0) == '/' && !skip)
-		_pathInfo = "PATH_INFO=" + remaining.substr(0, questionMarkPos);
+	if (remaining.at(0) == '/' && !skip) {
+		_subPathInfo = remaining.substr(0, questionMarkPos);
+		_pathInfo = "PATH_INFO=" + _subPathInfo;
+	}
 	if (!skip)
 		_queryString = "QUERY_STRING=" + remaining.substr(questionMarkPos, std::string::npos);
 	logger.log(DEBUG, _pathInfo);
