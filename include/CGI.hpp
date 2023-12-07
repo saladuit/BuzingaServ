@@ -22,6 +22,8 @@ private:
 	// bool		_bodyIsSent;
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
+	std::string	_pathInfo;
+	std::string	_queryString;
 
   public:
 	CGI();
@@ -32,7 +34,7 @@ private:
 	ClientState	start(Poll &poll, Client &client, size_t body_length, 
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	ClientState	parseURIForCGI(std::string requestTarget);
-	void		execute(std::string executable, char **env);
+	void		execute(std::string executable);
 	bool		fileExists(const std::string& filePath);
 	bool		isExecutable(const std::string& filePath);
 
@@ -45,7 +47,6 @@ private:
 
 	std::string	body;
 	int			pipe_fd[2];
-	char		**_env;
 };
 
 #endif

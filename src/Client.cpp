@@ -77,13 +77,6 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 				_state = _file_manager.manageCgi(_request.getHTTPVersion(), _cgi.body);
 				logger.log(DEBUG, "response:\n\n" + _file_manager.getResponse());
 			}
-	
-			// logger.log(DEBUG, "cgiBody: " + _cgi.body);
-			
-			// _state = ClientState::Sending;
-			// int status;
-			// waitpid(_cgi.getPid(), &status, 0);
-			// WEXITSTATUS(status);
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
