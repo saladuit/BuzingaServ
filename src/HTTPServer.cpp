@@ -118,8 +118,13 @@ void HTTPServer::handleActivePollFDs()
 		}
 		else if (_active_pipes.find(poll_fd.fd) != _active_pipes.end()) {
 			logger.log(DEBUG, "_active_pipes.find(poll_fd.fd) != _active_pipes.end()");
+			logger.log(DEBUG, "poll_fd.fd: %", poll_fd.fd);
 			Client &client = getClientByPipeFd(poll_fd.fd);
 			logger.log(DEBUG, "Client % found on poll_fd.fd (pipe): %", &client, poll_fd.fd);
+
+			// if (client.getRequest().getMethodType() == HTTPMethod::POST)
+			// 	handleExistingConnection(poll_fd, _poll, client, _active_pipes);
+
 			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
 			if (client.cgiHasBeenRead)
 			{
@@ -179,10 +184,12 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Cli
 		// 		// _poll.setEvents(client.getCgiToServerFd()[READ_END], POLLIN);
 		// 		_poll.setEvents(poll_fd.fd, POLLIN);
 		// 		break; }
+		case ClientState::CGI_Write:
+			// _poll.setEvents(client.getServerToCgiFd()[WRITE_END], POLLOUT);
+			// break;
 		case ClientState::Loading:
 		case ClientState::Sending:
 		case ClientState::Error:
-		case ClientState::CGI_Write:
 		case ClientState::CGI_Start:
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 			break;

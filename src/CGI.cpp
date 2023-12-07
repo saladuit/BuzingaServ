@@ -37,6 +37,7 @@ const pid_t &CGI::getPid(void) const {
 
 ClientState CGI::send(Client &client ,std::string body, size_t bodyLength)
 {
+	(void)bodyLength;
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesWritten = 0;
 
@@ -46,9 +47,10 @@ ClientState CGI::send(Client &client ,std::string body, size_t bodyLength)
 	if (bytesWritten == SYSTEM_ERROR)
 		throw SystemException("write to Python");
 	_bodyBytesWritten += bytesWritten;
-	if (_bodyBytesWritten == bodyLength) 
+	if (_bodyBytesWritten < BUFFER_SIZE) 
 	{
 		client.cgiBodyIsSent = true;
+		logger.log(DEBUG, "ServerToCgiFd()[WRITE_END] is now being closed");
 		close(client.getServerToCgiFd()[WRITE_END]);
 		return (ClientState::CGI_Read);
 	}
@@ -153,16 +155,18 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 	logger.log(DEBUG, "cgiBodyIsSent: %", client.cgiBodyIsSent);
 	if (bodyLength != 0 && !client.cgiBodyIsSent)
 	{
-		if (dup2(client.getServerToCgiFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
+		logger.log(DEBUG, "ClientState::CGI_Write is now being called");
+		// if (dup2(client.getServerToCgiFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
 		std::shared_ptr<int> pipe = std::make_shared<int>(client.getServerToCgiFd()[WRITE_END]);
 		active_pipes.emplace(client.getServerToCgiFd()[WRITE_END], pipe);
 		poll.addPollFD(client.getServerToCgiFd()[WRITE_END], POLLOUT);
+		// poll.setEvents(client.getServerToCgiFd()[WRITE_END], POLLOUT);
 		return (ClientState::CGI_Write);
 	}
 	logger.log(DEBUG, "GCI::start after writing");
 	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	
 	if (dup2(client.getCgiToServerFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-
 	std::shared_ptr<int> pipe = std::make_shared<int>(client.getCgiToServerFd()[READ_END]);
 	active_pipes.emplace(client.getCgiToServerFd()[READ_END], pipe);
 	poll.addPollFD(client.getCgiToServerFd()[READ_END], POLLIN);

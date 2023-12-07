@@ -23,6 +23,7 @@ class Client
 	int getFD(void) const;
 	int	*getCgiToServerFd(void);
 	int	*getServerToCgiFd(void);
+	HTTPRequest	&getRequest(void);
 
 	bool	cgiBodyIsSent;
 	bool	cgiHasBeenRead;

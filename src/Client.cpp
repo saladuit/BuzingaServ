@@ -33,6 +33,10 @@ int	*Client::getServerToCgiFd(void) {
 	return (_serverToCgiFd);
 }
 
+HTTPRequest	&Client::getRequest(void) {
+	return (_request);
+}
+
 // implement method Martijn for verifying that we are dealing with a CGI
 // also get fileExtension from Martijn and save in HTTPRequest class
 ClientState Client::handleConnection(short events, Poll &poll, Client &client, 
@@ -51,10 +55,6 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 			logger.log(DEBUG, "_request.getBodyLength(): %", _request.getBodyLength());
 			logger.log(DEBUG, "_request.getBody(): %", _request.getBody());
 			_request.setCGIToTrue();
-			if (_request.getMethodType() == HTTPMethod::POST) {
-				_cgi.setExecutable(_request.getRequestTarget());
-				_state = ClientState::CGI_Start;
-			}
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
