@@ -29,7 +29,8 @@ Client &HTTPServer::findClientByFd(int targetFd)
 Client &HTTPServer::getClientByPipeFd(int pipe_fd) {
     for (const auto& entry : _active_clients) {
         const auto& client = entry.second;
-        if (client->getCgiToServerFd()[READ_END] == pipe_fd) {
+        if (client->getCgiToServerFd()[READ_END] == pipe_fd ||
+				client->getServerToCgiFd()[WRITE_END] == pipe_fd) {
             return *client;
         }
     }
@@ -122,10 +123,14 @@ void HTTPServer::handleActivePollFDs()
 			Client &client = getClientByPipeFd(poll_fd.fd);
 			logger.log(DEBUG, "Client % found on poll_fd.fd (pipe): %", &client, poll_fd.fd);
 
-			// if (client.getRequest().getMethodType() == HTTPMethod::POST)
-			// 	handleExistingConnection(poll_fd, _poll, client, _active_pipes);
-
 			(&client)->handleConnection(poll_fd.events, _poll, client, _active_pipes);
+			if (client.cgiBodyIsSent)
+			{
+				logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	
+				_poll.removeFD(poll_fd.fd);
+				_active_pipes.erase(poll_fd.fd);
+				_poll.setEvents(client.getFD(), POLLIN);
+			}
 			if (client.cgiHasBeenRead)
 			{
 				logger.log(DEBUG, "remove pipe fd: %", poll_fd.fd);	

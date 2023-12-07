@@ -20,10 +20,10 @@ def main():
         
 
     print('Error message 1', file=sys.stderr)
-    sys.stdout.write("Hello world!")
+    # sys.stdout.write("Hello world!")
 
-    # if input_data.strip():
-    #     sys.stdout.write(input_data)
+    if input_data.strip():
+        sys.stdout.write(input_data)
     if input_data.strip():
         sys.stderr.write(input_data)
 
