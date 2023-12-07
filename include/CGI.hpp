@@ -13,13 +13,10 @@
 class Client;
 class Poll;
 
-// Common gateway interface
-
 class CGI
 {
 private:
 	pid_t		_pid;
-	// bool		_bodyIsSent;
 	size_t		_bodyBytesWritten;
 	std::string	_executable;
 	std::string	_pathInfo;
