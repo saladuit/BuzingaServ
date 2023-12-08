@@ -13,7 +13,6 @@ enum class TokenType
 	SEMICOLON,
 	OPEN_BRACKET,
 	CLOSE_BRACKET,
-	PATH,
 	WORD,
 };
 

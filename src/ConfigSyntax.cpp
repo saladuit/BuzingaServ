@@ -99,7 +99,6 @@ void syntaxLocationBlock(std::vector<Token> &tokens,
 
 	while (it != closing_token)
 	{
-
 		syntaxLine(it);
 		it++;
 	}
