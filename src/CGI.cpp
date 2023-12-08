@@ -1,3 +1,4 @@
+#include "ClientException.hpp"
 #include "Client.hpp"
 #include "Poll.hpp"
 #include "CGI.hpp"
@@ -31,17 +32,31 @@ const pid_t &CGI::getPid(void) const {
 	return (_pid);
 }
 
+size_t		CGI::getBufferSize(size_t bodyLength)
+{
+	size_t	bufferSize = 0;
+
+	if (BUFFER_SIZE > bodyLength)
+		bufferSize = bodyLength;
+	else if (BUFFER_SIZE > (bodyLength - _bodyBytesWritten))
+		bufferSize = bodyLength - _bodyBytesWritten;
+	else
+		bufferSize = BUFFER_SIZE;
+	return (bufferSize);
+}
+
 ClientState CGI::send(Client &client ,std::string body, size_t bodyLength)
 {
 	Logger	&logger = Logger::getInstance();
 	ssize_t	bytesWritten = 0;
-
+	
 	logger.log(INFO, "GCI::send is called");
 	logger.log(DEBUG, "body: " + body);
+
 	if (!client.cgiBodyIsSent)
-		bytesWritten = write(client.getServerToCgiFd()[WRITE_END], body.c_str(), BUFFER_SIZE);
+		bytesWritten = write(client.getServerToCgiFd()[WRITE_END], body.c_str(), getBufferSize(bodyLength));
 	if (bytesWritten == SYSTEM_ERROR)
-		throw SystemException("write to cgi");
+		throw ClientException(StatusCode::InternalServerError);
 	logger.log(DEBUG, "bytesWritten: %", bytesWritten);
 	_bodyBytesWritten += bytesWritten;
 	if (_bodyBytesWritten >= bodyLength) 
@@ -65,9 +80,9 @@ ClientState	CGI::receive(Client &client)
 	logger.log(INFO, "CGI::receive is called");
 	int	status;
 	waitpid(_pid, &status, 0);
-	if (status == SYSTEM_ERROR) throw SystemException("waitpid");
+	if (status == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	bytesRead = read(client.getCgiToServerFd()[READ_END], buffer, sizeof(buffer));
-	if (bytesRead == SYSTEM_ERROR) throw SystemException("read");
+	if (bytesRead == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	logger.log(DEBUG, "Bytes read: " + std::to_string(bytesRead));
 	logger.log(DEBUG, "buffer:\n" + std::string(buffer));
 	body += buffer;
@@ -96,22 +111,20 @@ bool CGI::isExecutable(const std::string& filePath)
 
 void	CGI::execute(std::string executable)
 {
-	// "PATH_INFO=/with/additional/path"
 	const char  *env[] = {_pathInfo.c_str(), _queryString.c_str(), NULL};
 	Logger &logger = Logger::getInstance();
 	std::string bin = "python3";
 
-	if (!fileExists("data/www" + executable) || !isExecutable("data/www" + executable))
-		throw SystemException("File does not exist or is not executable.");
 	logger.log(ERROR, "CGI::execute is called");
 	logger.log(ERROR, "Executable: %", executable);
 	std::string	executableWithPath = "data/www" + executable;
 	logger.log(ERROR, "executableWithPath: " + executableWithPath);
 	const char *const argv[] = {bin.c_str(), executableWithPath.c_str(), _subPathInfo.c_str(), NULL};
 	const char *path = "/usr/bin/python3";
-	if (execve(path, (char *const *)argv, (char *const*) env) == SYSTEM_ERROR) throw SystemException("Execve");
+	if (execve(path, (char *const *)argv, (char *const*) env) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 }
 
+// Can I throw a ClientExeception inside a child process or do I need to throw normal exception?
 ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength, 
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
@@ -120,10 +133,10 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 
 	logger.log(DEBUG, "CGI::start called");
 	logger.log(DEBUG, "Executable: %", _executable);
-	if (pipe(client.getServerToCgiFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
-	if (pipe(client.getCgiToServerFd()) == SYSTEM_ERROR) throw SystemException("Pipe");
+	if (pipe(client.getServerToCgiFd()) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+	if (pipe(client.getCgiToServerFd()) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	_pid = fork();
-	if (_pid == SYSTEM_ERROR) throw SystemException("Fork");
+	if (_pid == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	if (_pid == 0)
 	{
 		if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
@@ -136,8 +149,8 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 		execute(_executable);
 	}
 	logger.log(DEBUG, "CGI::start after else if (_pid == 0)");
-	if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-	if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+	if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	logger.log(DEBUG, "CGI::start after closing");
 	logger.log(DEBUG, "bodyLength: %", bodyLength);
 	logger.log(DEBUG, "cgiBodyIsSent: %", client.cgiBodyIsSent);
@@ -153,7 +166,7 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 		poll.addPollFD(client.getServerToCgiFd()[WRITE_END], POLLOUT);
 		return (ClientState::CGI_Write);
 	}
-	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
+	if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	return (ClientState::CGI_Read);
 }
 
@@ -172,6 +185,8 @@ ClientState	CGI::parseURIForCGI(std::string requestTarget)
     _executable = requestTarget.substr(0, filenameExtensionPos + lengthFilenameExtension);
 	bool		skip = false;
 	logger.log(DEBUG, "Executable is: " + _executable);
+	if (!fileExists("data/www" + _executable) || !isExecutable("data/www" + _executable))
+		throw ClientException(StatusCode::NotFound);
 	if (filenameExtensionPos + lengthFilenameExtension >= std::strlen(requestTarget.c_str()) - 1) {
 		return (ClientState::CGI_Start);
 	}

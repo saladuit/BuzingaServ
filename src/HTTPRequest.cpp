@@ -1,3 +1,4 @@
+#include "ClientException.hpp"
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
@@ -133,7 +134,7 @@ ClientState HTTPRequest::receive(int client_fd)
 
 	_bytes_read = read(client_fd, buffer, BUFFER_SIZE);
 	if (_bytes_read == SYSTEM_ERROR)
-		throw SystemException("Read failed on: " + std::to_string(client_fd));
+		throw ClientException(StatusCode::InternalServerError);
 	logger.log(DEBUG, "in receive _bytes_read is: %", _bytes_read);
 	if (_content_length != 0)
 	{
@@ -160,7 +161,10 @@ ClientState HTTPRequest::receive(int client_fd)
 				if (_content_length == 0)
 					return (ClientState::Loading);
 				_body += _http_request.substr(pos + 2);
+				if (std::strlen(_body.c_str()) == _content_length)
+					return (ClientState::Loading);
 				return (ClientState::Receiving);
+
 			}
 			else
 				return (ClientState::Loading);

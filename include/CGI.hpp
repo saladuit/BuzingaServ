@@ -41,6 +41,7 @@ private:
 	const pid_t&		getPid(void) const;
 
 	ClientState	send(Client &client ,std::string body, size_t bodyLength);
+	size_t		getBufferSize(size_t bodyLength);
 	ClientState	receive(Client &client);
 
 	std::string	body;

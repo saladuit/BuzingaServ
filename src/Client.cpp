@@ -49,8 +49,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		{
 			logger.log(DEBUG, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
-			_request.setCGIToTrue();
-			
+			// _request.setCGIToTrue();
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)
