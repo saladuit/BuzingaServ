@@ -47,7 +47,7 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 				parseAutoIndex(*token);
 			else if (key.getString() == "allowed_methods")
 				parseAllowedMethods(*token);
-			else if (key.getString() == "cgi_path")
+			else if (key.getString() == "cgi")
 				parseCgiPath(*token);
 			else if (key.getString() == "return")
 				parseReturn(*token);
@@ -106,8 +106,13 @@ void LocationSettings::parseAllowedMethods(const Token token)
 
 void LocationSettings::parseCgiPath(const Token token)
 {
+	Logger &logger = Logger::getInstance();
 
-	_cgi_path.append(" " + token.getString());
+	if (!_index.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining index in locationblock: " +
+					   _requesttarget);
+	_cgi_path = token.getString();
 }
 
 void LocationSettings::parseReturn(const Token token)
@@ -118,7 +123,7 @@ void LocationSettings::parseReturn(const Token token)
 		logger.log(WARNING,
 				   "ConfigParser: redefining return in locationblock: " +
 					   _requesttarget);
-	_return.append(" " + token.getString());
+	_return = token.getString();
 }
 
 // Functionality:
