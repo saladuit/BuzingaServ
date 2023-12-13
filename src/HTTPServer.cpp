@@ -1,6 +1,8 @@
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
+#include "HTTPRequest.hpp"
+#include "ClientException.hpp"
 
 HTTPServer::HTTPServer(const std::string &config_file_path)
 try : _parser(config_file_path), _poll(), _active_servers(), _active_clients(), _active_pipes()
@@ -97,6 +99,20 @@ void HTTPServer::handleActivePollFDs()
 			continue;
 		try
 		{
+			if (poll_fd.revents & POLLHUP) // this code block is solving a thrown exception from the cgi's child process
+			{
+				Client &client = getClientByPipeFd(poll_fd.fd);
+				if (client.getRequest().CGITrue() && _request.getMethodType() != HTTPMethod::DELETE)
+				{
+					_poll.removeFD(poll_fd.fd);
+					_active_pipes.erase(poll_fd.fd);
+					_poll.setEvents(client.getFD(), POLLOUT);
+					client.setState(ClientState::Sending);
+					client.KO = true;
+					handleExistingConnection(poll_fd, _poll, client, _active_pipes);
+					continue;
+				}
+			}
 			_poll.checkREvents(poll_fd.revents);
 		}
 		catch (const Poll::PollException &e)
@@ -177,6 +193,7 @@ void HTTPServer::handleExistingConnection(const pollfd &poll_fd, Poll &poll, Cli
 		case ClientState::CGI_Write:
 			_poll.setEvents(poll_fd.fd, POLLOUT);
 			break;
+		case ClientState::Unknown:
 		case ClientState::Done:
 			_poll.removeFD(poll_fd.fd);
 			_active_clients.erase(poll_fd.fd);

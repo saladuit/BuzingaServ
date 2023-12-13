@@ -124,7 +124,6 @@ void	CGI::execute(std::string executable)
 	if (execve(path, (char *const *)argv, (char *const*) env) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 }
 
-// Can I throw a ClientExeception inside a child process or do I need to throw normal exception?
 ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength, 
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
@@ -139,13 +138,12 @@ ClientState CGI::start(Poll &poll, Client &client, size_t bodyLength,
 	if (_pid == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 	if (_pid == 0)
 	{
-		if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close"); 
-		if (close(client.getCgiToServerFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(client.getServerToCgiFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw SystemException("close");
-		if (dup2(client.getCgiToServerFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw SystemException("dup2");
-		if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw SystemException("close");
-	
+		if (close(client.getServerToCgiFd()[WRITE_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+		if (close(client.getCgiToServerFd()[READ_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+		if (dup2(client.getServerToCgiFd()[READ_END], STDIN_FILENO) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+		if (close(client.getServerToCgiFd()[READ_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+		if (dup2(client.getCgiToServerFd()[WRITE_END], STDOUT_FILENO) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
+		if (close(client.getCgiToServerFd()[WRITE_END]) == SYSTEM_ERROR) throw ClientException(StatusCode::InternalServerError);
 		execute(_executable);
 	}
 	logger.log(DEBUG, "CGI::start after else if (_pid == 0)");

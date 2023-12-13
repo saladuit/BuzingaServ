@@ -14,6 +14,7 @@ Client::Client(const int &server_fd) : _socket(server_fd)
 	_state = ClientState::Receiving;
 	cgiBodyIsSent = false;
 	cgiHasBeenRead = false;
+	KO = false;
 }
 
 Client::~Client()
@@ -35,6 +36,10 @@ int	*Client::getServerToCgiFd(void) {
 
 HTTPRequest	&Client::getRequest(void) {
 	return (_request);
+}
+
+void	Client::setState(ClientState state) {
+	_state = state;
 }
 
 ClientState Client::handleConnection(short events, Poll &poll, Client &client, 
@@ -77,7 +82,7 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			logger.log(DEBUG, "ClientState::Loading");
-			if (_request.CGITrue() == true) {
+			if (_request.CGITrue() == true && _request.getMethodType() != HTTPMethod::DELETE) {
 
 				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
 				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
@@ -97,6 +102,11 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
 			logger.log(DEBUG, "ClientState::Sending");
+			if (KO == true)
+			{
+				_state =_response.send(_socket.getFD(), "HTTP/1.1 500 KO\t\n\t\n");
+				return (_state);
+			}
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);
@@ -105,11 +115,13 @@ ClientState Client::handleConnection(short events, Poll &poll, Client &client,
 	catch (ClientException &e)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
+		if (_request.CGITrue() == true && _request.getMethodType() != HTTPMethod::DELETE)
+			_exit(1);
 		_response.clear();
 		_response.append(e.what());
 		_state = _file_manager.openErrorPage(
 			"./data/errors", e.getStatusCode());
 		return (_state);
 	}
-	return (ClientState::Unkown);
+	return (ClientState::Unknown);
 }

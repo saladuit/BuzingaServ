@@ -24,9 +24,11 @@ class Client
 	int	*getCgiToServerFd(void);
 	int	*getServerToCgiFd(void);
 	HTTPRequest	&getRequest(void);
+	void	setState(ClientState state);
 
 	bool	cgiBodyIsSent;
 	bool	cgiHasBeenRead;
+	bool	KO;
 
   private:
 	HTTPRequest		_request;

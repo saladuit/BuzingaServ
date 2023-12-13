@@ -146,7 +146,7 @@ ClientState FileManager::manage(HTTPMethod method,
 			openPostFile(request_target_path);
 		return (managePost(body));
 	}
-	return (ClientState::Unkown);
+	return (ClientState::Unknown);
 }
 
 ClientState FileManager::manageCgi(std::string http_version, const std::string &body)

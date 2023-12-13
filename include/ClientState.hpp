@@ -11,7 +11,7 @@ enum class ClientState
 	Sending,
 	Done,
 	Error,
-	Unkown,
+	Unknown,
 };
 
 #endif
