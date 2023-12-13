@@ -1,6 +1,8 @@
+#include "ClientException.hpp"
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
+#include "ClientState.hpp"
 
 #include <string>
 
@@ -8,7 +10,8 @@
 
 HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _request_target(), _http_version(), _body(), _headers()
+	  _http_request(), _request_target(), _http_version(), _body(), _headers(),
+	  _cgi(false)
 {
 }
 
@@ -68,11 +71,25 @@ const std::string &HTTPRequest::getBody(void) const
 	return (_body);
 }
 
+const size_t &HTTPRequest::getBodyLength(void) const {
+	return (_content_length);
+}
+
+void HTTPRequest::setCGIToTrue(void) {
+	_cgi = true;
+}
+
+const bool &HTTPRequest::CGITrue(void) const {
+	return (_cgi);
+}
+
+
 size_t HTTPRequest::parseStartLine(size_t &i)
 {
 	Logger &logger = Logger::getInstance();
 	size_t pos;
 
+	logger.log(DEBUG, "_http_request: %", _http_request);
 	pos = _http_request.find(' ', i);
 	setMethodType(_http_request.substr(i, pos - i));
 	i = pos + 1;
@@ -112,12 +129,13 @@ ClientState HTTPRequest::receive(int client_fd)
 	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE];
 	std::string header_end;
-	size_t pos;
 	size_t i = 0;
+	size_t pos;
 
 	_bytes_read = read(client_fd, buffer, BUFFER_SIZE);
 	if (_bytes_read == SYSTEM_ERROR)
-		throw SystemException("Read failed on: " + std::to_string(client_fd));
+		throw ClientException(StatusCode::InternalServerError);
+	logger.log(DEBUG, "in receive _bytes_read is: %", _bytes_read);
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
@@ -143,7 +161,10 @@ ClientState HTTPRequest::receive(int client_fd)
 				if (_content_length == 0)
 					return (ClientState::Loading);
 				_body += _http_request.substr(pos + 2);
+				if (std::strlen(_body.c_str()) == _content_length)
+					return (ClientState::Loading);
 				return (ClientState::Receiving);
+
 			}
 			else
 				return (ClientState::Loading);

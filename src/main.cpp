@@ -3,6 +3,10 @@
 #include <Logger.hpp>
 #include <stdexcept>
 
+#include <iostream>
+#include <string>
+#include <vector>
+
 int main(int argc, char **argv)
 {
 	Logger &logger = Logger::getInstance();
@@ -17,6 +21,36 @@ int main(int argc, char **argv)
 	HTTPServer server(argc == 2 ? argv[1] : "config/default.conf");
 	return (server.run());
 }
+
+// &&&&&&&&&&&&&&
+
+// #include <fcntl.h>
+// #include <unistd.h>
+// int	main(void) {
+
+// 	Logger		&logger = Logger::getInstance();
+// 	CGI			cgi_request;
+// 	std::string	body;
+
+// 	cgi_request.execute("data/www/python/test.py", true, body);
+// 	logger.log(INFO, "Body: " + body);
+
+// 	return 0;
+
+	// &
+
+	// std::string bin = "python3";
+	// std::string script = "data/www/python/test.py";
+	// const char *path = "/usr/bin/python3";
+
+	// const char *const argv[] = {bin.c_str(), script.c_str(), NULL};
+	// char *const envp[] = {NULL};
+
+	// execve(path, (char *const *)argv, envp);
+	// return 0;
+// }
+
+// ######
 
 // //#define REQUEST "GET /index HTTP/1.1 balllen \r\nHost:
 // 192.168.0.199:80\r\nConnection: keep-alive\r\nAccept: */*\r\nUser-Agent:

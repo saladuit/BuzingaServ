@@ -9,8 +9,10 @@
 class FileManager
 {
   private:
-	std::string _response;
-	std::fstream _request_target;
+	std::string		_response;
+	std::fstream	_request_target;
+	size_t			_bytes_sent;
+	// CGI			_cgi;
 
   public:
 	FileManager();
@@ -26,9 +28,12 @@ class FileManager
 	ClientState loadErrorPage(void);
 	ClientState manage(HTTPMethod method, const std::string &filename,
 					   const std::string &body);
+	ClientState manageCgi(std::string http_version, const std::string &body);
 	ClientState manageGet(void);
 	ClientState managePost(const std::string &body);
 	ClientState manageDelete(const std::string &reqest_target_path);
+
+	// CGI APPEND FUNCTION
 
 	const std::string &getResponse(void) const;
 };

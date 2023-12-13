@@ -47,15 +47,21 @@ class HTTPRequest
 	const std::string &getBody(void) const;
 	ClientState receive(int fd);
 
+	const std::string	&getExecutable(void) const;
+	void				setCGIToTrue(void);
+	const bool			&CGITrue(void) const;
+	const size_t		&getBodyLength(void) const;
+	
   private:
-	ssize_t _bytes_read;
-	size_t _content_length;
-	HTTPMethod _methodType;
+	ssize_t 	_bytes_read;
+	size_t 		_content_length;
+	HTTPMethod 	_methodType;
 	std::string _http_request;
 	std::string _request_target;
 	std::string _http_version;
 	std::string _body;
 	std::unordered_map<std::string, std::string> _headers;
+	bool		_cgi;
 
 	size_t parseStartLine(size_t &i);
 	size_t parseHeaders(size_t &i);
