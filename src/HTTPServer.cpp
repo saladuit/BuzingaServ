@@ -102,7 +102,7 @@ void HTTPServer::handleActivePollFDs()
 			if (poll_fd.revents & POLLHUP) // this code block is solving a thrown exception from the cgi's child process
 			{
 				Client &client = getClientByPipeFd(poll_fd.fd);
-				if (client.getRequest().CGITrue() && _request.getMethodType() != HTTPMethod::DELETE)
+				if (client.getRequest().CGITrue() && client.getRequest().getMethodType() != HTTPMethod::DELETE)
 				{
 					_poll.removeFD(poll_fd.fd);
 					_active_pipes.erase(poll_fd.fd);
