@@ -102,7 +102,7 @@ void HTTPServer::handleNewConnection(int fd)
 	_active_clients.emplace(client->getFD(), client);
 	_poll.addPollFD(client->getFD(), POLLIN);
 	// TODO:	1. Serversetting need to be added to client class
-	// 			2.
+	//
 }
 
 void HTTPServer::handleExistingConnection(const pollfd &poll_fd)

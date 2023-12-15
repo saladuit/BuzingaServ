@@ -12,25 +12,22 @@ class LocationSettings
 	~LocationSettings();
 	LocationSettings(std::vector<Token>::iterator &token);
 	LocationSettings(const LocationSettings &rhs);
-	LocationSettings &operator=(const LocationSettings &rhs) = delete;
+	LocationSettings &operator=(LocationSettings &rhs);
 
 	// Functionality:
 	//		getters:
-	const std::string &getRequestTarget() const;
+	const std::string &getPath() const;
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
 	const std::string &getReturn() const;
 	bool getAutoIndex() const;
 
-	//		setters:
-	void setDir(const std::string &path);
-
 	// Printing:
 	void printLocationSettings() const;
 
   private:
-	std::string _requesttarget;
+	std::string _path;
 
 	std::string _alias;
 	std::string _index;

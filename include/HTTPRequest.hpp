@@ -29,7 +29,7 @@ class HTTPRequest
   public:
 	HTTPRequest();
 	HTTPRequest(const HTTPRequest &rhs) = delete;
-	HTTPRequest &operator=(const HTTPRequest &other) = delete;
+	HTTPRequest &operator=(const HTTPRequest &rhs) = delete;
 	~HTTPRequest();
 
 	void setMethodType(const std::string &method_type);

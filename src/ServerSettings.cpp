@@ -73,8 +73,12 @@ void validateListen(const std::string &str)
 
 void ServerSettings::parseListen(const Token value)
 {
+	Logger &logger = Logger::getInstance();
 	validateListen(value.getString());
-	_listen.append(" " + value.getString());
+
+	if (!_listen.empty())
+		logger.log(WARNING, "ConfigParser: redefining listen");
+	_listen = value.getString();
 }
 
 void ServerSettings::parseServerName(const Token value)
@@ -123,22 +127,6 @@ void ServerSettings::addValueToServerSettings(
 }
 
 // Functionality:
-const std::string
-methodToString(HTTPMethod method) // TODO: change data_types in function
-{
-	switch (method)
-	{
-	case (HTTPMethod::GET):
-		return ("GET");
-	case (HTTPMethod::POST):
-		return ("POST");
-	case (HTTPMethod::DELETE):
-		return ("DELETE");
-	default:
-		throw std::runtime_error("Unknown HTTPMethod");
-	}
-}
-
 //		getters:
 const std::string &ServerSettings::getListen() const
 {
@@ -179,24 +167,24 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 // /png/images/			=> /
 //
 
-const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
+const LocationSettings &
+ServerSettings::resolveLocation(const std::string &RequestTarget) const
 {
-	LocationSettings *ret = nullptr;
-	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+	const LocationSettings *ret = nullptr;
+	std::string searched = RequestTarget.substr(0, RequestTarget.find("?"));
 
-	for (auto &instance : _location_settings)
+	for (const auto &instance : _location_settings)
 	{
-		const size_t pos = requesttarget.find(instance.getRequestTarget());
+		const size_t pos = RequestTarget.find(instance.getPath());
 
-		if (pos != 0)
+		if (pos == std::string::npos)
 			continue;
-		if (ret != nullptr)
+		if (ret == nullptr)
 		{
-			if (instance.getRequestTarget().length() >
-				ret->getRequestTarget().length())
-				ret = &instance;
+			ret = &instance;
+			continue;
 		}
-		else
+		if (instance.getPath().length() > ret->getPath().length())
 			ret = &instance;
 	}
 	if (ret == nullptr)
@@ -205,6 +193,18 @@ const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 	return (*ret);
 }
 
+/* TODO: move to relevant class, i think it should be HTTPRequest
+
+bool ServerSettings::resolveServerName(const std::string &RequestHost)
+{
+	std::stringstream ss(getServerName());
+	std::string option;
+
+	for (; std::getline(ss, option, ' ');)
+	{
+	}
+}
+*/
 // Printing:
 
 void ServerSettings::printServerSettings() const

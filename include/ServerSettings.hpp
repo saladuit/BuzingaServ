@@ -17,7 +17,9 @@ class ServerSettings
 	ServerSettings &operator=(const ServerSettings &rhs) = delete;
 
 	// Functionality:
-	const LocationSettings &resolveLocation(const std::string &request_target);
+	const LocationSettings &resolveLocation(const std::string &URI) const;
+	bool resolveServerName(const std::string &RequestHost);
+
 	const std::string &getListen() const;
 	const std::string &getServerName() const;
 	const std::string &getErrorDir() const;
@@ -32,6 +34,8 @@ class ServerSettings
 	std::string _error_dir;
 	std::string _client_max_body_size;
 	std::vector<LocationSettings> _location_settings;
+
+	const LocationSettings &getRootLocationBlock() const;
 
 	// Parsing:
 	void addValueToServerSettings(const Token &key,

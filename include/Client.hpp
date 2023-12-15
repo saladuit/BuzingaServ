@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "ServerSettings.hpp"
 #include <CGI.hpp>
 #include <FileManager.hpp>
 #include <HTTPRequest.hpp>
@@ -25,6 +26,7 @@ class Client
 	FileManager _file_manager;
 	CGI _cgi;
 	Socket _socket;
+	ServerSettings _ServerSetting; // TODO: make multiple serverblocks work;
 	ClientState _state;
 };
 

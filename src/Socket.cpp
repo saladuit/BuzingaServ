@@ -4,6 +4,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <string>
 #include <unistd.h>
 
 #include <cassert>
@@ -46,16 +47,31 @@ Socket::~Socket()
 	assert(close(getFD()) != SYSTEM_ERROR);
 }
 
-void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_port)
+void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_listen)
 {
+	Logger &logger = Logger::getInstance();
+
+	size_t pos = _listen.find(":");
+	std::string host = _listen.substr(0, pos);
+	std::string port;
+	if (pos == std::string::npos)
+		port = "80";
+	else
+		port = _listen.substr(pos + 1);
+	logger.log(DEBUG,
+			   "listen: " + _listen + "\nhost: " + host + "\nport: " + port);
+
+	if (getaddrinfo(host.c_str(), port) != 0)
+		throw SystemException("getaddrinfo failed");
+
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(std::stoi(_port));
+	addr.sin_port = htons(std::stoi());
 	std::fill_n(addr.sin_zero, sizeof(addr.sin_zero), '\0');
 }
 
-void Socket::setupServer(const std::string &port)
+void Socket::setupServer(const std::string &Listen)
 {
 	int option = 1;
 	if (fcntl(getFD(), F_SETFL, O_NONBLOCK) == SYSTEM_ERROR)
@@ -63,7 +79,7 @@ void Socket::setupServer(const std::string &port)
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) ==
 		SYSTEM_ERROR)
 		throw SystemException("setsockopt failed");
-	initSockaddrIn(_addr, port);
+	initSockaddrIn(_addr, Listen);
 	if (bind(getFD(), (t_sockaddr *)&_addr, sizeof(t_sockaddr_in)) ==
 		SYSTEM_ERROR)
 		throw SystemException("Bind");
