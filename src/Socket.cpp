@@ -49,7 +49,7 @@ Socket::~Socket()
 
 void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_listen)
 {
-	Logger &logger = Logger::getInstance();
+	// Logger &logger = Logger::getInstance();
 
 	size_t pos = _listen.find(":");
 	std::string host = _listen.substr(0, pos);
@@ -58,16 +58,13 @@ void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_listen)
 		port = "80";
 	else
 		port = _listen.substr(pos + 1);
-	logger.log(DEBUG,
-			   "listen: " + _listen + "\nhost: " + host + "\nport: " + port);
-
-	if (getaddrinfo(host.c_str(), port) != 0)
-		throw SystemException("getaddrinfo failed");
+	//	logger.log(DEBUG,
+	//		   "listen: " + _listen + "\nhost: " + host + "\nport: " + port);
 
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(std::stoi());
+	addr.sin_port = htons(std::stoi(port));
 	std::fill_n(addr.sin_zero, sizeof(addr.sin_zero), '\0');
 }
 

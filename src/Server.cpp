@@ -19,6 +19,11 @@ Server::~Server()
 {
 }
 
+const ServerSettings &Server::getServerSettings(void) const
+{
+	return (_server_settings);
+}
+
 int Server::getFD(void) const
 {
 	return (_socket.getFD());

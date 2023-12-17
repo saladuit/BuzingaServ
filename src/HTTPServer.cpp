@@ -26,26 +26,15 @@ int HTTPServer::run()
 		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
+		while (true)
+			handleActivePollFDs();
 	}
 	catch (const std::runtime_error &e)
 	{
 		logger.log(FATAL, e.what());
 		return (EXIT_FAILURE);
 	}
-	return (EXIT_SUCCESS);
-
-	while (true)
-	{
-		try
-		{
-			handleActivePollFDs();
-		}
-		catch (const std::runtime_error &e)
-		{
-			logger.log(FATAL, e.what());
-			return (EXIT_FAILURE);
-		}
-	}
+	//	return (EXIT_SUCCESS);
 }
 
 void HTTPServer::setupServers(void)
@@ -88,7 +77,9 @@ void HTTPServer::handleActivePollFDs()
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
-			handleNewConnection(poll_fd.fd);
+			handleNewConnection(
+				poll_fd.fd,
+				_active_servers.find(poll_fd.fd)->second->getServerSettings());
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
 			handleExistingConnection(poll_fd);
 		else
@@ -96,13 +87,13 @@ void HTTPServer::handleActivePollFDs()
 	}
 }
 
-void HTTPServer::handleNewConnection(int fd)
+void HTTPServer::handleNewConnection(int fd,
+									 const ServerSettings &ServerSettings)
 {
-	std::shared_ptr<Client> client = std::make_shared<Client>(fd);
+	std::shared_ptr<Client> client =
+		std::make_shared<Client>(fd, ServerSettings);
 	_active_clients.emplace(client->getFD(), client);
 	_poll.addPollFD(client->getFD(), POLLIN);
-	// TODO:	1. Serversetting need to be added to client class
-	//
 }
 
 void HTTPServer::handleExistingConnection(const pollfd &poll_fd)

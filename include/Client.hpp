@@ -11,7 +11,7 @@
 class Client
 {
   public:
-	Client(const int &server_fd);
+	Client(const int &server_fd, const ServerSettings &serversettings);
 	Client() = delete;
 	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
