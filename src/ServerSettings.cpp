@@ -6,11 +6,12 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
+#include <regex>
 #include <stdexcept>
 #include <string>
 
 ServerSettings::ServerSettings()
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size("3M"),
 	  _location_settings()
 {
 }
@@ -32,7 +33,7 @@ ServerSettings::~ServerSettings()
 // assigned values will fill in the ServerSettings.
 
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size("3M"),
 	  _location_settings()
 {
 	token += 2;
@@ -99,9 +100,24 @@ void ServerSettings::parseClientMaxBodySize(const Token value)
 {
 	Logger &logger = Logger::getInstance();
 
+	const std::regex rgx_pat = std::regex("^\\d{1,3}[KM]?$");
+
+	std::sregex_iterator it(value.getString().begin(), value.getString().end(),
+							rgx_pat);
+	std::sregex_iterator end;
+
+	if (std::distance(it, end) == 0)
+	{
+		logger.log(FATAL, "ConfigParser: clientmaxbodysize inpropperly "
+						  "formated: \"d{1,3}[MK]?\"");
+		throw std::runtime_error(
+			"ConfigParser: invalid value for clientmaxbodysize");
+	}
+
 	if (!_client_max_body_size.empty())
 		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
-	_client_max_body_size = value.getString();
+
+	_client_max_body_size = it->str();
 }
 
 void ServerSettings::addValueToServerSettings(

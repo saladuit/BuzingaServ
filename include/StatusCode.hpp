@@ -16,7 +16,7 @@ enum class StatusCode
 	MethodNotAllowed = 405,
 	RequestTimeout = 408,
 	LenghtRequired = 411,
-	PayloadToLarge = 413,
+	RequestBodyTooLarge = 413,
 	URIToLong = 414,
 	UnsupportedMediaType = 415,
 	InternalServerError = 500,

@@ -1,14 +1,18 @@
+#include "ClientException.hpp"
+#include "StatusCode.hpp"
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
 
+#include <climits>
 #include <string>
 
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _request_target(), _http_version(), _body(), _headers()
+	: _bytes_read(0), _content_length(0), _max_body_size(),
+	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
+	  _http_version(), _body(), _headers()
 {
 }
 
@@ -31,6 +35,28 @@ void HTTPRequest::setMethodType(const std::string &method_type)
 HTTPMethod HTTPRequest::getMethodType(void) const
 {
 	return (_methodType);
+}
+
+void HTTPRequest::setMaxBodySize(std::string inp)
+{
+	size_t pos = inp.find_first_of("KM");
+	std::string nbr = inp.substr(0, pos);
+	std::string mag;
+	if (pos != std::string::npos)
+	{
+		mag = inp.substr(pos);
+		if (mag == "K")
+			nbr += "000";
+		else // (mag == "M")
+			nbr += "000000";
+	}
+
+	_max_body_size = std::stoull(nbr);
+}
+
+ssize_t HTTPRequest::getMaxBodySize(void) const
+{
+	return (_max_body_size);
 }
 
 void HTTPRequest::setHeader(const std::string &key, const std::string &header)
@@ -121,6 +147,8 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
+		if (_body.size() >= _max_body_size)
+			throw ClientException(StatusCode::RequestEntityTooLarge);
 		if (_body.size() >= _content_length)
 		{
 			logger.log(DEBUG, "Body: " + _body);

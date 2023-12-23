@@ -38,6 +38,9 @@ class HTTPRequest
 	void setRequestTarget(const std::string &request_target);
 	const std::string &getRequestTarget(void) const;
 
+	void setMaxBodySize(std::string inp);
+	ssize_t getMaxBodySize(void) const;
+
 	void setHTTPVersion(const std::string &http_version);
 	const std::string &getHTTPVersion(void) const;
 
@@ -50,6 +53,7 @@ class HTTPRequest
   private:
 	ssize_t _bytes_read;
 	size_t _content_length;
+	ssize_t _max_body_size;
 	HTTPMethod _methodType;
 	std::string _http_request;
 	std::string _request_target;

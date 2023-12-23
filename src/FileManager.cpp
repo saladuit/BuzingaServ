@@ -68,6 +68,7 @@ ClientState FileManager::loadErrorPage(void)
 	{
 		HTTPStatus status(StatusCode::InternalServerError);
 		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
+		// TODO: shouldn't there be a return here?
 	}
 	_response += std::string(buffer);
 	if (_request_target.eof())

@@ -10,6 +10,8 @@ Client::Client(const int &server_fd, const ServerSettings &serversettings)
 	: _socket(server_fd), _ServerSetting(serversettings)
 {
 	_socket.setupClient();
+	// TODO: if more settings need to be added make separate constructor;
+	_request.setMaxBodySize(serversettings.getClientMaxBodySize());
 }
 
 Client::~Client()
@@ -35,8 +37,6 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			// Does the loading event only happen once?
-
 			_state = _file_manager.manage(
 				_request.getMethodType(),
 				"./data/www" + _request.getRequestTarget(),
