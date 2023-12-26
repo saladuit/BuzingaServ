@@ -1,7 +1,6 @@
 #ifndef SERVERSETTING_HPP
 #define SERVERSETTING_HPP
 
-#include <HTTPRequest.hpp>
 #include <LocationSettings.hpp>
 #include <Token.hpp>
 
@@ -17,8 +16,8 @@ class ServerSettings
 	ServerSettings &operator=(const ServerSettings &rhs) = delete;
 
 	// Functionality:
-	const LocationSettings &resolveLocation(const std::string &URI) const;
-	bool resolveServerName(const std::string &RequestHost);
+	const LocationSettings &resolveLocation(const std::string &request_target) const;
+//	bool resolveServerName(const std::string &RequestHost);
 
 	const std::string &getListen() const;
 	const std::string &getServerName() const;

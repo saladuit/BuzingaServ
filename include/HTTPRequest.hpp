@@ -2,6 +2,8 @@
 #define HTTP_REQUEST_HPP
 
 #include <ClientState.hpp>
+#include <ServerSettings.hpp>
+#include <LocationSettings.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -28,6 +30,7 @@ class HTTPRequest
 {
   public:
 	HTTPRequest();
+	HTTPRequest(const ServerSettings &serversetting);
 	HTTPRequest(const HTTPRequest &rhs) = delete;
 	HTTPRequest &operator=(const HTTPRequest &rhs) = delete;
 	~HTTPRequest();
@@ -53,12 +56,13 @@ class HTTPRequest
   private:
 	ssize_t _bytes_read;
 	size_t _content_length;
-	ssize_t _max_body_size;
+	size_t _max_body_size;
 	HTTPMethod _methodType;
 	std::string _http_request;
 	std::string _request_target;
 	std::string _http_version;
 	std::string _body;
+	ServerSettings _serversetting;
 	std::unordered_map<std::string, std::string> _headers;
 
 	size_t parseStartLine(size_t &i);

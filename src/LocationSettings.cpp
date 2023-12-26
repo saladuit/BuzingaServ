@@ -7,8 +7,6 @@
 #include <string>
 
 LocationSettings::LocationSettings()
-	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(),
-	  _auto_index()
 {
 }
 
@@ -41,8 +39,6 @@ LocationSettings::~LocationSettings()
 }
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
-	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(),
-	  _auto_index()
 {
 	_path = token->getString();
 	token += 2;
@@ -69,9 +65,11 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 			else if (key.getString() == "return")
 				parseReturn(*token);
 			else
+			{
 				logger.log(WARNING, "LocationSettings: unknown KEY token: " +
 										key.getString());
-
+				break ;
+			}
 			token++;
 		}
 		token++;
@@ -125,7 +123,7 @@ void LocationSettings::parseCgiPath(const Token token)
 
 	if (!_index.empty())
 		logger.log(WARNING,
-				   "ConfigParser: redefining index in locationblock: " + _path);
+				   "ConfigParser: redefining cgi_path in locationblock: " + _path);
 	_cgi_path = token.getString();
 }
 
@@ -172,7 +170,40 @@ const std::string &LocationSettings::getReturn() const
 	return (_return);
 }
 
-//
+// 
+
+const std::string LocationSettings::resolveAlias(const std::string inp) const
+{
+//	Logger &logger = Logger::getInstance();
+
+//	logger.log(DEBUG, "input: " + getPath());
+//	logger.log(DEBUG, "       01234567890123456789");
+//	logger.log(DEBUG, "alias: " + getAlias() + "\n");
+
+	std::string alias = getAlias();
+	if (alias.empty())
+		return (inp);
+	if (_path.length() == 1)
+		return (alias + inp.substr(1, inp.length() - 1));
+	
+	size_t pos_begin = alias.length() - 1;
+	size_t pos_end;
+	while (pos_end != 0)
+	{
+		pos_end = pos_begin;
+		pos_begin = alias.find_last_of("/", pos_end - 1);
+		std::string hit = alias.substr(pos_begin, pos_end - pos_begin + 1);
+//		logger.log(DEBUG,	"end: " + std::to_string(pos_end));
+//		logger.log(DEBUG, 	"begin: " + std::to_string(pos_begin));
+//		logger.log(DEBUG,	"part: " + hit);
+		if (inp.find(hit) == std::string::npos) // aka not found in inp.
+			break;
+	}
+	std::string request_target = alias.substr(0, pos_end) + inp;
+//	logger.log(DEBUG, "Found: " + request_target + "\n");
+
+	return (request_target);
+}
 
 // THIS IS PRINTING FUNCTION
 

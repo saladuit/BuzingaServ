@@ -6,12 +6,10 @@
 
 #include <sys/poll.h>
 
-Client::Client(const int &server_fd, const ServerSettings &serversettings)
-	: _socket(server_fd), _ServerSetting(serversettings)
+Client::Client(const int &server_fd, const ServerSettings &serversetting)
+	: _request(serversetting), _socket(server_fd), _serversetting(serversetting)
 {
 	_socket.setupClient();
-	// TODO: if more settings need to be added make separate constructor;
-	_request.setMaxBodySize(serversettings.getClientMaxBodySize());
 }
 
 Client::~Client()
@@ -61,7 +59,7 @@ ClientState Client::handleConnection(short events)
 		_response.clear();
 		_response.append(e.what());
 		_state = _file_manager.openErrorPage(
-			"./data/errors", e.getStatusCode()); // TODO: resolve location
+		_serversetting.getErrorDir(), e.getStatusCode());
 		return (_state);
 	}
 	return (ClientState::Unkown);

@@ -9,11 +9,12 @@
 
 #include <unistd.h>
 
-HTTPRequest::HTTPRequest()
-	: _bytes_read(0), _content_length(0), _max_body_size(),
+HTTPRequest::HTTPRequest(const ServerSettings &serversetting)
+	: _bytes_read(0), _content_length(0), _max_body_size(), 
 	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
-	  _http_version(), _body(), _headers()
+	  _http_version(), _body(), _serversetting(serversetting), _headers()
 {
+	setMaxBodySize(_serversetting.getClientMaxBodySize());
 }
 
 HTTPRequest::~HTTPRequest()
@@ -103,7 +104,10 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 	setMethodType(_http_request.substr(i, pos - i));
 	i = pos + 1;
 	pos = _http_request.find(' ', i);
-	setRequestTarget(_http_request.substr(i, pos - i));
+
+	std::string prelim = _http_request.substr(i, pos - i);
+	setRequestTarget(_serversetting.resolveLocation(prelim).resolveAlias(prelim));
+	
 	i = pos + 1;
 	pos = _http_request.find("\r\n", i);
 	setHTTPVersion(_http_request.substr(i, pos - i));
@@ -147,13 +151,13 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
-		if (_body.size() >= _max_body_size)
-			throw ClientException(StatusCode::RequestEntityTooLarge);
 		if (_body.size() >= _content_length)
 		{
 			logger.log(DEBUG, "Body: " + _body);
 			return (ClientState::Loading);
 		}
+		if (_body.size() >= _max_body_size) // @saladuit not sure if this should be before the previous ifstatement
+			throw ClientException(StatusCode::RequestBodyTooLarge);
 		return (ClientState::Receiving);
 	}
 	_http_request += std::string(buffer, _bytes_read);

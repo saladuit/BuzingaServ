@@ -23,6 +23,9 @@ class LocationSettings
 	const std::string &getReturn() const;
 	bool getAutoIndex() const;
 
+	//		resolves:
+	const std::string resolveAlias(const std::string request_target) const;
+
 	// Printing:
 	void printLocationSettings() const;
 
