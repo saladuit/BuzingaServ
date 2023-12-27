@@ -106,7 +106,11 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 	pos = _http_request.find(' ', i);
 
 	std::string prelim = _http_request.substr(i, pos - i);
-	setRequestTarget(_serversetting.resolveLocation(prelim).resolveAlias(prelim));
+	const LocationSettings &loc = _serversetting.resolveLocation(prelim);
+	
+	setRequestTarget(loc.resolveAlias(prelim));
+	if (loc.resolveMethod(_methodType))
+		throw ClientException(StatusCode::Forbidden);
 	
 	i = pos + 1;
 	pos = _http_request.find("\r\n", i);

@@ -16,6 +16,7 @@ class LocationSettings
 
 	// Functionality:
 	//		getters:
+
 	const std::string &getPath() const;
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
@@ -24,7 +25,9 @@ class LocationSettings
 	bool getAutoIndex() const;
 
 	//		resolves:
+
 	const std::string resolveAlias(const std::string request_target) const;
+	bool resolveMethod(HTTPMethod method) const;
 
 	// Printing:
 	void printLocationSettings() const;

@@ -1,6 +1,7 @@
 
-#include <LocationSettings.hpp>
 #include <Logger.hpp>
+#include <LocationSettings.hpp>
+#include <HTTPRequest.hpp>
 #include <Token.hpp>
 
 #include <stdexcept>
@@ -170,17 +171,48 @@ const std::string &LocationSettings::getReturn() const
 	return (_return);
 }
 
-// 
+const std::string MethodToString(HTTPMethod num)
+{
+	switch (num)
+	{
+	case (HTTPMethod::GET):
+		return ("GET");
+	case (HTTPMethod::POST):
+		return ("POST");
+	case (HTTPMethod::DELETE):
+		return ("DELETE");
+	}
+
+	Logger &logger = Logger::getInstance();
+	logger.log(WARNING, "LocationSettings MethodToString: unknown Method");
+	return ("UNKOWNSTRING");
+}
+
+// resolveMethod
+bool LocationSettings::resolveMethod(HTTPMethod method) const
+{
+	Logger &logger = Logger::getInstance();
+
+	if (getAllowedMethods().empty())
+		logger.log(WARNING, "ResolveMethod: No HTTPMethod specified in Locationblock: " + getPath());
+	std::stringstream ss(getAllowedMethods());
+	std::string option;
+	for (; std::getline(ss, option, ' ') ;)
+	{
+		if (option == MethodToString(method))
+			return (true);
+	}
+	return (false);
+}
+
+// resolveAlias
 
 const std::string LocationSettings::resolveAlias(const std::string inp) const
 {
-//	Logger &logger = Logger::getInstance();
-
-//	logger.log(DEBUG, "input: " + getPath());
-//	logger.log(DEBUG, "       01234567890123456789");
-//	logger.log(DEBUG, "alias: " + getAlias() + "\n");
+	Logger &logger = Logger::getInstance();
 
 	std::string alias = getAlias();
+	logger.log(DEBUG, "resolveAlias: received: " + inp + "\tAlias: " + alias);
 	if (alias.empty())
 		return (inp);
 	if (_path.length() == 1)
@@ -193,14 +225,10 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 		pos_end = pos_begin;
 		pos_begin = alias.find_last_of("/", pos_end - 1);
 		std::string hit = alias.substr(pos_begin, pos_end - pos_begin + 1);
-//		logger.log(DEBUG,	"end: " + std::to_string(pos_end));
-//		logger.log(DEBUG, 	"begin: " + std::to_string(pos_begin));
-//		logger.log(DEBUG,	"part: " + hit);
-		if (inp.find(hit) == std::string::npos) // aka not found in inp.
+		if (inp.find(hit) == std::string::npos) // aka hit not found in inp.
 			break;
 	}
 	std::string request_target = alias.substr(0, pos_end) + inp;
-//	logger.log(DEBUG, "Found: " + request_target + "\n");
 
 	return (request_target);
 }

@@ -164,9 +164,11 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-// Funcion: find the longest possible locationblock form the URI.
-// URI will be stripped from it's trailing file. (line 3)
-// and expects LocationBlock requesttarget to always start with a '/'
+// Funcion: find the longest possible locationblock that fits the request_target.
+// request_target will be stripped from it's trailing input. (line 3)
+// and expects LocationBlock requesttarget to always start and end with a '/'
+//	
+// EXAMPLES:
 //
 //	server {
 //	location / {}
@@ -184,14 +186,14 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 //
 
 const LocationSettings &
-ServerSettings::resolveLocation(const std::string &RequestTarget) const
+ServerSettings::resolveLocation(const std::string &request_target) const
 {
 	const LocationSettings *ret = nullptr;
-	std::string searched = RequestTarget.substr(0, RequestTarget.find("?"));
+	std::string searched = request_target.substr(0, request_target.find("?"));
 
 	for (const auto &instance : _location_settings)
 	{
-		const size_t pos = RequestTarget.find(instance.getPath());
+		const size_t pos = request_target.find(instance.getPath());
 
 		if (pos == std::string::npos)
 			continue;
