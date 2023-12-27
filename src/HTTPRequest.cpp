@@ -1,5 +1,5 @@
-#include "ClientException.hpp"
-#include "StatusCode.hpp"
+#include <ClientException.hpp>
+#include <StatusCode.hpp>
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
@@ -107,9 +107,11 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 
 	std::string prelim = _http_request.substr(i, pos - i);
 	const LocationSettings &loc = _serversetting.resolveLocation(prelim);
-	
+	if (prelim.find_last_of('/') == prelim.length() - 1)
+		logger.log(WARNING, "prelim end with /\t" + prelim);
+
 	setRequestTarget(loc.resolveAlias(prelim));
-	if (loc.resolveMethod(_methodType))
+	if (loc.resolveMethod(_methodType) == false)
 		throw ClientException(StatusCode::Forbidden);
 	
 	i = pos + 1;

@@ -11,7 +11,7 @@
 #include <string>
 
 ServerSettings::ServerSettings()
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size("3M"),
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 }
@@ -33,7 +33,7 @@ ServerSettings::~ServerSettings()
 // assigned values will fill in the ServerSettings.
 
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size("3M"),
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 	token += 2;

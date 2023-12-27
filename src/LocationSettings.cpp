@@ -181,19 +181,21 @@ const std::string MethodToString(HTTPMethod num)
 		return ("POST");
 	case (HTTPMethod::DELETE):
 		return ("DELETE");
+	default:
+	{
+		Logger &logger = Logger::getInstance();
+		logger.log(WARNING, "LocationSettings MethodToString: unknown Method");
+		return ("UNKOWNSTRING");
 	}
-
-	Logger &logger = Logger::getInstance();
-	logger.log(WARNING, "LocationSettings MethodToString: unknown Method");
-	return ("UNKOWNSTRING");
+	}
 }
 
 // resolveMethod
-bool LocationSettings::resolveMethod(HTTPMethod method) const
+bool LocationSettings::resolveMethod(const HTTPMethod method) const
 {
 	Logger &logger = Logger::getInstance();
 
-	if (getAllowedMethods().empty())
+	if (getAllowedMethods().empty())	
 		logger.log(WARNING, "ResolveMethod: No HTTPMethod specified in Locationblock: " + getPath());
 	std::stringstream ss(getAllowedMethods());
 	std::string option;

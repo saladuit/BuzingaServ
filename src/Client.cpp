@@ -1,5 +1,5 @@
-#include "Server.hpp"
-#include "ServerSettings.hpp"
+#include <Server.hpp>
+#include <ServerSettings.hpp>
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>

@@ -2,8 +2,6 @@
 #define HTTP_REQUEST_HPP
 
 #include <ClientState.hpp>
-#include <ServerSettings.hpp>
-#include <LocationSettings.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -17,6 +15,8 @@
 #endif
 
 // ENUM
+#ifndef HTTP_METHOD_ENUM
+#define HTTP_METHOD_ENUM
 enum class HTTPMethod
 {
 	GET,
@@ -24,6 +24,9 @@ enum class HTTPMethod
 	DELETE,
 	UNKNOWN,
 };
+#endif
+
+#include <ServerSettings.hpp>
 
 // CLASS
 class HTTPRequest

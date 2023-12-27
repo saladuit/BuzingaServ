@@ -5,6 +5,18 @@
 
 #include <string>
 
+// ENUM
+#ifndef HTTP_METHOD_ENUM
+#define HTTP_METHOD_ENUM
+enum class HTTPMethod
+{
+	GET,
+	POST,
+	DELETE,
+	UNKNOWN,
+};
+#endif
+
 class LocationSettings
 {
   public:
@@ -27,7 +39,7 @@ class LocationSettings
 	//		resolves:
 
 	const std::string resolveAlias(const std::string request_target) const;
-	bool resolveMethod(HTTPMethod method) const;
+	bool resolveMethod(const HTTPMethod method) const;
 
 	// Printing:
 	void printLocationSettings() const;
