@@ -47,7 +47,9 @@ void FileManager::openPostFile(const std::string &request_target_path)
 
 ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 									   const StatusCode &status_code)
-{
+{	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "openErrorPage method is called");
 	_request_target.open(error_pages_path +
 						 std::to_string(static_cast<int>(status_code)) +
 						 ".html");
@@ -60,6 +62,9 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 	return (ClientState::Error);
 }
 
+// still need some elaboration for this part. it seems odd to append the buffer
+// to the respons even after it goes into the if(_request_target.bad()). and if 
+// you don't go in it you've missed your statusline for the response.
 ClientState FileManager::loadErrorPage(void)
 {
 	char buffer[BUFFER_SIZE];
