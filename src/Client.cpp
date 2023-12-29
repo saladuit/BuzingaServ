@@ -1,8 +1,8 @@
-#include <Server.hpp>
-#include <ServerSettings.hpp>
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
+#include <Server.hpp>
+#include <ServerSettings.hpp>
 
 #include <sys/poll.h>
 
@@ -36,8 +36,7 @@ ClientState Client::handleConnection(short events)
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			_state = _file_manager.manage(
-				_request.getMethodType(),
-				"./data/www" + _request.getRequestTarget(),
+				_request.getMethodType(), _request.getRequestTarget(),
 				_request.getBody()); // TODO: resolve location
 			return (_state);
 		}
@@ -58,8 +57,8 @@ ClientState Client::handleConnection(short events)
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
 		_response.clear();
 		_response.append(e.what());
-		_state = _file_manager.openErrorPage(
-		_serversetting.getErrorDir(), e.getStatusCode());
+		_state = _file_manager.openErrorPage(_serversetting.getErrorDir(),
+											 e.getStatusCode());
 		return (_state);
 	}
 	return (ClientState::Unkown);

@@ -2,8 +2,8 @@
 #include <FileManager.hpp>
 #include <Logger.hpp>
 
-#include <algorithm>
 #include <filesystem>
+#include <string>
 
 FileManager::FileManager() : _response(), _request_target()
 {
@@ -15,9 +15,9 @@ FileManager::~FileManager()
 
 void FileManager::openGetFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path))
+	if (!std::filesystem::exists(request_target_path.substr(1)))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(request_target_path, std::ios::in);
+	_request_target.open(request_target_path.substr(1), std::ios::in);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -47,7 +47,8 @@ void FileManager::openPostFile(const std::string &request_target_path)
 
 ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 									   const StatusCode &status_code)
-{	Logger &logger = Logger::getInstance();
+{
+	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "openErrorPage method is called");
 	_request_target.open(error_pages_path +
@@ -73,7 +74,6 @@ ClientState FileManager::loadErrorPage(void)
 	{
 		HTTPStatus status(StatusCode::InternalServerError);
 		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
-		// TODO: @saladuit: shouldn't there be a return here? -> return(ClientState::Sending)
 	}
 	_response += std::string(buffer);
 	if (_request_target.eof())

@@ -1,7 +1,7 @@
 
-#include <Logger.hpp>
-#include <LocationSettings.hpp>
 #include <HTTPRequest.hpp>
+#include <LocationSettings.hpp>
+#include <Logger.hpp>
 #include <Token.hpp>
 
 #include <stdexcept>
@@ -69,7 +69,7 @@ LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 			{
 				logger.log(WARNING, "LocationSettings: unknown KEY token: " +
 										key.getString());
-				break ;
+				break;
 			}
 			token++;
 		}
@@ -124,7 +124,8 @@ void LocationSettings::parseCgiPath(const Token token)
 
 	if (!_index.empty())
 		logger.log(WARNING,
-				   "ConfigParser: redefining cgi_path in locationblock: " + _path);
+				   "ConfigParser: redefining cgi_path in locationblock: " +
+					   _path);
 	_cgi_path = token.getString();
 }
 
@@ -195,11 +196,13 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 {
 	Logger &logger = Logger::getInstance();
 
-	if (getAllowedMethods().empty())	
-		logger.log(WARNING, "ResolveMethod: No HTTPMethod specified in Locationblock: " + getPath());
+	if (getAllowedMethods().empty())
+		logger.log(WARNING,
+				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
+					   getPath());
 	std::stringstream ss(getAllowedMethods());
 	std::string option;
-	for (; std::getline(ss, option, ' ') ;)
+	for (; std::getline(ss, option, ' ');)
 	{
 		if (option == MethodToString(method))
 			return (true);
@@ -219,7 +222,7 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 		return (inp);
 	if (_path.length() == 1)
 		return (alias + inp.substr(1, inp.length() - 1));
-	
+
 	size_t pos_begin = alias.length() - 1;
 	size_t pos_end;
 	while (pos_end != 0)
