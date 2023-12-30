@@ -35,9 +35,9 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			_state = _file_manager.manage(
-				_request.getMethodType(), _request.getRequestTarget(),
-				_request.getBody()); // TODO: resolve location
+			_state = _file_manager.manage(_request.getMethodType(),
+										  _request.getRequestTarget(),
+										  _request.getBody());
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)

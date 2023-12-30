@@ -224,7 +224,7 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 		return (alias + inp.substr(1, inp.length() - 1));
 
 	size_t pos_begin = alias.length() - 1;
-	size_t pos_end;
+	size_t pos_end = pos_begin;
 	while (pos_end != 0)
 	{
 		pos_end = pos_begin;

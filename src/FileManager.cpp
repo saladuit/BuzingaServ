@@ -51,7 +51,7 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 	Logger &logger = Logger::getInstance();
 
 	logger.log(DEBUG, "openErrorPage method is called");
-	_request_target.open(error_pages_path +
+	_request_target.open(error_pages_path.substr(1) +
 						 std::to_string(static_cast<int>(status_code)) +
 						 ".html");
 	if (!_request_target.is_open())
@@ -64,7 +64,7 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 }
 
 // still need some elaboration for this part. it seems odd to append the buffer
-// to the respons even after it goes into the if(_request_target.bad()). and if 
+// to the respons even after it goes into the if(_request_target.bad()). and if
 // you don't go in it you've missed your statusline for the response.
 ClientState FileManager::loadErrorPage(void)
 {
@@ -86,11 +86,10 @@ ClientState FileManager::manageGet(void)
 	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE + 1];
 
-	logger.log(DEBUG, "manageGet method is called");
+	logger.log(DEBUG, "manageGet method is called: ");
 	_request_target.read(buffer, BUFFER_SIZE);
 	if (_request_target.bad())
 		throw ClientException(StatusCode::InternalServerError);
-	logger.log(DEBUG, "get buffer: " + std::string(buffer));
 	buffer[_request_target.gcount()] = '\0';
 	_response += std::string(buffer);
 	if (_request_target.eof())
@@ -129,6 +128,11 @@ ClientState FileManager::manage(HTTPMethod method,
 								const std::string &request_target_path,
 								const std::string &body)
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "FileManager::manage: " +
+						  std::to_string(static_cast<int>(method)) + " " +
+						  request_target_path + " " + body);
 	if (method == HTTPMethod::DELETE)
 		return (manageDelete(request_target_path));
 	if (method == HTTPMethod::GET)
