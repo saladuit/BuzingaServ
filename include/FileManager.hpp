@@ -3,6 +3,9 @@
 
 #include <HTTPRequest.hpp>
 #include <HTTPStatus.hpp>
+#include <LocationSettings.hpp>
+#include <ServerSettings.hpp>
+
 #include <fstream>
 #include <string>
 
@@ -11,9 +14,14 @@ class FileManager
   private:
 	std::string _response;
 	std::fstream _request_target;
+	const ServerSettings &_serversetting;
+
+	std::string applyLocationSettings(const std::string &request_target,
+									  HTTPMethod method);
 
   public:
 	FileManager();
+	FileManager(const ServerSettings &ServerSettings);
 	FileManager(const FileManager &other) = delete;
 	void operator=(const FileManager &other) = delete;
 	~FileManager();

@@ -8,12 +8,11 @@
 
 #include <unistd.h>
 
-HTTPRequest::HTTPRequest(const ServerSettings &serversetting)
+HTTPRequest::HTTPRequest()
 	: _bytes_read(0), _content_length(0), _max_body_size(),
 	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
-	  _http_version(), _body(), _serversetting(serversetting), _headers()
+	  _http_version(), _body(), _headers()
 {
-	setMaxBodySize(_serversetting.getClientMaxBodySize());
 }
 
 HTTPRequest::~HTTPRequest()
@@ -101,17 +100,10 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 
 	pos = _http_request.find(' ', i);
 	setMethodType(_http_request.substr(i, pos - i));
+
 	i = pos + 1;
 	pos = _http_request.find(' ', i);
-
-	std::string prelim = _http_request.substr(i, pos - i);
-	const LocationSettings &loc = _serversetting.resolveLocation(prelim);
-	if (prelim.find_last_of('/') == prelim.length() - 1)
-		logger.log(WARNING, "prelim is a Directory:\t" + prelim);
-
-	setRequestTarget(loc.resolveAlias(prelim));
-	if (loc.resolveMethod(_methodType) == false)
-		throw ClientException(StatusCode::Forbidden);
+	setRequestTarget(_http_request.substr(i, pos - i));
 
 	i = pos + 1;
 	pos = _http_request.find("\r\n", i);
@@ -163,7 +155,7 @@ ClientState HTTPRequest::receive(int client_fd)
 		}
 		if (_body.size() >=
 			_max_body_size) // @saladuit not sure if this should be before the
-							// previous ifstatement
+			// previous ifstatement
 			throw ClientException(StatusCode::RequestBodyTooLarge);
 		return (ClientState::Receiving);
 	}

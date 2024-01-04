@@ -31,8 +31,12 @@ ClientState HTTPResponse::send(int client_fd, const std::string &response)
 	ssize_t bytes_to_send;
 	ssize_t w_size;
 
+	//	logger.log(DEBUG, "_response: " + _response);
+	//	logger.log(DEBUG, "response: " + response);
 	if (_response.empty())
+	{
 		_response = response;
+	}
 	logger.log(INFO, "Sending response to client on fd: " +
 						 std::to_string(client_fd));
 	// logger.log(DEBUG, "response: " + _response); // this logger line gives a

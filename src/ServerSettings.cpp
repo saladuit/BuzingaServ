@@ -212,7 +212,8 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 	return (*ret);
 }
 
-/* TODO: move to relevant class, i think it should be HTTPRequest
+/* TODO:	move this method to relevant class, i think it should be Client or
+			Filemanager
 
 bool ServerSettings::resolveServerName(const std::string &RequestHost)
 {

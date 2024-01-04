@@ -2,6 +2,7 @@
 #define HTTP_REQUEST_HPP
 
 #include <ClientState.hpp>
+#include <ServerSettings.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -26,14 +27,11 @@ enum class HTTPMethod
 };
 #endif
 
-#include <ServerSettings.hpp>
-
 // CLASS
 class HTTPRequest
 {
   public:
 	HTTPRequest();
-	HTTPRequest(const ServerSettings &serversetting);
 	HTTPRequest(const HTTPRequest &rhs) = delete;
 	HTTPRequest &operator=(const HTTPRequest &rhs) = delete;
 	~HTTPRequest();
@@ -65,11 +63,11 @@ class HTTPRequest
 	std::string _request_target;
 	std::string _http_version;
 	std::string _body;
-	ServerSettings _serversetting;
 	std::unordered_map<std::string, std::string> _headers;
 
 	size_t parseStartLine(size_t &i);
 	size_t parseHeaders(size_t &i);
+	void setLocationdependancies(std::string request_target);
 };
 
 #endif

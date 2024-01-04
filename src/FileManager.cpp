@@ -5,7 +5,8 @@
 #include <filesystem>
 #include <string>
 
-FileManager::FileManager() : _response(), _request_target()
+FileManager::FileManager(const ServerSettings &ServerSettings)
+	: _response(), _request_target(), _serversetting(ServerSettings)
 {
 }
 
@@ -13,12 +14,39 @@ FileManager::~FileManager()
 {
 }
 
+std::string
+FileManager::applyLocationSettings(const std::string &request_target,
+								   HTTPMethod method)
+{
+	Logger &logger = Logger::getInstance();
+
+	const LocationSettings &loc =
+		_serversetting.resolveLocation(request_target);
+
+	if (loc.resolveMethod(method) == false)
+		throw ClientException(StatusCode::MethodNotAllowed);
+
+	if (request_target.find_last_of('/') == request_target.length() - 1)
+	{
+		logger.log(WARNING,
+				   "request_target is a Directory:\t" + request_target);
+		if (loc.getAutoIndex())
+			return (loc.resolveAlias(request_target).substr(1));
+		return (loc.resolveAlias(request_target).substr(1) + loc.getIndex());
+	}
+
+	return (loc.resolveAlias(request_target).substr(1));
+	//  substr is required to remove starting '/'		^
+}
+
 void FileManager::openGetFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path.substr(1)))
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path, HTTPMethod::GET);
+
+	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(request_target_path.substr(1),
-						 std::ios::in | std::ios::binary);
+	_request_target.open(resolved_target, std::ios::in);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -51,10 +79,13 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "openErrorPage method is called");
-	_request_target.open(error_pages_path.substr(1) +
-						 std::to_string(static_cast<int>(status_code)) +
-						 ".html");
+	logger.log(DEBUG, "openErrorPage method is called. (" + error_pages_path +
+						  std::to_string(static_cast<int>(status_code)) +
+						  ".html)");
+	_request_target.open(error_pages_path +
+							 std::to_string(static_cast<int>(status_code)) +
+							 ".html",
+						 std::ios::in);
 	if (!_request_target.is_open())
 	{
 		HTTPStatus status(status_code);
@@ -76,10 +107,14 @@ ClientState FileManager::loadErrorPage(void)
 		HTTPStatus status(StatusCode::InternalServerError);
 		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
 	}
-	_response += std::string(buffer);
+	buffer[_request_target.gcount()] = '\0';
+	_response += std::string(buffer, _request_target.gcount());
 	if (_request_target.eof())
+	{
 		return (ClientState::Sending);
-	return (ClientState::Loading);
+	}
+	return (ClientState::Error); // @saladuit changed this to Error since the
+								 // file needs to keep reading this fstream
 }
 
 ClientState FileManager::manageGet(void)

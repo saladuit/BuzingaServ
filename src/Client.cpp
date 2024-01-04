@@ -7,9 +7,11 @@
 #include <sys/poll.h>
 
 Client::Client(const int &server_fd, const ServerSettings &serversetting)
-	: _request(serversetting), _socket(server_fd), _serversetting(serversetting)
+	: _request(), _file_manager(serversetting), _socket(server_fd),
+	  _serversetting(serversetting)
 {
 	_socket.setupClient();
+	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
 }
 
 Client::~Client()
@@ -57,8 +59,11 @@ ClientState Client::handleConnection(short events)
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
 		_response.clear();
 		_response.append(e.what());
-		_state = _file_manager.openErrorPage(_serversetting.getErrorDir(),
-											 e.getStatusCode());
+		_state = _file_manager.openErrorPage(
+			_serversetting.getErrorDir().substr(1), e.getStatusCode());
+		// TODO: Fix Error page:
+		//  Error status is put in Client::_response
+		//  Error page loaded is put into FileManager::_response
 		return (_state);
 	}
 	return (ClientState::Unkown);
