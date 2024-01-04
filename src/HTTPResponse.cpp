@@ -35,7 +35,7 @@ ClientState HTTPResponse::send(int client_fd, const std::string &response)
 		_response = response;
 	logger.log(INFO, "Sending response to client on fd: " +
 						 std::to_string(client_fd));
-	//	logger.log(DEBUG, "response: " + _response); // this logger line gives a
+	// logger.log(DEBUG, "response: " + _response); // this logger line gives a
 	//	segfault when transporting /data/images/conffee-resized.jpeg
 	if (_response.length() - _bytes_sent < BUFFER_SIZE)
 		bytes_to_send = _response.length() - _bytes_sent;

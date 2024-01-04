@@ -1,15 +1,17 @@
 #!/bin/bash
 
 if [[ -z $1 ]]; then
-	SERVER_PORT="9696"
+	SERVER_PORT="8080"
 else
 	SERVER_PORT=$1
 fi
 
-HTTP_VERSION="http1.1"
+HTTP_VERSION="HTTP/1.1"
 
 SERVER_HOST="localhost"
 SERVER_LOG_DIR=../build/log/
+
+HTTP_REQUEST="./request/get.txt"
 
 echo "GET REQUEST on localhost at port $SERVER_PORT"
 echo ""

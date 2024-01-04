@@ -17,7 +17,8 @@ void FileManager::openGetFile(const std::string &request_target_path)
 {
 	if (!std::filesystem::exists(request_target_path.substr(1)))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(request_target_path.substr(1), std::ios::in);
+	_request_target.open(request_target_path.substr(1),
+						 std::ios::in | std::ios::binary);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -86,12 +87,12 @@ ClientState FileManager::manageGet(void)
 	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE + 1];
 
-	logger.log(DEBUG, "manageGet method is called: ");
+	logger.log(DEBUG, "manageGet method is called:");
 	_request_target.read(buffer, BUFFER_SIZE);
 	if (_request_target.bad())
 		throw ClientException(StatusCode::InternalServerError);
 	buffer[_request_target.gcount()] = '\0';
-	_response += std::string(buffer);
+	_response += std::string(buffer, _request_target.gcount());
 	if (_request_target.eof())
 		return (ClientState::Sending);
 	return (ClientState::Loading);
