@@ -1,11 +1,11 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <ServerSettings.hpp>
 #include <CGI.hpp>
 #include <FileManager.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
+#include <ServerSettings.hpp>
 #include <Socket.hpp>
 
 class Client

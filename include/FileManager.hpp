@@ -15,6 +15,7 @@ class FileManager
 	std::string _response;
 	std::fstream _request_target;
 	const ServerSettings &_serversetting;
+	bool _autoindex;
 
 	std::string applyLocationSettings(const std::string &request_target,
 									  HTTPMethod method);

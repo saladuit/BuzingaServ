@@ -1,3 +1,5 @@
+#include "StatusCode.hpp"
+#include <AutoIndexGenerator.hpp>
 #include <ClientException.hpp>
 #include <FileManager.hpp>
 #include <Logger.hpp>
@@ -6,7 +8,8 @@
 #include <string>
 
 FileManager::FileManager(const ServerSettings &ServerSettings)
-	: _response(), _request_target(), _serversetting(ServerSettings)
+	: _response(), _request_target(), _serversetting(ServerSettings),
+	  _autoindex(false)
 {
 }
 
@@ -18,8 +21,6 @@ std::string
 FileManager::applyLocationSettings(const std::string &request_target,
 								   HTTPMethod method)
 {
-	Logger &logger = Logger::getInstance();
-
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
@@ -28,13 +29,16 @@ FileManager::applyLocationSettings(const std::string &request_target,
 
 	if (request_target.find_last_of('/') == request_target.length() - 1)
 	{
-		logger.log(WARNING,
-				   "request_target is a Directory:\t" + request_target);
-		if (loc.getAutoIndex())
-			return (loc.resolveAlias(request_target).substr(1));
-		return (loc.resolveAlias(request_target).substr(1) + loc.getIndex());
+		if (!loc.getIndex().empty())
+			return (loc.resolveAlias(request_target).substr(1) +
+					loc.getIndex());
+		else if (loc.getAutoIndex() == false)
+			return (loc.resolveAlias(request_target).substr(1) +
+					"index.html"); // default value;
+		_request_target = AutoIndexGenerator::OpenAutoIndex(
+			loc.resolveAlias(request_target).substr(1), request_target);
+		_autoindex = true;
 	}
-
 	return (loc.resolveAlias(request_target).substr(1));
 	//  substr is required to remove starting '/'		^
 }
@@ -43,10 +47,12 @@ void FileManager::openGetFile(const std::string &request_target_path)
 {
 	const std::string resolved_target =
 		applyLocationSettings(request_target_path, HTTPMethod::GET);
+	if (_autoindex == true)
+		return;
 
 	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(resolved_target, std::ios::in);
+	_request_target.open(resolved_target, std::ios::in | std::ios::binary);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -114,7 +120,8 @@ ClientState FileManager::loadErrorPage(void)
 		return (ClientState::Sending);
 	}
 	return (ClientState::Error); // @saladuit changed this to Error since the
-								 // file needs to keep reading this fstream
+								 // file needs to keep reading this and
+								 // loadErrorPage
 }
 
 ClientState FileManager::manageGet(void)

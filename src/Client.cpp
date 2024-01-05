@@ -63,7 +63,8 @@ ClientState Client::handleConnection(short events)
 			_serversetting.getErrorDir().substr(1), e.getStatusCode());
 		// TODO: Fix Error page:
 		//  Error status is put in Client::_response
-		//  Error page loaded is put into FileManager::_response
+		//  Errorpage fsteam is put into FileManager::_response
+		//  in HTTPResponse::send this clashes in the first if statement
 		return (_state);
 	}
 	return (ClientState::Unkown);

@@ -8,6 +8,8 @@
 #include <string>
 
 LocationSettings::LocationSettings()
+	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(),
+	  _auto_index(false)
 {
 }
 
