@@ -1,8 +1,9 @@
 #ifndef AUTOINDEXGENERATOR_HPP
 #define AUTOINDEXGENERATOR_HPP
 
-#include <Logger.hpp>
+#include "Logger.hpp"
 
+#include <dirent.h>
 #include <fstream>
 #include <string>
 

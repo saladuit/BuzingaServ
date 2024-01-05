@@ -1,10 +1,10 @@
 #ifndef FILE_MANAGER_HPP
 #define FILE_MANAGER_HPP
 
-#include <HTTPRequest.hpp>
-#include <HTTPStatus.hpp>
-#include <LocationSettings.hpp>
-#include <ServerSettings.hpp>
+#include "HTTPRequest.hpp"
+#include "HTTPStatus.hpp"
+#include "LocationSettings.hpp"
+#include "ServerSettings.hpp"
 
 #include <fstream>
 #include <string>
