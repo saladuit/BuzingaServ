@@ -10,7 +10,8 @@
 namespace AutoIndexGenerator
 {
 std::fstream OpenAutoIndex(std::string directory, const std::string uri);
-std::string AutoIndexGenerator(const std::string dir);
+std::string AutoIndexGenerator(const std::string dir, const std::string uri);
+
 } // namespace AutoIndexGenerator
 
 #endif // !AUTOINDEXGENERATOR_HPP
