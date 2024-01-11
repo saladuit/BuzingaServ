@@ -21,6 +21,7 @@ std::string
 FileManager::applyLocationSettings(const std::string &request_target,
 								   HTTPMethod method)
 {
+	//  substr is required to remove starting '/'
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
@@ -40,7 +41,6 @@ FileManager::applyLocationSettings(const std::string &request_target,
 		_autoindex = true;
 	}
 	return (loc.resolveAlias(request_target).substr(1));
-	//  substr is required to remove starting '/'		^
 }
 
 void FileManager::openGetFile(const std::string &request_target_path)
@@ -48,7 +48,11 @@ void FileManager::openGetFile(const std::string &request_target_path)
 	const std::string resolved_target =
 		applyLocationSettings(request_target_path, HTTPMethod::GET);
 	if (_autoindex == true)
+	{
+		HTTPStatus status(StatusCode::OK);
+		_response += status.getStatusLine("HTTP/1.1");
 		return;
+	}
 
 	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
@@ -173,9 +177,7 @@ ClientState FileManager::manage(HTTPMethod method,
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "FileManager::manage: " +
-						  std::to_string(static_cast<int>(method)) + " " +
-						  request_target_path + " " + body);
+	logger.log(DEBUG, "FileManager::manage: ");
 	if (method == HTTPMethod::DELETE)
 		return (manageDelete(request_target_path));
 	if (method == HTTPMethod::GET)

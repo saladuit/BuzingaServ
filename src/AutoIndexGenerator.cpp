@@ -14,7 +14,7 @@ std::string excludeSpecialCharacters(std::string str)
 {
 	std::string result;
 
-	for (std::string::iterator it = str.begin(); it != str.end(); ++it)
+	for (std::string::iterator it = str.begin(); it != str.end() - 1; ++it)
 	{
 		if (*it == '/')
 			result += "_";
@@ -75,18 +75,19 @@ std::string AutoIndexGenerator::AutoIndexGenerator(const std::string dir,
 	std::string response;
 
 	// clang-format off
-	response = "<!DOCTYPE html>\n\
-		<html>\n\
-		\t<head>\n\
-		\t\t<title> Index of ";
+	response = "\
+<!DOCTYPE html>\n\
+	<html>\n\
+	<head>\n\
+	\t<title> Index of ";
 	response += uri;
 	response += "</title>\n\
-		\t</head>\n\
-		\t<body>\n\
-		\t\t<h1> Index of ";
+	</head>\n\
+	<body>\n\
+		<h1> Index of ";
 	response += uri;
 	response += "</h1>\n\
-		\t\t<table style = \"width:80%;font-size:15px\">\n\
+	\t<table style = \"width:80%;font-size:15px\">\n\
 		\t\t<tbody>\n\
 		\t\t<tr>\n\
 		\t\t\t<th style = \"text-align:left\"> File Name</th>\n\
@@ -121,7 +122,6 @@ std::fstream AutoIndexGenerator::OpenAutoIndex(std::string directory,
 	autoindex_fstream << AutoIndexGenerator(directory, uri);
 	autoindex_fstream.close();
 
-	exit(1);
 	std::fstream return_fstream(filename, std::ios::in);
 	std::remove(filename.c_str());
 
