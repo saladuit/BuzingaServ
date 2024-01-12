@@ -124,7 +124,7 @@ ClientState FileManager::loadErrorPage(void)
 		return (ClientState::Sending);
 	}
 	return (ClientState::Error); // @saladuit changed this to Error since the
-								 // file needs to keep reading this and
+								 // file needs to keep reading this fstream and
 								 // loadErrorPage
 }
 

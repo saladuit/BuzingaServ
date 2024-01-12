@@ -31,7 +31,6 @@ class FileManager
 	void openPostFile(const std::string &request_target_path);
 	ClientState openErrorPage(const std::string &error_pages_path,
 							  const StatusCode &status_code);
-	ClientState setErrorResponse(const StatusCode &status_code);
 	ClientState loadErrorPage(void);
 	ClientState manage(HTTPMethod method, const std::string &filename,
 					   const std::string &body);

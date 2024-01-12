@@ -61,10 +61,10 @@ void getTableLines(std::string &response, const std::string dir)
 		filepath = pwd.string() + "/" + dir + direnty->d_name;
 		statreturn = stat(filepath.c_str(), &filestat);
 		response += "\t\t<tr>\n\
-			\t\t\t<th style =\"text-align:left\" >" + std::string(direnty->d_name) + "</th>\n\
-			\t\t\t<th style =\"text-align:left\" >" + ((statreturn != -1) ? getStatDateLastModified(filestat) : "UNKOWN") + "</th>\n\
-			\t\t\t<th style =\"text-align:left\" >" + ((statreturn != -1) ? getStatSize(filestat) : "UNKNOWN") + "</th>\n\
-			\t\t</tr>";
+			<th style =\"text-align:left\" >" + std::string(direnty->d_name) + "</th>\n\
+			<th style =\"text-align:left\" >" + ((statreturn != -1) ? getStatDateLastModified(filestat) : "UNKOWN") + "</th>\n\
+			<th style =\"text-align:left\" >" + ((statreturn != -1) ? getStatSize(filestat) : "UNKNOWN") + "</th>\n\
+		</tr>\n";
 	}
 	// clang-format on 
 }
@@ -77,7 +77,7 @@ std::string AutoIndexGenerator::AutoIndexGenerator(const std::string dir,
 	// clang-format off
 	response = "\
 <!DOCTYPE html>\n\
-	<html>\n\
+<html>\n\
 	<head>\n\
 	\t<title> Index of ";
 	response += uri;
@@ -87,20 +87,21 @@ std::string AutoIndexGenerator::AutoIndexGenerator(const std::string dir,
 		<h1> Index of ";
 	response += uri;
 	response += "</h1>\n\
-	\t<table style = \"width:80%;font-size:15px\">\n\
-		\t\t<tbody>\n\
-		\t\t<tr>\n\
-		\t\t\t<th style = \"text-align:left\"> File Name</th>\n\
-		\t\t\t<th style = \"text-align:left\"> File Size</th>\n\
-		\t\t\t<th style = \"text-align:left\"> Last Modification</th>\n\
-		\t\t</tr>\n";
+		<hr>\n\
+		<table style = \"width:80%;font-size:15px\">\n\
+		<tbody>\n\
+		<tr>\n\
+		\t<th style = \"text-align:left\"> File Name</th>\n\
+		\t<th style = \"text-align:left\"> File Size</th>\n\
+		\t<th style = \"text-align:left\"> Last Modification</th>\n\
+		</tr>\n";
 
 	getTableLines(response, dir);
 
 	response += "\
-		\t\t</tbody>\n\
-		\t\t</table>\n\
-		\t</body>\n";
+		</tbody>\n\
+		</table>\n\
+	</body>\n";
 	// clang-format on
 	return (response);
 }
