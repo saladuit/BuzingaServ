@@ -58,13 +58,14 @@ ClientState Client::handleConnection(short events)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
 		_response.clear();
-		_response.append(e.what());
+		_file_manager.setResponse(e.what());
 		_state = _file_manager.openErrorPage(
 			_serversetting.getErrorDir().substr(1), e.getStatusCode());
 		// TODO: Fix Error page:
 		//  Error status is put in Client::_response
 		//  Errorpage fsteam is put into FileManager::_response
 		//  in HTTPResponse::send this clashes in the first if statement
+		//  FIXED
 		return (_state);
 	}
 	return (ClientState::Unkown);

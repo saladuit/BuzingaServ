@@ -199,3 +199,8 @@ const std::string &FileManager::getResponse(void) const
 {
 	return (_response);
 }
+
+void FileManager::setResponse(const std::string str)
+{
+	_response = str;
+}
