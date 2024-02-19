@@ -8,7 +8,7 @@
 #include <string>
 
 LocationSettings::LocationSettings()
-	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(),
+	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(), _redirect(),
 	  _auto_index(false)
 {
 }
@@ -16,7 +16,7 @@ LocationSettings::LocationSettings()
 LocationSettings::LocationSettings(const LocationSettings &rhs)
 	: _path(rhs._path), _alias(rhs._alias), _index(rhs._index),
 	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
-	  _auto_index(rhs._auto_index)
+	  _redirect(rhs._redirect), _auto_index(rhs._auto_index)
 {
 }
 
@@ -31,7 +31,7 @@ LocationSettings &LocationSettings::operator=(LocationSettings &rhs)
 	_index = rhs._index;
 	_allowed_methods = rhs._allowed_methods;
 	_cgi_path = rhs._cgi_path;
-	_return = rhs._return;
+	_redirect = rhs._redirect;
 	_auto_index = rhs._auto_index;
 
 	return (*this);
@@ -135,11 +135,11 @@ void LocationSettings::parseReturn(const Token token)
 {
 	Logger &logger = Logger::getInstance();
 
-	if (!_return.empty())
+	if (!_redirect.empty())
 		logger.log(WARNING,
 				   "ConfigParser: redefining return in locationblock: " +
 					   _path);
-	_return = token.getString();
+	_redirect = token.getString();
 }
 
 // Functionality:
@@ -169,9 +169,9 @@ bool LocationSettings::getAutoIndex() const
 	return (_auto_index);
 }
 
-const std::string &LocationSettings::getReturn() const
+const std::string &LocationSettings::getRedirect() const
 {
-	return (_return);
+	return (_redirect);
 }
 
 const std::string MethodToString(HTTPMethod num)
@@ -201,7 +201,7 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 	if (getAllowedMethods().empty())
 		logger.log(WARNING,
 				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
-					   getPath());
+					   getPath()); // TODO: Should throw exception?
 	std::stringstream ss(getAllowedMethods());
 	std::string option;
 	for (; std::getline(ss, option, ' ');)
@@ -251,7 +251,7 @@ void LocationSettings::printLocationSettings() const
 	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
 	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
-	logger.log(DEBUG, "\t\tReturn:\t\t" + _return);
+	logger.log(DEBUG, "\t\tRedirect:\t\t" + _redirect);
 	logger.log(DEBUG,
 			   "\t\tAutoIndex:\t\t" +
 				   (_auto_index ? std::string(" ON") : std::string(" OFF")));

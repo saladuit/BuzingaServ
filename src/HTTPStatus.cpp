@@ -6,6 +6,7 @@ std::unordered_map<StatusCode, std::string> HTTPStatus::_message = {
 	{StatusCode::Created, "Created"},
 	{StatusCode::Accepted, "Accepted"},
 	{StatusCode::NoContent, "No Content"},
+	{StatusCode::MovedPermanently, "Moved Permanently"},
 	{StatusCode::Found, "Found"},
 	{StatusCode::NotModified, "Not Modified"},
 	{StatusCode::BadRequest, "Bad Request"},

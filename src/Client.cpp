@@ -1,3 +1,5 @@
+#include "ClientState.hpp"
+#include "ReturnException.hpp"
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
@@ -66,6 +68,16 @@ ClientState Client::handleConnection(short events)
 		//  Errorpage fsteam is put into FileManager::_response
 		//  in HTTPResponse::send this clashes in the first if statement
 		//  FIXED
+		return (_state);
+	}
+	catch (ReturnException &e)
+	{
+		logger.log(ERROR, "Return exception: " + std::string(e.what()));
+		_response.clear();
+		_file_manager.setResponse(e.what());
+		_file_manager.addToResponse("Location:" + e.getRedirection() +
+									"\r\n\r\n");
+		_state = ClientState::Sending;
 		return (_state);
 	}
 	return (ClientState::Unkown);

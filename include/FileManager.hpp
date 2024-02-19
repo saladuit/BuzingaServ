@@ -39,6 +39,7 @@ class FileManager
 	ClientState manageDelete(const std::string &reqest_target_path);
 
 	const std::string &getResponse(void) const;
+	void addToResponse(const std::string str);
 	void setResponse(const std::string str);
 };
 

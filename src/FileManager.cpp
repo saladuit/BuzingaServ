@@ -2,6 +2,7 @@
 #include "AutoIndexGenerator.hpp"
 #include "ClientException.hpp"
 #include "Logger.hpp"
+#include "ReturnException.hpp"
 #include "StatusCode.hpp"
 
 #include <filesystem>
@@ -27,6 +28,8 @@ FileManager::applyLocationSettings(const std::string &request_target,
 
 	if (loc.resolveMethod(method) == false)
 		throw ClientException(StatusCode::MethodNotAllowed);
+	if (!loc.getRedirect().empty())
+		throw ReturnException(StatusCode::MovedPermanently, loc);
 
 	if (request_target.find_last_of('/') == request_target.length() - 1)
 	{
@@ -35,11 +38,14 @@ FileManager::applyLocationSettings(const std::string &request_target,
 					loc.getIndex());
 		else if (loc.getAutoIndex() == false)
 			return (loc.resolveAlias(request_target).substr(1) +
-					"index.html"); // default value;
+					"index.html"); /* default value, potential
+								 TODO: set Default values in default
+												assigner;   */
 		_request_target = AutoIndexGenerator::OpenAutoIndex(
 			loc.resolveAlias(request_target).substr(1), request_target);
 		_autoindex = true;
 	}
+
 	return (loc.resolveAlias(request_target).substr(1));
 }
 
@@ -65,9 +71,12 @@ void FileManager::openGetFile(const std::string &request_target_path)
 
 void FileManager::openPostFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path))
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path, HTTPMethod::GET);
+
+	if (!std::filesystem::exists(resolved_target))
 	{
-		_request_target.open(request_target_path, std::ios::out);
+		_request_target.open(resolved_target, std::ios::out);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::Created);
@@ -106,7 +115,7 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 }
 
 // still need some elaboration for this part. it seems odd to append the buffer
-// to the respons even after it goes into the if(_request_target.bad()). and if
+// to the response even after it goes into the if(_request_target.bad()). and if
 // you don't go in it you've missed your statusline for the response.
 ClientState FileManager::loadErrorPage(void)
 {
@@ -198,6 +207,11 @@ ClientState FileManager::manage(HTTPMethod method,
 const std::string &FileManager::getResponse(void) const
 {
 	return (_response);
+}
+
+void FileManager::addToResponse(const std::string str)
+{
+	_response += str;
 }
 
 void FileManager::setResponse(const std::string str)

@@ -49,20 +49,11 @@ void ConfigParser::ParseConfig()
 	tokenizeStream(OpenFile(), tokenlist);
 
 	syntax(tokenlist);
-	logger.log(INFO, "Syntax of " + _config_file_path + " finished");
+	logger.log(INFO, "Passed Syntax " + _config_file_path);
 
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
 
-	//	{
-	//		const LocationSettings &loc = it.resolveLocation("/t/");
-	//
-	//		logger.log(DEBUG, "LocationSettings.getRequestTarget: " +
-	//							  loc.getRequestTarget() +
-	//							  "\tcheck: " + loc.getIndex());
-	//	}
-	//
-	//
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

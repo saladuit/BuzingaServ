@@ -33,7 +33,7 @@ class LocationSettings
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
-	const std::string &getReturn() const;
+	const std::string &getRedirect() const;
 	bool getAutoIndex() const;
 
 	//		resolves:
@@ -51,7 +51,7 @@ class LocationSettings
 	std::string _index;
 	std::string _allowed_methods;
 	std::string _cgi_path;
-	std::string _return;
+	std::string _redirect;
 	bool _auto_index;
 
 	void parseAlias(const Token token);
