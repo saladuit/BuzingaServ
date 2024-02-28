@@ -75,7 +75,7 @@ ClientState Client::handleConnection(short events)
 		logger.log(ERROR, "Return exception: " + std::string(e.what()));
 		_response.clear();
 		_file_manager.setResponse(e.what());
-		_file_manager.addToResponse("Location:" + e.getRedirection() +
+		_file_manager.addToResponse("Location: " + e.getRedirection() +
 									"\r\n\r\n");
 		_state = ClientState::Sending;
 		return (_state);

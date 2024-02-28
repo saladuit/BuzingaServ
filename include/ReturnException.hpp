@@ -12,7 +12,7 @@ class ReturnException : public HTTPStatus, public std::runtime_error
 
   public:
 	ReturnException(StatusCode status, const LocationSettings &locationBlock)
-		: HTTPStatus(status), std::runtime_error(getStatusLine("HTTP/1.1")),
+		: HTTPStatus(status), std::runtime_error(getStatusLineCRLF("HTTP/1.1")),
 		  _redireciton(locationBlock.getRedirect()){};
 
 	const std::string &getRedirection(void)
