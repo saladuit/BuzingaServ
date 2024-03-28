@@ -29,7 +29,7 @@ FileManager::applyLocationSettings(const std::string &request_target,
 	if (loc.resolveMethod(method) == false)
 		throw ClientException(StatusCode::MethodNotAllowed);
 	if (!loc.getRedirect().empty())
-		throw ReturnException(StatusCode::MovedPermanently, loc);
+		throw ReturnException(StatusCode::Found, loc);
 
 	if (request_target.find_last_of('/') == request_target.length() - 1)
 	{
