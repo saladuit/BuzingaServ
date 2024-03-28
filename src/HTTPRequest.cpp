@@ -1,5 +1,7 @@
+#include <ClientException.hpp>
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
+#include <StatusCode.hpp>
 #include <SystemException.hpp>
 
 #include <string>
@@ -7,8 +9,9 @@
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _request_target(), _http_version(), _body(), _headers()
+	: _bytes_read(0), _content_length(0), _max_body_size(),
+	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
+	  _http_version(), _body(), _headers()
 {
 }
 
@@ -31,6 +34,28 @@ void HTTPRequest::setMethodType(const std::string &method_type)
 HTTPMethod HTTPRequest::getMethodType(void) const
 {
 	return (_methodType);
+}
+
+void HTTPRequest::setMaxBodySize(std::string inp)
+{
+	size_t pos = inp.find_first_of("KM");
+	std::string nbr = inp.substr(0, pos);
+	std::string mag;
+	if (pos != std::string::npos)
+	{
+		mag = inp.substr(pos);
+		if (mag == "K")
+			nbr += "000";
+		else // (mag == "M")
+			nbr += "000000";
+	}
+
+	_max_body_size = std::stoull(nbr);
+}
+
+ssize_t HTTPRequest::getMaxBodySize(void) const
+{
+	return (_max_body_size);
 }
 
 void HTTPRequest::setHeader(const std::string &key, const std::string &header)
@@ -75,9 +100,11 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 
 	pos = _http_request.find(' ', i);
 	setMethodType(_http_request.substr(i, pos - i));
+
 	i = pos + 1;
 	pos = _http_request.find(' ', i);
 	setRequestTarget(_http_request.substr(i, pos - i));
+
 	i = pos + 1;
 	pos = _http_request.find("\r\n", i);
 	setHTTPVersion(_http_request.substr(i, pos - i));
@@ -126,6 +153,10 @@ ClientState HTTPRequest::receive(int client_fd)
 			logger.log(DEBUG, "Body: " + _body);
 			return (ClientState::Loading);
 		}
+		if (_body.size() >=
+			_max_body_size) // @saladuit not sure if this should be before the
+			// previous ifstatement
+			throw ClientException(StatusCode::RequestBodyTooLarge);
 		return (ClientState::Receiving);
 	}
 	_http_request += std::string(buffer, _bytes_read);

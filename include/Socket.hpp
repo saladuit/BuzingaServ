@@ -4,6 +4,10 @@
 #include <netinet/in.h>
 #include <string>
 
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #define MAX_PENDING_CONNECTIONS 10
 
 typedef struct sockaddr_in t_sockaddr_in;

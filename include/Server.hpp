@@ -14,6 +14,7 @@ class Server
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
 	int getFD(void) const;
+	const ServerSettings &getServerSettings(void) const;
 
   private:
 	const ServerSettings &_server_settings;

@@ -110,8 +110,6 @@ std::string Token::typeToString() const
 		return ("OPEN_BRACKET");
 	case TokenType::CLOSE_BRACKET:
 		return ("CLOSE_BRACKET");
-	case TokenType::PATH:
-		return ("PATH");
 	case TokenType::WORD:
 		return ("WORD");
 	}

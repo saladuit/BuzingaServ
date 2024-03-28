@@ -20,6 +20,7 @@ class HTTPStatus
 	~HTTPStatus();
 
 	std::string getStatusLine(const std::string &version) const;
+	std::string getStatusLineCRLF(const std::string &version) const;
 	std::string getHTMLStatus(void) const;
 	StatusCode getStatusCode() const;
 };

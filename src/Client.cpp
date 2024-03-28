@@ -1,12 +1,19 @@
+#include "ClientState.hpp"
+#include "ReturnException.hpp"
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
+#include <Server.hpp>
+#include <ServerSettings.hpp>
 
 #include <sys/poll.h>
 
-Client::Client(const int &server_fd) : _socket(server_fd)
+Client::Client(const int &server_fd, const ServerSettings &serversetting)
+	: _request(), _file_manager(serversetting), _socket(server_fd),
+	  _serversetting(serversetting)
 {
 	_socket.setupClient();
+	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
 }
 
 Client::~Client()
@@ -32,10 +39,9 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
-			_state = _file_manager.manage(
-				_request.getMethodType(),
-				"./data/www" + _request.getRequestTarget(),
-				_request.getBody()); // TODO: resolve location
+			_state = _file_manager.manage(_request.getMethodType(),
+										  _request.getRequestTarget(),
+										  _request.getBody());
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)
@@ -54,9 +60,24 @@ ClientState Client::handleConnection(short events)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
 		_response.clear();
-		_response.append(e.what());
+		_file_manager.setResponse(e.what());
 		_state = _file_manager.openErrorPage(
-			"./data/errors", e.getStatusCode()); // TODO: resolve location
+			_serversetting.getErrorDir().substr(1), e.getStatusCode());
+		// TODO: Fix Error page:
+		//  Error status is put in Client::_response
+		//  Errorpage fsteam is put into FileManager::_response
+		//  in HTTPResponse::send this clashes in the first if statement
+		//  FIXED
+		return (_state);
+	}
+	catch (ReturnException &e)
+	{
+		logger.log(ERROR, "Return exception: " + std::string(e.what()));
+		_response.clear();
+		_file_manager.setResponse(e.what());
+		_file_manager.addToResponse("Location: " + e.getRedirection() +
+									"\r\n\r\n");
+		_state = ClientState::Sending;
 		return (_state);
 	}
 	return (ClientState::Unkown);

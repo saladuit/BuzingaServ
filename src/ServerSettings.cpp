@@ -6,6 +6,7 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
+#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -73,8 +74,12 @@ void validateListen(const std::string &str)
 
 void ServerSettings::parseListen(const Token value)
 {
+	Logger &logger = Logger::getInstance();
 	validateListen(value.getString());
-	_listen.append(" " + value.getString());
+
+	if (!_listen.empty())
+		logger.log(WARNING, "ConfigParser: redefining listen");
+	_listen = value.getString();
 }
 
 void ServerSettings::parseServerName(const Token value)
@@ -95,9 +100,24 @@ void ServerSettings::parseClientMaxBodySize(const Token value)
 {
 	Logger &logger = Logger::getInstance();
 
+	const std::regex rgx_pat = std::regex("^\\d{1,3}[KM]?$");
+
+	std::sregex_iterator it(value.getString().begin(), value.getString().end(),
+							rgx_pat);
+	std::sregex_iterator end;
+
+	if (std::distance(it, end) == 0)
+	{
+		logger.log(FATAL, "ConfigParser: clientmaxbodysize inpropperly "
+						  "formated: \"d{1,3}[MK]?\"");
+		throw std::runtime_error(
+			"ConfigParser: invalid value for clientmaxbodysize");
+	}
+
 	if (!_client_max_body_size.empty())
 		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
-	_client_max_body_size = value.getString();
+
+	_client_max_body_size = it->str();
 }
 
 void ServerSettings::addValueToServerSettings(
@@ -123,22 +143,6 @@ void ServerSettings::addValueToServerSettings(
 }
 
 // Functionality:
-const std::string
-methodToString(HTTPMethod method) // TODO: change data_types in function
-{
-	switch (method)
-	{
-	case (HTTPMethod::GET):
-		return ("GET");
-	case (HTTPMethod::POST):
-		return ("POST");
-	case (HTTPMethod::DELETE):
-		return ("DELETE");
-	default:
-		throw std::runtime_error("Unknown HTTPMethod");
-	}
-}
-
 //		getters:
 const std::string &ServerSettings::getListen() const
 {
@@ -160,9 +164,12 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-// Funcion: find the longest possible locationblock form the URI.
-// URI will be stripped from it's trailing file. (line 3)
-// and expects LocationBlock requesttarget to always start with a '/'
+// Funcion: find the longest possible locationblock that fits the
+// request_target. request_target will be stripped from it's trailing input.
+// (line 3) and expects LocationBlock requesttarget to always start and end with
+// a '/'
+//
+// EXAMPLES:
 //
 //	server {
 //	location / {}
@@ -179,24 +186,24 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 // /png/images/			=> /
 //
 
-const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
+const LocationSettings &
+ServerSettings::resolveLocation(const std::string &request_target) const
 {
-	LocationSettings *ret = nullptr;
-	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+	const LocationSettings *ret = nullptr;
+	std::string searched = request_target.substr(0, request_target.find("?"));
 
-	for (auto &instance : _location_settings)
+	for (const auto &instance : _location_settings)
 	{
-		const size_t pos = requesttarget.find(instance.getRequestTarget());
+		const size_t pos = request_target.find(instance.getPath());
 
 		if (pos != 0)
 			continue;
-		if (ret != nullptr)
+		if (ret == nullptr)
 		{
-			if (instance.getRequestTarget().length() >
-				ret->getRequestTarget().length())
-				ret = &instance;
+			ret = &instance;
+			continue;
 		}
-		else
+		if (instance.getPath().length() > ret->getPath().length())
 			ret = &instance;
 	}
 	if (ret == nullptr)
@@ -205,6 +212,19 @@ const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
 	return (*ret);
 }
 
+/* TODO:	move this method to relevant class, i think it should be Client or
+			Filemanager
+
+bool ServerSettings::resolveServerName(const std::string &RequestHost)
+{
+	std::stringstream ss(getServerName());
+	std::string option;
+
+	for (; std::getline(ss, option, ' ');)
+	{
+	}
+}
+*/
 // Printing:
 
 void ServerSettings::printServerSettings() const

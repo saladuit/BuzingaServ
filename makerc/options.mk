@@ -1,6 +1,6 @@
 #	Flags
 ifdef	DEBUG
-	CFLAGS					+=-g -fstandalone-debug
+	CFLAGS					+=-g #-fstandalone-debug
 
 endif
 

@@ -42,9 +42,13 @@ void Poll::pollFDs(void)
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Polling " + std::to_string(_poll_fds.size()) +
 						 " file descriptors");
-	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
+	int poll_count =
+		poll(_poll_fds.data(), _poll_fds.size(),
+			 NO_TIMEOUT); // TODO: NO_TIMEOUT is an issue. We need to make sure
+						  // Poll will time out certain Clients (e.g. Clients
+						  // won't send anymore bytes after first 10 bytes)
 	if (poll_count == SYSTEM_ERROR || poll_count == 0)
-		throw SystemException("poll"); // TODO change poll_count 0 handler
+		throw SystemException("poll"); // TODO: change poll_count 0 handler
 }
 
 std::string Poll::pollEventsToString(short events) const

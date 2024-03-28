@@ -28,7 +28,7 @@ class HTTPServer
 
 	void setupServers(void);
 	void handleActivePollFDs();
-	void handleNewConnection(int fd);
+	void handleNewConnection(int fd, const ServerSettings &ServerBlock);
 	void handleExistingConnection(const pollfd &poll_fd);
 };
 
