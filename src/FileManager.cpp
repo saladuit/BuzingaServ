@@ -114,9 +114,6 @@ ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 	return (ClientState::Error);
 }
 
-// still need some elaboration for this part. it seems odd to append the buffer
-// to the response even after it goes into the if(_request_target.bad()). and if
-// you don't go in it you've missed your statusline for the response.
 ClientState FileManager::loadErrorPage(void)
 {
 	char buffer[BUFFER_SIZE];
@@ -132,9 +129,7 @@ ClientState FileManager::loadErrorPage(void)
 	{
 		return (ClientState::Sending);
 	}
-	return (ClientState::Error); // @saladuit changed this to Error since the
-								 // file needs to keep reading this fstream and
-								 // loadErrorPage
+	return (ClientState::Error);
 }
 
 ClientState FileManager::manageGet(void)

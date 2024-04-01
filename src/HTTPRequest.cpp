@@ -148,15 +148,13 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
+		if (_body.size() >= _max_body_size)
+			throw ClientException(StatusCode::RequestBodyTooLarge);
 		if (_body.size() >= _content_length)
 		{
 			logger.log(DEBUG, "Body: " + _body);
 			return (ClientState::Loading);
 		}
-		if (_body.size() >=
-			_max_body_size) // @saladuit not sure if this should be before the
-			// previous ifstatement
-			throw ClientException(StatusCode::RequestBodyTooLarge);
 		return (ClientState::Receiving);
 	}
 	_http_request += std::string(buffer, _bytes_read);

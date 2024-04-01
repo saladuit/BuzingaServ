@@ -63,11 +63,6 @@ ClientState Client::handleConnection(short events)
 		_file_manager.setResponse(e.what());
 		_state = _file_manager.openErrorPage(
 			_serversetting.getErrorDir().substr(1), e.getStatusCode());
-		// TODO: Fix Error page:
-		//  Error status is put in Client::_response
-		//  Errorpage fsteam is put into FileManager::_response
-		//  in HTTPResponse::send this clashes in the first if statement
-		//  FIXED
 		return (_state);
 	}
 	catch (ReturnException &e)
