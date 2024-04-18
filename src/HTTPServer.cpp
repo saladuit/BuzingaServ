@@ -42,10 +42,10 @@ void HTTPServer::setupServers(void)
 	Logger &logger = Logger::getInstance();
 
 	logger.log(INFO, "Setting up server sockets");
-	const std::vector<ServerSettings> &server_settings =
-		_parser.getServerSettings();
+	const std::vector<std::vector<ServerSettings>> list =
+		_parser.sortServerSettings();
 
-	for (const auto &server_setting : server_settings)
+	for (const auto &server_setting : list)
 	{
 		std::shared_ptr<Server> server =
 			std::make_shared<Server>(server_setting);

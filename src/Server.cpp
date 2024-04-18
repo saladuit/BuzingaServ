@@ -9,7 +9,7 @@ Server::Server(const ServerSettings &server_settings)
 
 	_socket.setupServer(
 		_server_settings.getListen()); // TODO: make sure setupServer is capable
-									   // of having getListen as an input.
+	//                                       	of having getListen as an input.
 	logger.log(DEBUG, "Created Server on host:port " +
 						  _server_settings.getListen() +
 						  " on fd: " + std::to_string(_socket.getFD()));

@@ -188,7 +188,7 @@ const std::string MethodToString(HTTPMethod num)
 	{
 		Logger &logger = Logger::getInstance();
 		logger.log(WARNING, "LocationSettings MethodToString: unknown Method");
-		return ("UNKOWNSTRING");
+		return ("UNKOWNMETHOD");
 	}
 	}
 }

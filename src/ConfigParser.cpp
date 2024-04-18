@@ -19,6 +19,19 @@ ConfigParser::~ConfigParser()
 {
 }
 
+const std::vector<std::vector<ServerSettings>>
+ConfigParser::sortServerSettings()
+{
+	std::vector<std::vector<ServerSettings>> vec;
+	Logger &logger = Logger::getInstance();
+	logger.log(INFO, "sortServerSettings");
+
+	for (const ServerSettings &block : _server_settings)
+	{
+	}
+	return (vec);
+}
+
 const std::vector<ServerSettings> &ConfigParser::getServerSettings()
 {
 	return (_server_settings);

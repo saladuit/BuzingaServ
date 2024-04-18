@@ -49,17 +49,17 @@ Socket::~Socket()
 
 void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_listen)
 {
-	// Logger &logger = Logger::getInstance();
+	Logger &logger = Logger::getInstance();
 
 	size_t pos = _listen.find(":");
 	std::string host = _listen.substr(0, pos);
 	std::string port;
 	if (pos == std::string::npos)
-		port = "80";
+		port = "80"; // DEFUALT 80
 	else
 		port = _listen.substr(pos + 1);
-	//	logger.log(DEBUG,
-	//		   "listen: " + _listen + "\nhost: " + host + "\nport: " + port);
+	logger.log(DEBUG,
+			   "listen: " + _listen + "\nhost: " + host + "\nport: " + port);
 
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;

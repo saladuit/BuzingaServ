@@ -13,6 +13,7 @@ class Server
 	Server(const Server &rhs) = delete;
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
+
 	int getFD(void) const;
 	const ServerSettings &getServerSettings(void) const;
 
