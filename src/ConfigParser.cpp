@@ -7,8 +7,8 @@
 
 #include <filesystem>
 #include <iterator>
-#include <map>
 #include <netinet/in.h>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -22,36 +22,29 @@ ConfigParser::~ConfigParser()
 {
 }
 
-void ConfigParser::sortServerSettings()
+std::vector<std::vector<ServerSettings>> ConfigParser::sortServerSettings()
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "sortServerSettings");
 
-	std::map<std::string, std::vector<ServerSettings>> map_servers;
+	std::set<std::string> hpset;
+	std::vector<std::vector<ServerSettings>> vec_servers;
 
 	for (ServerSettings block : _server_settings)
 	{
-		std::map<std::string, std::vector<ServerSettings>>::iterator it =
-			map_servers.find(block.getListen());
-		if (it == map_servers.end())
+		std::set<std::string>::iterator it = hpset.find(block.getListen());
+		if (it == hpset.end())
 		{
+			hpset.emplace(block.getListen());
 			std::vector<ServerSettings> vec;
 			vec.push_back(block);
-			map_servers.emplace(block.getListen(), vec);
+			vec_servers.emplace_back(vec);
 		}
 		else
-			it->second.emplace_back(block);
+			vec_servers.at(std::distance(hpset.begin(), it))
+				.emplace_back(block);
 	}
-
-	/*
-	for (auto vec : map_servers)
-	{
-		logger.log(DEBUG, "HOST:PORT\t" + vec.second.at(0).getListen());
-		for (auto block : vec.second)
-			block.printServerSettings();
-	}
-	exit(10);
-	*/
+	return (vec_servers);
 }
 
 const std::vector<ServerSettings> &ConfigParser::getServerSettings()

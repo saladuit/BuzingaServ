@@ -8,7 +8,7 @@
 class Server
 {
   public:
-	Server(const ServerSettings &settings);
+	Server(const std::vector<ServerSettings> &server_settings);
 	Server() = delete;
 	Server(const Server &rhs) = delete;
 	Server &operator=(const Server &rhs) = delete;
@@ -18,7 +18,7 @@ class Server
 	const ServerSettings &getServerSettings(void) const;
 
   private:
-	const ServerSettings &_server_settings;
+	const std::vector<ServerSettings> _server_settings;
 	Socket _socket;
 };
 

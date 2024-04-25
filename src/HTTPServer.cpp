@@ -42,16 +42,15 @@ void HTTPServer::setupServers(void)
 	Logger &logger = Logger::getInstance();
 
 	logger.log(INFO, "Setting up server sockets");
-	_parser.sortServerSettings();
-	/*
-	for (const auto &server_setting : list)
+	std::vector<std::vector<ServerSettings>> servers =
+		_parser.sortServerSettings();
+
+	for (const std::vector<ServerSettings> &list : servers)
 	{
-		std::shared_ptr<Server> server =
-			std::make_shared<Server>(server_setting);
+		std::shared_ptr<Server> server = std::make_shared<Server>(list);
 		_active_servers.emplace(server->getFD(), server);
 		_poll.addPollFD(server->getFD(), POLLIN);
 	}
-	*/
 }
 
 void HTTPServer::handleActivePollFDs()
