@@ -6,6 +6,9 @@
 #include <Token.hpp>
 
 #include <filesystem>
+#include <iterator>
+#include <map>
+#include <netinet/in.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -19,17 +22,36 @@ ConfigParser::~ConfigParser()
 {
 }
 
-const std::vector<std::vector<ServerSettings>>
-ConfigParser::sortServerSettings()
+void ConfigParser::sortServerSettings()
 {
-	std::vector<std::vector<ServerSettings>> vec;
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "sortServerSettings");
 
-	for (const ServerSettings &block : _server_settings)
+	std::map<std::string, std::vector<ServerSettings>> map_servers;
+
+	for (ServerSettings block : _server_settings)
 	{
+		std::map<std::string, std::vector<ServerSettings>>::iterator it =
+			map_servers.find(block.getListen());
+		if (it == map_servers.end())
+		{
+			std::vector<ServerSettings> vec;
+			vec.push_back(block);
+			map_servers.emplace(block.getListen(), vec);
+		}
+		else
+			it->second.emplace_back(block);
 	}
-	return (vec);
+
+	/*
+	for (auto vec : map_servers)
+	{
+		logger.log(DEBUG, "HOST:PORT\t" + vec.second.at(0).getListen());
+		for (auto block : vec.second)
+			block.printServerSettings();
+	}
+	exit(10);
+	*/
 }
 
 const std::vector<ServerSettings> &ConfigParser::getServerSettings()

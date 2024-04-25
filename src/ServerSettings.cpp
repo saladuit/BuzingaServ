@@ -6,6 +6,8 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -51,7 +53,31 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-void validateListen(const std::string &str)
+const std::string convertHost(const std::string &str)
+{
+	Logger &logger = Logger::getInstance();
+
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+	hints.ai_socktype = SOCK_STREAM;
+
+	struct addrinfo *res = NULL;
+	int ret;
+
+	if ((ret = getaddrinfo(str.c_str(), "http", &hints, &res)) != 0)
+	{
+		logger.log(WARNING,
+				   "Unable to get IPv4: " + std::string(gai_strerror(ret)));
+		// TODO: trhow?
+	}
+	void *addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+	char ipstr[INET_ADDRSTRLEN];
+	inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+	return (std::string(ipstr));
+}
+
+const std::string validateListen(const std::string &str)
 {
 	size_t pos = str.find_first_of(":");
 	if (pos == std::string::npos || pos != str.find_last_of(":"))
@@ -63,23 +89,23 @@ void validateListen(const std::string &str)
 	try
 	{
 		int port_ = std::stoi(port);
-		if (port_ < 1 || port_ > 65535) //
+		if (port_ < 1 || port_ > 65535)
 			throw std::exception();
 	}
 	catch (std::exception &e)
 	{
-		throw std::runtime_error("Parsing Error: invalid port found in listen");
+		throw std::runtime_error("Parsing Error: found invalid PORT in listen");
 	}
+	return (convertHost(ip) + ":" + port);
 }
 
 void ServerSettings::parseListen(const Token value)
 {
 	Logger &logger = Logger::getInstance();
-	validateListen(value.getString());
 
 	if (!_listen.empty())
 		logger.log(WARNING, "ConfigParser: redefining listen");
-	_listen = value.getString();
+	_listen = validateListen(value.getString());
 }
 
 void ServerSettings::parseServerName(const Token value)
@@ -242,9 +268,9 @@ void ServerSettings::printServerSettings() const
 
 	for (auto &location_instance : _location_settings)
 	{
-		logger.log(DEBUG, "\n");
 		location_instance.printLocationSettings();
 	}
+	logger.log(DEBUG, "\n");
 
 	// We can go over the different strings by using Getline
 	//
