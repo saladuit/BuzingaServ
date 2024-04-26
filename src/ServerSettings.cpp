@@ -250,19 +250,6 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 	return (*ret);
 }
 
-/* TODO:	move this method to relevant class, i think it should be Client or
-			Filemanager
-
-bool ServerSettings::resolveServerName(const std::string &RequestHost)
-{
-	std::stringstream ss(getServerName());
-	std::string option;
-
-	for (; std::getline(ss, option, ' ');)
-	{
-	}
-}
-*/
 // Printing:
 
 void ServerSettings::printServerSettings() const

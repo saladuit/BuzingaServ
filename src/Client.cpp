@@ -21,7 +21,9 @@ Client::~Client()
 
 void Client::resolveServerSetting()
 {
-	const std::string &host = _request.getHeader("Host");
+	Logger &logger = Logger::getInstance();
+	const std::string &hp = _request.getHeader("Host");
+	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
 	{
 		std::stringstream ss(block.getServerName());
@@ -39,6 +41,7 @@ void Client::resolveServerSetting()
 		if (_request.getHeaderEnd() == false)
 			break;
 	}
+	logger.log(INFO, "Found ServerSetting: " + _serversetting.getServerName());
 	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
 	_file_manager.setServerSetting(_serversetting);
 }
