@@ -1,3 +1,4 @@
+
 #include <ClientException.hpp>
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
@@ -93,6 +94,16 @@ const std::string &HTTPRequest::getBody(void) const
 	return (_body);
 }
 
+void HTTPRequest::setHeaderEnd(bool b)
+{
+	_header_end = b;
+}
+
+bool HTTPRequest::getHeaderEnd() const
+{
+	return (_header_end);
+}
+
 size_t HTTPRequest::parseStartLine(size_t &i)
 {
 	Logger &logger = Logger::getInstance();
@@ -134,6 +145,18 @@ size_t HTTPRequest::parseHeaders(size_t &i)
 	return (i);
 }
 
+ClientState HTTPRequest::setRequestVariables(size_t pos)
+{
+	_header_end = true;
+	if (_headers.find("Content-length") != _headers.end())
+		_content_length = std::stoi(getHeader("Content-length"));
+
+	if (_content_length == 0)
+		return (ClientState::Loading);
+	_body += _http_request.substr(pos + 2);
+	return (ClientState::Receiving);
+}
+
 ClientState HTTPRequest::receive(int client_fd)
 {
 	Logger &logger = Logger::getInstance();
@@ -165,18 +188,7 @@ ClientState HTTPRequest::receive(int client_fd)
 	{
 		header_end = _http_request.substr(pos - 2, 4);
 		if (header_end == "\r\n\r\n")
-		{
-			if (_headers.find("Content-length") != _headers.end())
-			{
-				_content_length = std::stoi(getHeader("Content-length"));
-				if (_content_length == 0)
-					return (ClientState::Loading);
-				_body += _http_request.substr(pos + 2);
-				return (ClientState::Receiving);
-			}
-			else
-				return (ClientState::Loading);
-		}
+			return (setRequestVariables(pos));
 		pos = parseHeaders(i);
 	}
 	return (ClientState::Receiving);

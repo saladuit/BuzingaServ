@@ -13,7 +13,7 @@ class ServerSettings
 	ServerSettings(std::vector<Token>::iterator &token);
 	~ServerSettings();
 	ServerSettings(const ServerSettings &rhs);
-	ServerSettings &operator=(const ServerSettings &rhs) = delete;
+	ServerSettings &operator=(const ServerSettings &rhs);
 
 	// Functionality:
 	const LocationSettings &

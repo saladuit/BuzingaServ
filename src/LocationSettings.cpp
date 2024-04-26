@@ -20,7 +20,7 @@ LocationSettings::LocationSettings(const LocationSettings &rhs)
 {
 }
 
-LocationSettings &LocationSettings::operator=(LocationSettings &rhs)
+LocationSettings &LocationSettings::operator=(const LocationSettings &rhs)
 {
 	if (this == &rhs)
 		return (*this);

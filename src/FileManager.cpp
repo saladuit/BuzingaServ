@@ -8,9 +8,8 @@
 #include <filesystem>
 #include <string>
 
-FileManager::FileManager(const ServerSettings &ServerSettings)
-	: _response(), _request_target(), _serversetting(ServerSettings),
-	  _autoindex(false)
+FileManager::FileManager()
+	: _response(), _request_target(), _serversetting(), _autoindex(false)
 {
 }
 
@@ -213,4 +212,9 @@ void FileManager::addToResponse(const std::string str)
 void FileManager::setResponse(const std::string str)
 {
 	_response = str;
+}
+
+void FileManager::setServerSetting(const ServerSettings &serversetting)
+{
+	_serversetting = serversetting;
 }

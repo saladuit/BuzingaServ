@@ -11,13 +11,14 @@
 class Client
 {
   public:
-	Client(const int &server_fd, const ServerSettings &serversettings);
+	Client(const int &server_fd, std::vector<ServerSettings> &serversettings);
 	Client() = delete;
 	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
 	ClientState handleConnection(short events);
+	void resolveServerSetting();
 	int getFD(void) const;
 
   private:
@@ -26,7 +27,8 @@ class Client
 	FileManager _file_manager;
 	CGI _cgi;
 	Socket _socket;
-	ServerSettings _serversetting; // TODO: make multiple serverblocks work;
+	const std::vector<ServerSettings> &_server_list;
+	ServerSettings &_serversetting;
 	ClientState _state;
 };
 

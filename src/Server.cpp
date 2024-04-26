@@ -18,7 +18,7 @@ Server::~Server()
 {
 }
 
-const ServerSettings &Server::getServerSettings(void) const
+std::vector<ServerSettings> &Server::getServerSettings(void)
 {
 	return (_server_settings);
 }

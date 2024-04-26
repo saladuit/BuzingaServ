@@ -26,6 +26,18 @@ ServerSettings::ServerSettings(const ServerSettings &rhs)
 {
 }
 
+ServerSettings &ServerSettings::operator=(const ServerSettings &rhs)
+{
+	if (this == &rhs)
+		return (*this);
+	_listen = rhs._listen;
+	_server_name = rhs._server_name;
+	_error_dir = rhs._error_dir;
+	_client_max_body_size = rhs._client_max_body_size;
+	_location_settings = rhs._location_settings;
+	return (*this);
+}
+
 ServerSettings::~ServerSettings()
 {
 }

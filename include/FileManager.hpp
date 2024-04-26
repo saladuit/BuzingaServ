@@ -14,7 +14,7 @@ class FileManager
   private:
 	std::string _response;
 	std::fstream _request_target;
-	const ServerSettings &_serversetting;
+	ServerSettings _serversetting;
 	bool _autoindex;
 
 	std::string applyLocationSettings(const std::string &request_target,
@@ -22,7 +22,6 @@ class FileManager
 
   public:
 	FileManager();
-	FileManager(const ServerSettings &ServerSettings);
 	FileManager(const FileManager &other) = delete;
 	void operator=(const FileManager &other) = delete;
 	~FileManager();
@@ -41,6 +40,8 @@ class FileManager
 	const std::string &getResponse(void) const;
 	void addToResponse(const std::string str);
 	void setResponse(const std::string str);
+
+	void setServerSetting(const ServerSettings &serversetting);
 };
 
 #endif

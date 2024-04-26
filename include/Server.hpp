@@ -15,10 +15,10 @@ class Server
 	~Server();
 
 	int getFD(void) const;
-	const ServerSettings &getServerSettings(void) const;
+	std::vector<ServerSettings> &getServerSettings(void);
 
   private:
-	const std::vector<ServerSettings> _server_settings;
+	std::vector<ServerSettings> _server_settings;
 	Socket _socket;
 };
 

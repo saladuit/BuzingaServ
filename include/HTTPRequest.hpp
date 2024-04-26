@@ -52,9 +52,14 @@ class HTTPRequest
 	const std::string &getHeader(const std::string &key) const;
 
 	const std::string &getBody(void) const;
+	ClientState setRequestVariables(size_t pos);
 	ClientState receive(int fd);
 
+	void setHeaderEnd(bool b);
+	bool getHeaderEnd() const;
+
   private:
+	bool _header_end;
 	ssize_t _bytes_read;
 	size_t _content_length;
 	size_t _max_body_size;

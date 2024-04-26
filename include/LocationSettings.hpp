@@ -24,7 +24,7 @@ class LocationSettings
 	~LocationSettings();
 	LocationSettings(std::vector<Token>::iterator &token);
 	LocationSettings(const LocationSettings &rhs);
-	LocationSettings &operator=(LocationSettings &rhs);
+	LocationSettings &operator=(const LocationSettings &rhs);
 
 	// Functionality:
 	//		getters:

@@ -8,16 +8,39 @@
 
 #include <sys/poll.h>
 
-Client::Client(const int &server_fd, const ServerSettings &serversetting)
-	: _request(), _file_manager(serversetting), _socket(server_fd),
-	  _serversetting(serversetting)
+Client::Client(const int &server_fd, std::vector<ServerSettings> &serversetting)
+	: _request(), _file_manager(), _socket(server_fd),
+	  _server_list(serversetting), _serversetting(serversetting.at(0))
 {
 	_socket.setupClient();
-	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
 }
 
 Client::~Client()
 {
+}
+
+void Client::resolveServerSetting()
+{
+	const std::string &host = _request.getHeader("Host");
+	for (const ServerSettings &block : _server_list)
+	{
+		std::stringstream ss(block.getServerName());
+		std::string name;
+
+		for (; std::getline(ss, name, ' ');)
+		{
+			if (host == name)
+			{
+				_serversetting = block;
+				_request.setHeaderEnd(false);
+				break;
+			}
+		}
+		if (_request.getHeaderEnd() == false)
+			break;
+	}
+	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
+	_file_manager.setServerSetting(_serversetting);
 }
 
 int Client::getFD(void) const
@@ -35,6 +58,8 @@ ClientState Client::handleConnection(short events)
 		if (events & POLLIN)
 		{
 			_state = _request.receive(_socket.getFD());
+			if (_request.getHeaderEnd())
+				resolveServerSetting();
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
