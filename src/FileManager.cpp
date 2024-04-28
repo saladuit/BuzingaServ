@@ -51,7 +51,6 @@ FileManager::applyLocationSettings(const std::string &request_target,
 
 void FileManager::openGetFile(const std::string &request_target_path)
 {
-	Logger &logger = Logger::getInstance();
 	const std::string resolved_target =
 		applyLocationSettings(request_target_path, HTTPMethod::GET);
 
@@ -62,15 +61,11 @@ void FileManager::openGetFile(const std::string &request_target_path)
 		return;
 	}
 
-	logger.log(DEBUG, "REQUESTtarget: " + resolved_target);
-	if (!std::filesystem::exists(
-			resolved_target)) // TODO: ERROR: can't print image
+	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
-	logger.log(DEBUG, "file exists");
 	_request_target.open(resolved_target, std::ios::in | std::ios::binary);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
-	logger.log(DEBUG, "file can be found");
 	HTTPStatus status(StatusCode::OK);
 	_response += status.getStatusLine("HTTP/1.1");
 }
