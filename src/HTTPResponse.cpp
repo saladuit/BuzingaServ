@@ -1,8 +1,9 @@
-#include "HTTPRequest.hpp"
+#include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
 #include <Logger.hpp>
 #include <SystemException.hpp>
 
+#include <string>
 #include <unistd.h>
 
 HTTPResponse::HTTPResponse() : _bytes_sent(0), _response("")
@@ -31,10 +32,11 @@ ClientState HTTPResponse::send(int client_fd, const std::string &response)
 	ssize_t w_size;
 
 	if (_response.empty())
+	{
 		_response = response;
+	}
 	logger.log(INFO, "Sending response to client on fd: " +
 						 std::to_string(client_fd));
-	logger.log(DEBUG, "response: " + _response);
 	if (_response.length() - _bytes_sent < BUFFER_SIZE)
 		bytes_to_send = _response.length() - _bytes_sent;
 	else
@@ -43,7 +45,7 @@ ClientState HTTPResponse::send(int client_fd, const std::string &response)
 		write(client_fd, _response.substr(_bytes_sent).c_str(), bytes_to_send);
 	if (w_size == -1)
 		throw SystemException("Error: write failed on: " +
-							  std::to_string(client_fd)); // TODO handle error
+							  std::to_string(client_fd)); // TODO: handle error
 	_bytes_sent += w_size;
 	if (_bytes_sent == _response.length())
 	{

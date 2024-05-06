@@ -6,6 +6,9 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -21,6 +24,18 @@ ServerSettings::ServerSettings(const ServerSettings &rhs)
 	  _client_max_body_size(rhs._client_max_body_size),
 	  _location_settings(rhs._location_settings)
 {
+}
+
+ServerSettings &ServerSettings::operator=(const ServerSettings &rhs)
+{
+	if (this == &rhs)
+		return (*this);
+	_listen = rhs._listen;
+	_server_name = rhs._server_name;
+	_error_dir = rhs._error_dir;
+	_client_max_body_size = rhs._client_max_body_size;
+	_location_settings = rhs._location_settings;
+	return (*this);
 }
 
 ServerSettings::~ServerSettings()
@@ -50,7 +65,31 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 	}
 }
 
-void validateListen(const std::string &str)
+const std::string convertHost(const std::string &str)
+{
+	Logger &logger = Logger::getInstance();
+
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+	hints.ai_socktype = SOCK_STREAM;
+
+	struct addrinfo *res = NULL;
+	int ret;
+
+	if ((ret = getaddrinfo(str.c_str(), "http", &hints, &res)) != 0)
+	{
+		logger.log(WARNING,
+				   "Unable to get IPv4: " + std::string(gai_strerror(ret)));
+		// TODO: trhow?
+	}
+	void *addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+	char ipstr[INET_ADDRSTRLEN];
+	inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+	return (std::string(ipstr));
+}
+
+const std::string validateListen(const std::string &str)
 {
 	size_t pos = str.find_first_of(":");
 	if (pos == std::string::npos || pos != str.find_last_of(":"))
@@ -62,19 +101,23 @@ void validateListen(const std::string &str)
 	try
 	{
 		int port_ = std::stoi(port);
-		if (port_ < 1 || port_ > 65535) //
+		if (port_ < 1 || port_ > 65535)
 			throw std::exception();
 	}
 	catch (std::exception &e)
 	{
-		throw std::runtime_error("Parsing Error: invalid port found in listen");
+		throw std::runtime_error("Parsing Error: found invalid PORT in listen");
 	}
+	return (convertHost(ip) + ":" + port);
 }
 
 void ServerSettings::parseListen(const Token value)
 {
-	validateListen(value.getString());
-	_listen.append(" " + value.getString());
+	Logger &logger = Logger::getInstance();
+
+	if (!_listen.empty())
+		logger.log(WARNING, "ConfigParser: redefining listen");
+	_listen = validateListen(value.getString());
 }
 
 void ServerSettings::parseServerName(const Token value)
@@ -95,9 +138,24 @@ void ServerSettings::parseClientMaxBodySize(const Token value)
 {
 	Logger &logger = Logger::getInstance();
 
+	const std::regex rgx_pat = std::regex("^\\d{1,3}[KM]?$");
+
+	std::sregex_iterator it(value.getString().begin(), value.getString().end(),
+							rgx_pat);
+	std::sregex_iterator end;
+
+	if (std::distance(it, end) == 0)
+	{
+		logger.log(FATAL, "ConfigParser: clientmaxbodysize inpropperly "
+						  "formated: \"d{1,3}[MK]?\"");
+		throw std::runtime_error(
+			"ConfigParser: invalid value for clientmaxbodysize");
+	}
+
 	if (!_client_max_body_size.empty())
 		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
-	_client_max_body_size = value.getString();
+
+	_client_max_body_size = it->str();
 }
 
 void ServerSettings::addValueToServerSettings(
@@ -123,22 +181,6 @@ void ServerSettings::addValueToServerSettings(
 }
 
 // Functionality:
-const std::string
-methodToString(HTTPMethod method) // TODO: change data_types in function
-{
-	switch (method)
-	{
-	case (HTTPMethod::GET):
-		return ("GET");
-	case (HTTPMethod::POST):
-		return ("POST");
-	case (HTTPMethod::DELETE):
-		return ("DELETE");
-	default:
-		throw std::runtime_error("Unknown HTTPMethod");
-	}
-}
-
 //		getters:
 const std::string &ServerSettings::getListen() const
 {
@@ -160,9 +202,12 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 	return (_client_max_body_size);
 }
 
-// Funcion: find the longest possible locationblock form the URI.
-// URI will be stripped from it's trailing file. (line 3)
-// and expects LocationBlock requesttarget to always start with a '/'
+// Funcion: find the longest possible locationblock that fits the
+// request_target. request_target will be stripped from it's trailing input.
+// (line 3) and expects LocationBlock requesttarget to always start and end with
+// a '/'
+//
+// EXAMPLES:
 //
 //	server {
 //	location / {}
@@ -179,24 +224,24 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 // /png/images/			=> /
 //
 
-const LocationSettings &ServerSettings::resolveLocation(const std::string &URI)
+const LocationSettings &
+ServerSettings::resolveLocation(const std::string &request_target) const
 {
-	LocationSettings *ret = nullptr;
-	const std::string requesttarget = URI.substr(0, URI.find_last_of("/") + 1);
+	const LocationSettings *ret = nullptr;
+	std::string searched = request_target.substr(0, request_target.find("?"));
 
-	for (auto &instance : _location_settings)
+	for (const auto &instance : _location_settings)
 	{
-		const size_t pos = requesttarget.find(instance.getRequestTarget());
+		const size_t pos = request_target.find(instance.getPath());
 
 		if (pos != 0)
 			continue;
-		if (ret != nullptr)
+		if (ret == nullptr)
 		{
-			if (instance.getRequestTarget().length() >
-				ret->getRequestTarget().length())
-				ret = &instance;
+			ret = &instance;
+			continue;
 		}
-		else
+		if (instance.getPath().length() > ret->getPath().length())
 			ret = &instance;
 	}
 	if (ret == nullptr)
@@ -222,9 +267,9 @@ void ServerSettings::printServerSettings() const
 
 	for (auto &location_instance : _location_settings)
 	{
-		logger.log(DEBUG, "\n");
 		location_instance.printLocationSettings();
 	}
+	logger.log(DEBUG, "\n");
 
 	// We can go over the different strings by using Getline
 	//

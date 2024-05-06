@@ -44,7 +44,7 @@ void Poll::pollFDs(void)
 						 " file descriptors");
 	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
 	if (poll_count == SYSTEM_ERROR || poll_count == 0)
-		throw SystemException("poll"); // TODO change poll_count 0 handler
+		throw SystemException("poll"); // TODO: change poll_count 0 handler
 }
 
 std::string Poll::pollEventsToString(short events) const

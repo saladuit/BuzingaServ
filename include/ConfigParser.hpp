@@ -29,6 +29,7 @@ class ConfigParser
 	void ParseConfig();
 
 	const std::vector<ServerSettings> &getServerSettings();
+	std::vector<std::vector<ServerSettings>> sortServerSettings();
 };
 
 void tokenizeStream(std::stringstream sstream,

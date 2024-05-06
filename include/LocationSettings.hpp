@@ -5,6 +5,18 @@
 
 #include <string>
 
+// ENUM
+#ifndef HTTP_METHOD_ENUM
+#define HTTP_METHOD_ENUM
+enum class HTTPMethod
+{
+	GET,
+	POST,
+	DELETE,
+	UNKNOWN,
+};
+#endif
+
 class LocationSettings
 {
   public:
@@ -12,31 +24,34 @@ class LocationSettings
 	~LocationSettings();
 	LocationSettings(std::vector<Token>::iterator &token);
 	LocationSettings(const LocationSettings &rhs);
-	LocationSettings &operator=(const LocationSettings &rhs) = delete;
+	LocationSettings &operator=(const LocationSettings &rhs);
 
 	// Functionality:
 	//		getters:
-	const std::string &getRequestTarget() const;
+
+	const std::string &getPath() const;
 	const std::string &getAlias() const;
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
-	const std::string &getReturn() const;
+	const std::string &getRedirect() const;
 	bool getAutoIndex() const;
 
-	//		setters:
-	void setDir(const std::string &path);
+	//		resolves:
+
+	const std::string resolveAlias(const std::string request_target) const;
+	bool resolveMethod(const HTTPMethod method) const;
 
 	// Printing:
 	void printLocationSettings() const;
 
   private:
-	std::string _requesttarget;
+	std::string _path;
 
 	std::string _alias;
 	std::string _index;
 	std::string _allowed_methods;
 	std::string _cgi_path;
-	std::string _return;
+	std::string _redirect;
 	bool _auto_index;
 
 	void parseAlias(const Token token);

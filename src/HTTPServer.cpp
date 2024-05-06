@@ -26,6 +26,8 @@ int HTTPServer::run()
 		_parser.ParseConfig();
 		setupServers();
 		logger.log(INFO, "Server started");
+		while (true)
+			handleActivePollFDs();
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -33,19 +35,6 @@ int HTTPServer::run()
 		return (EXIT_FAILURE);
 	}
 	return (EXIT_SUCCESS);
-
-	while (true)
-	{
-		try
-		{
-			handleActivePollFDs();
-		}
-		catch (const std::runtime_error &e)
-		{
-			logger.log(FATAL, e.what());
-			return (EXIT_FAILURE);
-		}
-	}
 }
 
 void HTTPServer::setupServers(void)
@@ -53,13 +42,12 @@ void HTTPServer::setupServers(void)
 	Logger &logger = Logger::getInstance();
 
 	logger.log(INFO, "Setting up server sockets");
-	const std::vector<ServerSettings> &server_settings =
-		_parser.getServerSettings();
+	std::vector<std::vector<ServerSettings>> server_list =
+		_parser.sortServerSettings();
 
-	for (const auto &server_setting : server_settings)
+	for (const std::vector<ServerSettings> &list : server_list)
 	{
-		std::shared_ptr<Server> server =
-			std::make_shared<Server>(server_setting);
+		std::shared_ptr<Server> server = std::make_shared<Server>(list);
 		_active_servers.emplace(server->getFD(), server);
 		_poll.addPollFD(server->getFD(), POLLIN);
 	}
@@ -88,7 +76,9 @@ void HTTPServer::handleActivePollFDs()
 							  " revents: " +
 							  _poll.pollEventsToString(poll_fd.revents));
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
-			handleNewConnection(poll_fd.fd);
+			handleNewConnection(
+				poll_fd.fd,
+				_active_servers.find(poll_fd.fd)->second->getServerSettings());
 		else if (_active_clients.find(poll_fd.fd) != _active_clients.end())
 			handleExistingConnection(poll_fd);
 		else
@@ -96,9 +86,11 @@ void HTTPServer::handleActivePollFDs()
 	}
 }
 
-void HTTPServer::handleNewConnection(int fd)
+void HTTPServer::handleNewConnection(
+	int fd, std::vector<ServerSettings> &ServerSettings)
 {
-	std::shared_ptr<Client> client = std::make_shared<Client>(fd);
+	std::shared_ptr<Client> client =
+		std::make_shared<Client>(fd, ServerSettings);
 	_active_clients.emplace(client->getFD(), client);
 	_poll.addPollFD(client->getFD(), POLLIN);
 }

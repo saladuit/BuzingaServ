@@ -1,7 +1,6 @@
 #ifndef SERVERSETTING_HPP
 #define SERVERSETTING_HPP
 
-#include <HTTPRequest.hpp>
 #include <LocationSettings.hpp>
 #include <Token.hpp>
 
@@ -14,10 +13,12 @@ class ServerSettings
 	ServerSettings(std::vector<Token>::iterator &token);
 	~ServerSettings();
 	ServerSettings(const ServerSettings &rhs);
-	ServerSettings &operator=(const ServerSettings &rhs) = delete;
+	ServerSettings &operator=(const ServerSettings &rhs);
 
 	// Functionality:
-	const LocationSettings &resolveLocation(const std::string &request_target);
+	const LocationSettings &
+	resolveLocation(const std::string &request_target) const;
+
 	const std::string &getListen() const;
 	const std::string &getServerName() const;
 	const std::string &getErrorDir() const;
@@ -33,6 +34,8 @@ class ServerSettings
 	std::string _client_max_body_size;
 	std::vector<LocationSettings> _location_settings;
 
+	const LocationSettings &getRootLocationBlock() const;
+
 	// Parsing:
 	void addValueToServerSettings(const Token &key,
 								  std::vector<Token>::iterator &value);
@@ -40,9 +43,6 @@ class ServerSettings
 	void parseServerName(const Token value);
 	void parseErrorDir(const Token value);
 	void parseClientMaxBodySize(const Token value);
-
-	// TODO: methods fucntion that can resolve if a read/write/delete can be
-	// done on a certain location in the LocationSettings
 };
 
 #endif

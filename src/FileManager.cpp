@@ -1,11 +1,15 @@
-#include <ClientException.hpp>
-#include <FileManager.hpp>
-#include <Logger.hpp>
+#include "FileManager.hpp"
+#include "AutoIndexGenerator.hpp"
+#include "ClientException.hpp"
+#include "Logger.hpp"
+#include "ReturnException.hpp"
+#include "StatusCode.hpp"
 
-#include <algorithm>
 #include <filesystem>
+#include <string>
 
-FileManager::FileManager() : _response(), _request_target()
+FileManager::FileManager()
+	: _response(), _request_target(), _serversetting(), _autoindex(false)
 {
 }
 
@@ -13,11 +17,53 @@ FileManager::~FileManager()
 {
 }
 
+std::string
+FileManager::applyLocationSettings(const std::string &request_target,
+								   HTTPMethod method)
+{
+
+	//  substr is required to remove starting '/'
+	const LocationSettings &loc =
+		_serversetting.resolveLocation(request_target);
+
+	if (loc.resolveMethod(method) == false)
+		throw ClientException(StatusCode::MethodNotAllowed);
+	if (!loc.getRedirect().empty())
+		throw ReturnException(StatusCode::Found, loc);
+
+	if (request_target.find_last_of('/') == request_target.length() - 1)
+	{
+		if (!loc.getIndex().empty())
+			return (loc.resolveAlias(request_target).substr(1) +
+					loc.getIndex());
+		else if (loc.getAutoIndex() == false)
+			return (loc.resolveAlias(request_target).substr(1) +
+					"index.html"); /* default value, potential
+								 TODO: set Default values in default
+												assigner;   */
+		_request_target = AutoIndexGenerator::OpenAutoIndex(
+			loc.resolveAlias(request_target).substr(1), request_target);
+		_autoindex = true;
+	}
+
+	return (loc.resolveAlias(request_target).substr(1));
+}
+
 void FileManager::openGetFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path))
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path, HTTPMethod::GET);
+
+	if (_autoindex == true)
+	{
+		HTTPStatus status(StatusCode::OK);
+		_response += status.getStatusLine("HTTP/1.1");
+		return;
+	}
+
+	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(request_target_path, std::ios::in);
+	_request_target.open(resolved_target, std::ios::in | std::ios::binary);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -26,9 +72,12 @@ void FileManager::openGetFile(const std::string &request_target_path)
 
 void FileManager::openPostFile(const std::string &request_target_path)
 {
-	if (!std::filesystem::exists(request_target_path))
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path, HTTPMethod::GET);
+
+	if (!std::filesystem::exists(resolved_target))
 	{
-		_request_target.open(request_target_path, std::ios::out);
+		_request_target.open(resolved_target, std::ios::out);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::Created);
@@ -48,9 +97,15 @@ void FileManager::openPostFile(const std::string &request_target_path)
 ClientState FileManager::openErrorPage(const std::string &error_pages_path,
 									   const StatusCode &status_code)
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "openErrorPage method is called. (" + error_pages_path +
+						  std::to_string(static_cast<int>(status_code)) +
+						  ".html)");
 	_request_target.open(error_pages_path +
-						 std::to_string(static_cast<int>(status_code)) +
-						 ".html");
+							 std::to_string(static_cast<int>(status_code)) +
+							 ".html",
+						 std::ios::in);
 	if (!_request_target.is_open())
 	{
 		HTTPStatus status(status_code);
@@ -69,10 +124,13 @@ ClientState FileManager::loadErrorPage(void)
 		HTTPStatus status(StatusCode::InternalServerError);
 		_response = status.getStatusLine("HTTP/1.1") + status.getHTMLStatus();
 	}
-	_response += std::string(buffer);
+	buffer[_request_target.gcount()] = '\0';
+	_response += std::string(buffer, _request_target.gcount());
 	if (_request_target.eof())
+	{
 		return (ClientState::Sending);
-	return (ClientState::Loading);
+	}
+	return (ClientState::Error);
 }
 
 ClientState FileManager::manageGet(void)
@@ -80,13 +138,12 @@ ClientState FileManager::manageGet(void)
 	Logger &logger = Logger::getInstance();
 	char buffer[BUFFER_SIZE + 1];
 
-	logger.log(DEBUG, "manageGet method is called");
+	logger.log(DEBUG, "manageGet method is called:");
 	_request_target.read(buffer, BUFFER_SIZE);
 	if (_request_target.bad())
 		throw ClientException(StatusCode::InternalServerError);
-	logger.log(DEBUG, "get buffer: " + std::string(buffer));
 	buffer[_request_target.gcount()] = '\0';
-	_response += std::string(buffer);
+	_response += std::string(buffer, _request_target.gcount());
 	if (_request_target.eof())
 		return (ClientState::Sending);
 	return (ClientState::Loading);
@@ -123,6 +180,9 @@ ClientState FileManager::manage(HTTPMethod method,
 								const std::string &request_target_path,
 								const std::string &body)
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "FileManager::manage: ");
 	if (method == HTTPMethod::DELETE)
 		return (manageDelete(request_target_path));
 	if (method == HTTPMethod::GET)
@@ -143,4 +203,19 @@ ClientState FileManager::manage(HTTPMethod method,
 const std::string &FileManager::getResponse(void) const
 {
 	return (_response);
+}
+
+void FileManager::addToResponse(const std::string str)
+{
+	_response += str;
+}
+
+void FileManager::setResponse(const std::string str)
+{
+	_response = str;
+}
+
+void FileManager::setServerSetting(const ServerSettings &serversetting)
+{
+	_serversetting = serversetting;
 }
