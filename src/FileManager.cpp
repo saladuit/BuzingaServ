@@ -73,7 +73,7 @@ void FileManager::openGetFile(const std::string &request_target_path)
 void FileManager::openPostFile(const std::string &request_target_path)
 {
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path, HTTPMethod::GET);
+		applyLocationSettings(request_target_path, HTTPMethod::POST);
 
 	if (!std::filesystem::exists(resolved_target))
 	{
@@ -85,8 +85,7 @@ void FileManager::openPostFile(const std::string &request_target_path)
 	}
 	else
 	{
-		_request_target.open(request_target_path,
-							 std::ios::out | std::ios::app);
+		_request_target.open(resolved_target, std::ios::out | std::ios::app);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::OK);
