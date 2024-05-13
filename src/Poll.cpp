@@ -46,7 +46,7 @@ void Poll::pollFDs(void)
 	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
 	logger.log(DEBUG, "foo");
 	if (poll_count == SYSTEM_ERROR || poll_count == 0)
-		throw SystemException("poll"); // TODO change poll_count 0 handler
+		throw SystemException("poll"); // TODO: change poll_count 0 handler
 }
 
 std::string Poll::pollEventsToString(short events) const

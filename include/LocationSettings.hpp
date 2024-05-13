@@ -4,18 +4,18 @@
 #include <Token.hpp>
 
 #include <string>
-#include <unordered_map>
-#include <vector>
 
-enum class LocationSettingOption
+// ENUM
+#ifndef HTTP_METHOD_ENUM
+#define HTTP_METHOD_ENUM
+enum class HTTPMethod
 {
-	Prefix,
-	Root,
-	Index,
-	DirectoryListing,
-	AllowedMethods,
-	CgiPass,
+	GET,
+	POST,
+	DELETE,
+	UNKNOWN,
 };
+#endif
 
 class LocationSettings
 {
@@ -24,25 +24,41 @@ class LocationSettings
 	~LocationSettings();
 	LocationSettings(std::vector<Token>::iterator &token);
 	LocationSettings(const LocationSettings &rhs);
-	LocationSettings &operator=(const LocationSettings &rhs) = delete;
+	LocationSettings &operator=(const LocationSettings &rhs);
 
-	const std::vector<std::string> &
-	getValues(LocationSettingOption setting) const;
-	void addValue(LocationSettingOption key, const std::string &value);
+	// Functionality:
+	//		getters:
 
 	const std::string &getPath() const;
-	void setPath(const std::string &path);
+	const std::string &getAlias() const;
+	const std::string &getIndex() const;
+	const std::string &getAllowedMethods() const;
+	const std::string &getRedirect() const;
+	bool getAutoIndex() const;
 
+	//		resolves:
+
+	const std::string resolveAlias(const std::string request_target) const;
+	bool resolveMethod(const HTTPMethod method) const;
+
+	// Printing:
 	void printLocationSettings() const;
 
-	std::string keyToString(LocationSettingOption Key) const;
-	std::string valuesToString(LocationSettingOption Key) const;
-
   private:
-	std::unordered_map<LocationSettingOption, std::vector<std::string>>
-		_setting;
 	std::string _path;
 
-	LocationSettingOption identifyLocationSetting(const std::string &token);
+	std::string _alias;
+	std::string _index;
+	std::string _allowed_methods;
+	std::string _cgi_path;
+	std::string _redirect;
+	bool _auto_index;
+
+	void parseAlias(const Token token);
+	void parseIndex(const Token token);
+	void parseAutoIndex(const Token token);
+	void parseAllowedMethods(const Token token);
+	void parseCgiPath(const Token token);
+	void parseReturn(const Token token);
 };
 #endif // !LOCATIONSETTING_HPP

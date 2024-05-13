@@ -1,6 +1,7 @@
 #	Flags
 ifdef	DEBUG
-	CFLAGS					+=-g
+	CFLAGS					+=-g #-fstandalone-debug
+
 endif
 
 ifdef	FSAN

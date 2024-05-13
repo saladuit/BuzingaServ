@@ -8,15 +8,17 @@
 class Server
 {
   public:
-	Server(const ServerSettings &settings);
+	Server(const std::vector<ServerSettings> &server_settings);
 	Server() = delete;
 	Server(const Server &rhs) = delete;
 	Server &operator=(const Server &rhs) = delete;
 	~Server();
+
 	int getFD(void) const;
+	std::vector<ServerSettings> &getServerSettings(void);
 
   private:
-	const ServerSettings &_server_settings;
+	std::vector<ServerSettings> _server_settings;
 	Socket _socket;
 };
 

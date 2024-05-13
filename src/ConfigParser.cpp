@@ -1,13 +1,15 @@
 
 #include <ConfigParser.hpp>
+#include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
 #include <Token.hpp>
 
 #include <filesystem>
-#include <ios>
+#include <iterator>
+#include <netinet/in.h>
+#include <set>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -18,6 +20,31 @@ ConfigParser::ConfigParser(const std::string &file_path)
 
 ConfigParser::~ConfigParser()
 {
+}
+
+std::vector<std::vector<ServerSettings>> ConfigParser::sortServerSettings()
+{
+	Logger &logger = Logger::getInstance();
+	logger.log(INFO, "sortServerSettings");
+
+	std::set<std::string> hpset;
+	std::vector<std::vector<ServerSettings>> vec_servers;
+
+	for (ServerSettings block : _server_settings)
+	{
+		std::set<std::string>::iterator it = hpset.find(block.getListen());
+		if (it == hpset.end())
+		{
+			hpset.emplace(block.getListen());
+			std::vector<ServerSettings> vec;
+			vec.push_back(block);
+			vec_servers.emplace_back(vec);
+		}
+		else
+			vec_servers.at(std::distance(hpset.begin(), it))
+				.emplace_back(block);
+	}
+	return (vec_servers);
 }
 
 const std::vector<ServerSettings> &ConfigParser::getServerSettings()
@@ -49,12 +76,12 @@ void ConfigParser::ParseConfig()
 
 	tokenizeStream(OpenFile(), tokenlist);
 
+	syntax(tokenlist);
+	logger.log(INFO, "Passed Syntax " + _config_file_path);
+
 	for (std::vector<Token>::iterator it = tokenlist.begin();
 		 it != tokenlist.end(); it++)
 		_server_settings.emplace_back(ServerSettings(it));
-
-	for (auto &it : _server_settings)
-		it.printServerSettings();
 
 	logger.log(INFO, "Parsed configfile: " + _config_file_path);
 }

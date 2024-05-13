@@ -4,6 +4,7 @@
 #include <LocationSettings.hpp>
 #include <ServerSettings.hpp>
 
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,6 +16,7 @@ class ConfigParser
 	std::vector<ServerSettings> _server_settings;
 
 	std::stringstream OpenFile();
+	void syntax(std::vector<Token> token);
 
   public:
 	ConfigParser(const std::string &file_path);
@@ -27,6 +29,7 @@ class ConfigParser
 	void ParseConfig();
 
 	const std::vector<ServerSettings> &getServerSettings();
+	std::vector<std::vector<ServerSettings>> sortServerSettings();
 };
 
 void tokenizeStream(std::stringstream sstream,

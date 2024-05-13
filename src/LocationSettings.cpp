@@ -1,156 +1,258 @@
 
+#include <HTTPRequest.hpp>
 #include <LocationSettings.hpp>
 #include <Logger.hpp>
 #include <Token.hpp>
 
-#include <array>
+#include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
-LocationSettings::LocationSettings() : _setting(), _path()
+LocationSettings::LocationSettings()
+	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(), _redirect(),
+	  _auto_index(false)
 {
 }
 
-LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
+LocationSettings::LocationSettings(const LocationSettings &rhs)
+	: _path(rhs._path), _alias(rhs._alias), _index(rhs._index),
+	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
+	  _redirect(rhs._redirect), _auto_index(rhs._auto_index)
 {
-	if (token->getString() != "location")
-		throw std::runtime_error(
-			"unrecognised token in Configfile at token: " +
-			token->getString()); // TODO: Make unrecognised token exception
+}
 
-	std::vector<Token>::iterator tmp = token;
-	token++;
+LocationSettings &LocationSettings::operator=(const LocationSettings &rhs)
+{
+	if (this == &rhs)
+		return (*this);
 
-	_path = token->getString();
-	token += 2;
+	_path = rhs._path;
 
-	while (token->getType() != TokenType::CLOSE_BRACKET)
-	{
-		const LocationSettingOption key =
-			identifyLocationSetting(token->getString());
-		tmp = token;
+	_alias = rhs._alias;
+	_index = rhs._index;
+	_allowed_methods = rhs._allowed_methods;
+	_cgi_path = rhs._cgi_path;
+	_redirect = rhs._redirect;
+	_auto_index = rhs._auto_index;
 
-		token++;
-		while (token->getType() != TokenType::SEMICOLON)
-		{
-			if (_setting
-					.try_emplace(key,
-								 std::vector<std::string>{token->getString()})
-					.second == false)
-				_setting.at(key).push_back(token->getString());
-			token++;
-		}
-		token++;
-	}
-	token++;
+	return (*this);
 }
 
 LocationSettings::~LocationSettings()
 {
 }
 
-LocationSettings::LocationSettings(const LocationSettings &rhs)
-	: _setting(rhs._setting), _path(rhs._path)
+LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
 {
+	_path = token->getString();
+	token += 2;
+
+	while (token->getType() != TokenType::CLOSE_BRACKET)
+	{
+		Logger &logger = Logger::getInstance();
+
+		const Token key = *token;
+		token++;
+
+		while (token->getType() != TokenType::SEMICOLON)
+		{
+			if (key.getString() == "alias")
+				parseAlias(*token);
+			else if (key.getString() == "index")
+				parseIndex(*token);
+			else if (key.getString() == "autoindex")
+				parseAutoIndex(*token);
+			else if (key.getString() == "allowed_methods")
+				parseAllowedMethods(*token);
+			else if (key.getString() == "cgi")
+				parseCgiPath(*token);
+			else if (key.getString() == "return")
+				parseReturn(*token);
+			else
+			{
+				logger.log(WARNING, "LocationSettings: unknown KEY token: " +
+										key.getString());
+				break;
+			}
+			token++;
+		}
+		token++;
+	}
 }
 
-LocationSettingOption
-LocationSettings::identifyLocationSetting(const std::string &token)
+void LocationSettings::parseAlias(const Token token)
 {
-	if (token == "prefix")
-		return (LocationSettingOption::Prefix);
-	else if (token == "root")
-		return (LocationSettingOption::Root);
-	else if (token == "index")
-		return (LocationSettingOption::Index);
-	else if (token == "directory_listing")
-		return (LocationSettingOption::DirectoryListing);
-	else if (token == "allow_methods")
-		return (LocationSettingOption::AllowedMethods);
-	else if (token == "cgipass")
-		return (LocationSettingOption::CgiPass);
+	Logger &logger = Logger::getInstance();
+
+	if (!_alias.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining alias in locationblock: " + _path);
+	_alias = token.getString();
+}
+
+void LocationSettings::parseIndex(const Token token)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_index.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining index in locationblock: " + _path);
+	_index = token.getString();
+}
+
+void LocationSettings::parseAutoIndex(const Token token)
+{
+	if (token.getString() == "on")
+		_auto_index = true;
+	else if (token.getString() == "off")
+		_auto_index = false;
 	else
-		throw std::runtime_error("Unknow Key Token in LocationSettings" +
-								 token);
+		throw std::runtime_error("ConfigParser: Unknown VALUE for autoindex: " +
+								 token.getString());
 }
 
-const std::vector<std::string> &
-LocationSettings::getValues(LocationSettingOption setting) const
+void LocationSettings::parseAllowedMethods(const Token token)
 {
-	return (_setting.at(setting));
+	if (token.getString() != "GET" && token.getString() != "POST" &&
+		token.getString() != "DELETE")
+		throw std::runtime_error(
+			"ConfigParser: Unknown VALUE for allowed_methods: " +
+			token.getString());
+	_allowed_methods.append(" " + token.getString());
 }
 
-void LocationSettings::addValue(LocationSettingOption key,
-								const std::string &value)
+void LocationSettings::parseCgiPath(const Token token)
 {
-	std::vector<std::string> vect = _setting.at(key);
-	vect.emplace_back(value);
+	Logger &logger = Logger::getInstance();
+
+	if (!_index.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining cgi_path in locationblock: " +
+					   _path);
+	_cgi_path = token.getString();
 }
 
+void LocationSettings::parseReturn(const Token token)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_redirect.empty())
+		logger.log(WARNING,
+				   "ConfigParser: redefining return in locationblock: " +
+					   _path);
+	_redirect = token.getString();
+}
+
+// Functionality:
+//		getters:
 const std::string &LocationSettings::getPath() const
 {
 	return (_path);
 }
 
-void LocationSettings::setPath(const std::string &path)
+const std::string &LocationSettings::getAlias() const
 {
-	_path = path;
+	return (_alias);
+}
+
+const std::string &LocationSettings::getIndex() const
+{
+	return (_index);
+}
+
+const std::string &LocationSettings::getAllowedMethods() const
+{
+	return (_allowed_methods);
+}
+
+bool LocationSettings::getAutoIndex() const
+{
+	return (_auto_index);
+}
+
+const std::string &LocationSettings::getRedirect() const
+{
+	return (_redirect);
+}
+
+const std::string MethodToString(HTTPMethod num)
+{
+	switch (num)
+	{
+	case (HTTPMethod::GET):
+		return ("GET");
+	case (HTTPMethod::POST):
+		return ("POST");
+	case (HTTPMethod::DELETE):
+		return ("DELETE");
+	default:
+	{
+		Logger &logger = Logger::getInstance();
+		logger.log(WARNING, "LocationSettings MethodToString: unknown Method");
+		return ("UNKOWNMETHOD");
+	}
+	}
+}
+
+// resolveMethod
+bool LocationSettings::resolveMethod(const HTTPMethod method) const
+{
+	Logger &logger = Logger::getInstance();
+
+	if (getAllowedMethods().empty())
+		logger.log(WARNING,
+				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
+					   getPath()); // TODO: Should throw exception?
+	std::stringstream ss(getAllowedMethods());
+	std::string option;
+	for (; std::getline(ss, option, ' ');)
+	{
+		if (option == MethodToString(method))
+			return (true);
+	}
+	return (false);
+}
+
+// resolveAlias
+
+const std::string LocationSettings::resolveAlias(const std::string inp) const
+{
+	Logger &logger = Logger::getInstance();
+
+	std::string alias = getAlias();
+	logger.log(DEBUG, "resolveAlias: received: " + inp + "\tAlias: " + alias);
+	if (alias.empty())
+		return (inp);
+	if (_path.length() == 1)
+		return (alias + inp.substr(1, inp.length() - 1));
+
+	size_t pos_begin = alias.length() - 1;
+	size_t pos_end = pos_begin;
+	while (pos_end != 0)
+	{
+		pos_end = pos_begin;
+		pos_begin = alias.find_last_of("/", pos_end - 1);
+		std::string hit = alias.substr(pos_begin, pos_end - pos_begin + 1);
+		if (inp.find(hit) == std::string::npos) // aka hit not found in inp.
+			break;
+	}
+	std::string request_target = alias.substr(0, pos_end) + inp;
+
+	return (request_target);
 }
 
 // THIS IS PRINTING FUNCTION
 
-std::string LocationSettings::keyToString(LocationSettingOption Key) const
-{
-	switch (Key)
-	{
-	case (LocationSettingOption::Prefix):
-		return ("Prefix");
-	case (LocationSettingOption::Root):
-		return ("Root");
-	case (LocationSettingOption::Index):
-		return ("Index");
-	case (LocationSettingOption::DirectoryListing):
-		return ("DirectoryListing");
-	case (LocationSettingOption::AllowedMethods):
-		return ("AllowedMethods");
-	case (LocationSettingOption::CgiPass):
-		return ("CgiPass");
-	default:
-		return ("__UNRECOGNISED KEY__");
-	}
-}
-
-std::string LocationSettings::valuesToString(LocationSettingOption Key) const
-{
-	std::string ret;
-
-	for (const std::string &it : getValues(Key))
-		ret += it + " ";
-	return (ret);
-}
-
 void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
-	size_t enum_size = sizeof(LocationSettingOption) /
-					   sizeof(std::underlying_type<LocationSettingOption>);
 
-	logger.log(DEBUG, "Path:\t" + _path);
-	for (size_t i = 0; i <= enum_size + 1; i++)
-	{
-		logger.log(DEBUG,
-				   "LocationSetting: Key:\t" +
-					   keyToString(static_cast<LocationSettingOption>(i)));
-		try
-		{
-			logger.log(DEBUG, "LocationSetting: Value:\t" +
-								  valuesToString(
-									  static_cast<LocationSettingOption>(i)));
-		}
-		catch (std::out_of_range &e)
-		{
-			logger.log(WARNING, "Missing option: " + std::string(e.what()));
-		}
-	}
+	logger.log(DEBUG, "\tLocation Prefix:\t" + _path);
+	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
+	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
+	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
+	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
+	logger.log(DEBUG, "\t\tRedirect:\t\t" + _redirect);
+	logger.log(DEBUG,
+			   "\t\tAutoIndex:\t\t" +
+				   (_auto_index ? std::string(" ON") : std::string(" OFF")));
 }

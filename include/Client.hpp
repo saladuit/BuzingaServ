@@ -1,11 +1,13 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <CGI.hpp>
-#include <FileManager.hpp>
-#include <HTTPRequest.hpp>
-#include <HTTPResponse.hpp>
-#include <Socket.hpp>
+#include "CGI.hpp"
+#include "FileManager.hpp"
+#include "HTTPRequest.hpp"
+#include "HTTPResponse.hpp"
+#include "ServerSettings.hpp"
+#include "Socket.hpp"
+
 #include <memory>
 #include <unistd.h>
 #include <unordered_map>
@@ -13,7 +15,7 @@
 class Client
 {
   public:
-	Client(const int &server_fd);
+	Client(const int &server_fd, std::vector<ServerSettings> &serversettings);
 	Client() = delete;
 	Client(const Client &other) = delete;
 	const Client &operator=(const Client &other) = delete;
@@ -22,6 +24,7 @@ class Client
 	ClientState handleConnection(
 		short events, Poll &poll, Client &client,
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
+	void resolveServerSetting();
 	int getFD(void) const;
 	int *getCgiToServerFd(void);
 	int *getServerToCgiFd(void);
@@ -38,6 +41,8 @@ class Client
 	FileManager _file_manager;
 	CGI _cgi;
 	Socket _socket;
+	const std::vector<ServerSettings> &_server_list;
+	ServerSettings &_serversetting;
 	ClientState _state;
 	int _serverToCgiFd[2];
 	int _cgiToServerFd[2];

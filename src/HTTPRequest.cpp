@@ -1,17 +1,19 @@
-#include "ClientException.hpp"
+
+#include "ClientState.hpp"
+#include <ClientException.hpp>
 #include <HTTPRequest.hpp>
 #include <Logger.hpp>
+#include <StatusCode.hpp>
 #include <SystemException.hpp>
-#include "ClientState.hpp"
 
 #include <string>
 
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _bytes_read(0), _content_length(0), _methodType(HTTPMethod::UNKNOWN),
-	  _http_request(), _request_target(), _http_version(), _body(), _headers(),
-	  _cgi(false)
+	: _bytes_read(0), _content_length(0), _max_body_size(),
+	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
+	  _http_version(), _body(), _headers(), _cgi(false)
 {
 }
 
@@ -34,6 +36,28 @@ void HTTPRequest::setMethodType(const std::string &method_type)
 HTTPMethod HTTPRequest::getMethodType(void) const
 {
 	return (_methodType);
+}
+
+void HTTPRequest::setMaxBodySize(std::string inp)
+{
+	size_t pos = inp.find_first_of("KM");
+	std::string nbr = inp.substr(0, pos);
+	std::string mag;
+	if (pos != std::string::npos)
+	{
+		mag = inp.substr(pos);
+		if (mag == "K")
+			nbr += "000";
+		else // (mag == "M")
+			nbr += "000000";
+	}
+
+	_max_body_size = std::stoull(nbr);
+}
+
+ssize_t HTTPRequest::getMaxBodySize(void) const
+{
+	return (_max_body_size);
 }
 
 void HTTPRequest::setHeader(const std::string &key, const std::string &header)
@@ -71,18 +95,30 @@ const std::string &HTTPRequest::getBody(void) const
 	return (_body);
 }
 
-const size_t &HTTPRequest::getBodyLength(void) const {
+const size_t &HTTPRequest::getBodyLength(void) const
+{
 	return (_content_length);
 }
 
-void HTTPRequest::setCGIToTrue(void) {
+void HTTPRequest::setCGIToTrue(void)
+{
 	_cgi = true;
 }
 
-const bool &HTTPRequest::CGITrue(void) const {
+const bool &HTTPRequest::CGITrue(void) const
+{
 	return (_cgi);
 }
 
+void HTTPRequest::setHeaderEnd(bool b)
+{
+	_header_end = b;
+}
+
+bool HTTPRequest::getHeaderEnd() const
+{
+	return (_header_end);
+}
 
 size_t HTTPRequest::parseStartLine(size_t &i)
 {
@@ -92,9 +128,11 @@ size_t HTTPRequest::parseStartLine(size_t &i)
 	logger.log(DEBUG, "_http_request: %", _http_request);
 	pos = _http_request.find(' ', i);
 	setMethodType(_http_request.substr(i, pos - i));
+
 	i = pos + 1;
 	pos = _http_request.find(' ', i);
 	setRequestTarget(_http_request.substr(i, pos - i));
+
 	i = pos + 1;
 	pos = _http_request.find("\r\n", i);
 	setHTTPVersion(_http_request.substr(i, pos - i));
@@ -124,6 +162,20 @@ size_t HTTPRequest::parseHeaders(size_t &i)
 	return (i);
 }
 
+ClientState HTTPRequest::setRequestVariables(size_t pos)
+{
+	_header_end = true;
+	if (_headers.find("Content-length") != _headers.end())
+		_content_length = std::stoi(getHeader("Content-length"));
+
+	if (_content_length == 0)
+		return (ClientState::Loading);
+	_body += _http_request.substr(pos + 2);
+	if (std::strlen(_body.c_str()) == _content_length)
+		return (ClientState::Loading);
+	return (ClientState::Receiving);
+}
+
 ClientState HTTPRequest::receive(int client_fd)
 {
 	Logger &logger = Logger::getInstance();
@@ -139,6 +191,8 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
+		if (_body.size() >= _max_body_size)
+			throw ClientException(StatusCode::RequestBodyTooLarge);
 		if (_body.size() >= _content_length)
 		{
 			logger.log(DEBUG, "Body: " + _body);
@@ -154,21 +208,7 @@ ClientState HTTPRequest::receive(int client_fd)
 	{
 		header_end = _http_request.substr(pos - 2, 4);
 		if (header_end == "\r\n\r\n")
-		{
-			if (_headers.find("Content-length") != _headers.end())
-			{
-				_content_length = std::stoi(getHeader("Content-length"));
-				if (_content_length == 0)
-					return (ClientState::Loading);
-				_body += _http_request.substr(pos + 2);
-				if (std::strlen(_body.c_str()) == _content_length)
-					return (ClientState::Loading);
-				return (ClientState::Receiving);
-
-			}
-			else
-				return (ClientState::Loading);
-		}
+			return (setRequestVariables(pos));
 		pos = parseHeaders(i);
 	}
 	return (ClientState::Receiving);

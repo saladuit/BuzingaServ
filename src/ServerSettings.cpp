@@ -6,162 +6,277 @@
 #include <SystemException.hpp>
 #include <Token.hpp>
 
-#include <array>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <regex>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
-ServerSettings::ServerSettings() : _server_setting(), _location_settings()
+ServerSettings::ServerSettings()
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	  _location_settings()
 {
 }
 
 ServerSettings::ServerSettings(const ServerSettings &rhs)
-	: _server_setting(rhs._server_setting),
+	: _listen(rhs._listen), _server_name(rhs._server_name),
+	  _error_dir(rhs._error_dir),
+	  _client_max_body_size(rhs._client_max_body_size),
 	  _location_settings(rhs._location_settings)
 {
 }
 
-ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _server_setting(), _location_settings()
+ServerSettings &ServerSettings::operator=(const ServerSettings &rhs)
 {
-	if (token->getString() != "server")
-		throw std::runtime_error(
-			"unrecognised token in Configfile at token: " +
-			token->getString()); // TODO: Make unrecognised token exception
-								 // TODO: this needs to be moved to syntax
-
-	token += 2;
-
-	while (token->getType() != TokenType::CLOSE_BRACKET)
-	{
-		ServerSettingOption key = identifyServerSetting(token->getString());
-		if (key == ServerSettingOption::Location)
-			_location_settings.emplace_back(LocationSettings(token));
-		else
-		{
-			token++;
-			setValue(key, token->getString());
-			token += 2;
-		}
-	}
+	if (this == &rhs)
+		return (*this);
+	_listen = rhs._listen;
+	_server_name = rhs._server_name;
+	_error_dir = rhs._error_dir;
+	_client_max_body_size = rhs._client_max_body_size;
+	_location_settings = rhs._location_settings;
+	return (*this);
 }
 
 ServerSettings::~ServerSettings()
 {
 }
 
-ServerSettingOption
-ServerSettings::identifyServerSetting(const std::string &token)
-{
-	if (token == "port")
-		return (ServerSettingOption::Port);
-	else if (token == "host")
-		return (ServerSettingOption::Host);
-	else if (token == "server_name")
-		return (ServerSettingOption::ServerName);
-	else if (token == "client_max_body_size")
-		return (ServerSettingOption::ClientMaxBodySize);
-	else if (token == "error_pages")
-		return (ServerSettingOption::ErrorPages);
-	else if (token == "location")
-		return (ServerSettingOption::Location);
-	else
-		throw std::runtime_error("Unknow Key Token in ServerSetting " + token);
-	// TODO: this might need a costum exception
-}
+// Parsing:
+// This constructor takes a vector of Tokens, goes over it and according to the
+// assigned values will fill in the ServerSettings.
 
-const std::string
-methodToString(HTTPMethod method) // TODO: change data_types in function
+ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
+	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	  _location_settings()
 {
-	switch (method)
+	token += 2;
+
+	while (token->getType() != TokenType::CLOSE_BRACKET)
 	{
-	case (HTTPMethod::GET):
-		return ("GET");
-	case (HTTPMethod::POST):
-		return ("POST");
-	case (HTTPMethod::DELETE):
-		return ("DELETE");
-	default:
-		throw std::runtime_error("Unknown HTTPMethod");
+		const Token key = *token;
+		token++;
+
+		if (key.getString() == "location")
+			_location_settings.emplace_back(LocationSettings(token));
+		else
+			addValueToServerSettings(key, token);
+		token++;
 	}
 }
 
-bool ServerSettings::resolveLocation(const std::string &path,
-									 HTTPMethod input_method)
+const std::string convertHost(const std::string &str)
 {
-	for (auto &location_instance : _location_settings)
+	Logger &logger = Logger::getInstance();
+
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+	hints.ai_socktype = SOCK_STREAM;
+
+	struct addrinfo *res = NULL;
+	int ret;
+
+	if ((ret = getaddrinfo(str.c_str(), "http", &hints, &res)) != 0)
 	{
-		if (location_instance.getPath() != path)
+		logger.log(WARNING,
+				   "Unable to get IPv4: " + std::string(gai_strerror(ret)));
+		// TODO: trhow?
+	}
+	void *addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+	char ipstr[INET_ADDRSTRLEN];
+	inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+	return (std::string(ipstr));
+}
+
+const std::string validateListen(const std::string &str)
+{
+	size_t pos = str.find_first_of(":");
+	if (pos == std::string::npos || pos != str.find_last_of(":"))
+		throw std::runtime_error("Parsing Error: invalid value for listen");
+
+	const std::string ip = str.substr(0, pos);
+	const std::string port = str.substr(pos + 1, std::string::npos);
+
+	try
+	{
+		int port_ = std::stoi(port);
+		if (port_ < 1 || port_ > 65535)
+			throw std::exception();
+	}
+	catch (std::exception &e)
+	{
+		throw std::runtime_error("Parsing Error: found invalid PORT in listen");
+	}
+	return (convertHost(ip) + ":" + port);
+}
+
+void ServerSettings::parseListen(const Token value)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_listen.empty())
+		logger.log(WARNING, "ConfigParser: redefining listen");
+	_listen = validateListen(value.getString());
+}
+
+void ServerSettings::parseServerName(const Token value)
+{
+	_server_name.append(" " + value.getString());
+}
+
+void ServerSettings::parseErrorDir(const Token value)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_error_dir.empty())
+		logger.log(WARNING, "ConfigParser: redefining error_dir");
+	_error_dir = value.getString();
+}
+
+void ServerSettings::parseClientMaxBodySize(const Token value)
+{
+	Logger &logger = Logger::getInstance();
+
+	const std::regex rgx_pat = std::regex("^\\d{1,3}[KM]?$");
+
+	std::sregex_iterator it(value.getString().begin(), value.getString().end(),
+							rgx_pat);
+	std::sregex_iterator end;
+
+	if (std::distance(it, end) == 0)
+	{
+		logger.log(FATAL, "ConfigParser: clientmaxbodysize inpropperly "
+						  "formated: \"d{1,3}[MK]?\"");
+		throw std::runtime_error(
+			"ConfigParser: invalid value for clientmaxbodysize");
+	}
+
+	if (!_client_max_body_size.empty())
+		logger.log(WARNING, "ConfigParser: redefining clientmaxbodysize");
+
+	_client_max_body_size = it->str();
+}
+
+void ServerSettings::addValueToServerSettings(
+	const Token &key, std::vector<Token>::iterator &value)
+{
+	Logger &logger = Logger::getInstance();
+
+	while (value->getType() != TokenType::SEMICOLON)
+	{
+		if (key.getString() == "listen")
+			parseListen(*value);
+		else if (key.getString() == "server_name")
+			parseServerName(*value);
+		else if (key.getString() == "error_dir")
+			parseErrorDir(*value);
+		else if (key.getString() == "client_max_body_size")
+			parseClientMaxBodySize(*value);
+		else
+			logger.log(WARNING,
+					   "ServerSettings: unknown KEY token: " + key.getString());
+		value++;
+	}
+}
+
+// Functionality:
+//		getters:
+const std::string &ServerSettings::getListen() const
+{
+	return (_listen);
+}
+
+const std::string &ServerSettings::getServerName() const
+{
+	return (_server_name);
+}
+
+const std::string &ServerSettings::getErrorDir() const
+{
+	return (_error_dir);
+}
+
+const std::string &ServerSettings::getClientMaxBodySize() const
+{
+	return (_client_max_body_size);
+}
+
+// Funcion: find the longest possible locationblock that fits the
+// request_target. request_target will be stripped from it's trailing input.
+// (line 3) and expects LocationBlock requesttarget to always start and end with
+// a '/'
+//
+// EXAMPLES:
+//
+//	server {
+//	location / {}
+//	location /images/ {}
+//	location /images/png/ {}
+//	}
+//
+// /image				=> /
+// /some/example.jpg	=> /
+// /images				=> /
+// /images/				=> /images/
+// /images/jpg/			=> /images/
+// /images/png/			=> /images/png/
+// /png/images/			=> /
+//
+
+const LocationSettings &
+ServerSettings::resolveLocation(const std::string &request_target) const
+{
+	const LocationSettings *ret = nullptr;
+	std::string searched = request_target.substr(0, request_target.find("?"));
+
+	for (const auto &instance : _location_settings)
+	{
+		const size_t pos = request_target.find(instance.getPath());
+
+		if (pos != 0)
 			continue;
-		for (auto &methods :
-			 location_instance.getValues(LocationSettingOption::AllowedMethods))
-			if (methods == methodToString(input_method))
-				return (true);
+		if (ret == nullptr)
+		{
+			ret = &instance;
+			continue;
+		}
+		if (instance.getPath().length() > ret->getPath().length())
+			ret = &instance;
 	}
-	return (false);
+	if (ret == nullptr)
+		throw std::logic_error("Couldn't resolve Location in server: " +
+							   _server_name);
+	return (*ret);
 }
 
-const std::string &ServerSettings::getValue(ServerSettingOption setting) const
-{
-	return (_server_setting.at(setting));
-}
-
-void ServerSettings::setValue(ServerSettingOption key, const std::string &value)
-{
-	_server_setting.emplace(key, value);
-}
-
-// THIS IS PRINTING FUNCTION
-
-std::string keyToString(size_t Key)
-{
-	ServerSettingOption ss_key = static_cast<ServerSettingOption>(Key);
-
-	switch (ss_key)
-	{
-	case (ServerSettingOption::Port):
-		return ("Port\t\t");
-	case (ServerSettingOption::Host):
-		return ("Host\t\t");
-	case (ServerSettingOption::ServerName):
-		return ("ServerName\t");
-	case (ServerSettingOption::ClientMaxBodySize):
-		return ("ClientMaxBodySize");
-	case (ServerSettingOption::ErrorPages):
-		return ("ErrorPages\t");
-	case (ServerSettingOption::Location):
-		return ("Location\t");
-	default:
-		return ("OUT OF BOUND KEY");
-	}
-}
+// Printing:
 
 void ServerSettings::printServerSettings() const
 {
 	Logger &logger = Logger::getInstance();
-	size_t enum_size = sizeof(ServerSettingOption) /
-					   sizeof(std::underlying_type<ServerSettingOption>);
+	std::string option;
 
-	for (size_t i = 0; i <= enum_size + 1; i++)
-	{
-		try
-		{
-			logger.log(DEBUG,
-					   "\tServerSetting: Key:\t" + keyToString(i) +
-						   "\tValue:\t" +
-						   getValue(static_cast<ServerSettingOption>(i)));
-		}
-		catch (std::out_of_range &e)
-		{
-			logger.log(WARNING, "\tServerSetting: Key:\t" + keyToString(i) +
-									" Missed option: " + std::string(e.what()));
-		}
-	}
+	logger.log(DEBUG, "ServerSettings:");
 
-	for (const LocationSettings &loc : _location_settings)
+	// printing Class variables:
+	logger.log(DEBUG, "\t_Listen:" + _listen);
+	logger.log(DEBUG, "\t_ServerName:" + _server_name);
+	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
+
+	for (auto &location_instance : _location_settings)
 	{
-		logger.log(DEBUG, "LocationSettings: ");
-		loc.printLocationSettings();
+		location_instance.printLocationSettings();
 	}
+	logger.log(DEBUG, "\n");
+
+	// We can go over the different strings by using Getline
+	//
+	//	std::stringstream ss(getListen());
+	//
+	//	for (; std::getline(ss, option, ' ');)
+	//		logger.log(DEBUG, "\t\t" + option);
+
+	return;
 }

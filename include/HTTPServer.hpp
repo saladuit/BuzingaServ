@@ -29,12 +29,14 @@ class HTTPServer
 
 	void setupServers(void);
 	void handleActivePollFDs();
-	void handleNewConnection(int fd);
-	void handleExistingConnection(const pollfd &poll_fd, Poll &poll, Client &client, 
-			std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
+	void handleNewConnection(int fd, std::vector<ServerSettings> &ServerBlock);
+	void handleExistingConnection(
+		const pollfd &poll_fd, Poll &poll, Client &client,
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	Client &findClientByFd(int targetFd);
 	Client &getClientByPipeFd(int pipe_fd);
-	void	handlePipeConnection(const pollfd &poll_fd, Poll &poll, Client &client, 
+	void handlePipeConnection(
+		const pollfd &poll_fd, Poll &poll, Client &client,
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 };
 
