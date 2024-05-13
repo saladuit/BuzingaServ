@@ -7,6 +7,7 @@
 #include <HTTPResponse.hpp>
 #include <Socket.hpp>
 #include <memory>
+#include <unistd.h>
 #include <unordered_map>
 
 class Client
@@ -18,27 +19,28 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	ClientState handleConnection(short events, Poll &poll, Client &client, 
+	ClientState handleConnection(
+		short events, Poll &poll, Client &client,
 		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	int getFD(void) const;
-	int	*getCgiToServerFd(void);
-	int	*getServerToCgiFd(void);
-	HTTPRequest	&getRequest(void);
-	void	setState(ClientState state);
+	int *getCgiToServerFd(void);
+	int *getServerToCgiFd(void);
+	HTTPRequest &getRequest(void);
+	void setState(ClientState state);
 
-	bool	cgiBodyIsSent;
-	bool	cgiHasBeenRead;
-	bool	KO;
+	bool cgiBodyIsSent;
+	bool cgiHasBeenRead;
+	bool KO;
 
   private:
-	HTTPRequest		_request;
-	HTTPResponse	_response;
-	FileManager		_file_manager;
-	CGI				_cgi;
-	Socket			_socket;
-	ClientState		_state;
-	int				_serverToCgiFd[2];
-	int				_cgiToServerFd[2];
+	HTTPRequest _request;
+	HTTPResponse _response;
+	FileManager _file_manager;
+	CGI _cgi;
+	Socket _socket;
+	ClientState _state;
+	int _serverToCgiFd[2];
+	int _cgiToServerFd[2];
 };
 
 #endif
