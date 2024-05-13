@@ -22,7 +22,6 @@ FileManager::applyLocationSettings(const std::string &request_target,
 								   HTTPMethod method)
 {
 
-	//  substr is required to remove starting '/'
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
@@ -37,15 +36,11 @@ FileManager::applyLocationSettings(const std::string &request_target,
 			return (loc.resolveAlias(request_target).substr(1) +
 					loc.getIndex());
 		else if (loc.getAutoIndex() == false)
-			return (loc.resolveAlias(request_target).substr(1) +
-					"index.html"); /* default value, potential
-								 TODO: set Default values in default
-												assigner;   */
+			return (loc.resolveAlias(request_target).substr(1) + "index.html");
 		_request_target = AutoIndexGenerator::OpenAutoIndex(
 			loc.resolveAlias(request_target).substr(1), request_target);
 		_autoindex = true;
 	}
-
 	return (loc.resolveAlias(request_target).substr(1));
 }
 
@@ -60,7 +55,6 @@ void FileManager::openGetFile(const std::string &request_target_path)
 		_response += status.getStatusLine("HTTP/1.1");
 		return;
 	}
-
 	if (!std::filesystem::exists(resolved_target))
 		throw ClientException(StatusCode::NotFound);
 	_request_target.open(resolved_target, std::ios::in | std::ios::binary);
