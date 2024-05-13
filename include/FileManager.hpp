@@ -16,6 +16,7 @@ class FileManager
 	std::fstream _request_target;
 	ServerSettings _serversetting;
 	bool _autoindex;
+	size_t _bytes_sent;
 
 	std::string applyLocationSettings(const std::string &request_target,
 									  HTTPMethod method);
@@ -33,9 +34,12 @@ class FileManager
 	ClientState loadErrorPage(void);
 	ClientState manage(HTTPMethod method, const std::string &filename,
 					   const std::string &body);
+	ClientState manageCgi(std::string http_version, const std::string &body);
 	ClientState manageGet(void);
 	ClientState managePost(const std::string &body);
 	ClientState manageDelete(const std::string &reqest_target_path);
+
+	// CGI APPEND FUNCTION
 
 	const std::string &getResponse(void) const;
 	void addToResponse(const std::string str);

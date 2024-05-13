@@ -1,4 +1,6 @@
+#include "CGI.hpp"
 #include "ClientState.hpp"
+#include "Poll.hpp"
 #include "ReturnException.hpp"
 #include <Client.hpp>
 #include <ClientException.hpp>
@@ -7,12 +9,18 @@
 #include <ServerSettings.hpp>
 
 #include <sys/poll.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 
 Client::Client(const int &server_fd, std::vector<ServerSettings> &serversetting)
 	: _request(), _file_manager(), _socket(server_fd),
 	  _server_list(serversetting), _serversetting(serversetting.at(0))
 {
 	_socket.setupClient();
+	_state = ClientState::Receiving;
+	cgiBodyIsSent = false;
+	cgiHasBeenRead = false;
+	KO = false;
 }
 
 Client::~Client()
@@ -51,22 +59,82 @@ int Client::getFD(void) const
 	return (_socket.getFD());
 }
 
-ClientState Client::handleConnection(short events)
+int *Client::getCgiToServerFd(void)
+{
+	return (_cgiToServerFd);
+}
+
+int *Client::getServerToCgiFd(void)
+{
+	return (_serverToCgiFd);
+}
+
+HTTPRequest &Client::getRequest(void)
+{
+	return (_request);
+}
+
+void Client::setState(ClientState state)
+{
+	_state = state;
+}
+
+ClientState Client::handleConnection(
+	short events, Poll &poll, Client &client,
+	std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Handling client connection on fd: " +
 						 std::to_string(_socket.getFD()));
 	try
 	{
-		if (events & POLLIN)
+		if (events & POLLIN && _state == ClientState::Receiving)
 		{
+			logger.log(DEBUG, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			if (_request.getHeaderEnd())
 				resolveServerSetting();
+			_request.setCGIToTrue(); // TODO: method returns if current request
+									 // is a CGI
+			return (_state);
+		}
+		else if (events & POLLOUT && _state == ClientState::CGI_Start)
+		{
+			logger.log(DEBUG, "ClientState::CGI_Start");
+			_state = _cgi.start(poll, client, _request.getBodyLength(),
+								active_pipes);
+			return (_state);
+		}
+		else if (events & POLLOUT && _state == ClientState::CGI_Write)
+		{
+			logger.log(DEBUG, "ClientState::CGI_Write");
+			_state =
+				_cgi.send(client, _request.getBody(), _request.getBodyLength());
+			return (_state);
+		}
+		else if (events & POLLIN && _state == ClientState::CGI_Read)
+		{
+			logger.log(DEBUG, "ClientState::CGI_Read");
+			_state = _cgi.receive(client);
+			if (client.cgiHasBeenRead == true)
+			{
+				_state = _file_manager.manageCgi(_request.getHTTPVersion(),
+												 _cgi.body);
+				logger.log(DEBUG,
+						   "response:\n\n" + _file_manager.getResponse());
+			}
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
+			logger.log(DEBUG, "ClientState::Loading");
+			if (_request.CGITrue() == true &&
+				_request.getMethodType() != HTTPMethod::DELETE)
+			{
+				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
+				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
+				return (_state);
+			}
 			_state = _file_manager.manage(_request.getMethodType(),
 										  _request.getRequestTarget(),
 										  _request.getBody());
@@ -79,6 +147,13 @@ ClientState Client::handleConnection(short events)
 		}
 		else if (events & POLLOUT && _state == ClientState::Sending)
 		{
+			logger.log(DEBUG, "ClientState::Sending");
+			if (KO == true)
+			{
+				_state =
+					_response.send(_socket.getFD(), "HTTP/1.1 500 KO\t\n\t\n");
+				return (_state);
+			}
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);
@@ -87,6 +162,9 @@ ClientState Client::handleConnection(short events)
 	catch (ClientException &e)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
+		if (_request.CGITrue() == true &&
+			_request.getMethodType() != HTTPMethod::DELETE)
+			_exit(1);
 		_response.clear();
 		_file_manager.setResponse(e.what());
 		_state = _file_manager.openErrorPage(
@@ -103,5 +181,5 @@ ClientState Client::handleConnection(short events)
 		_state = ClientState::Sending;
 		return (_state);
 	}
-	return (ClientState::Unkown);
+	return (ClientState::Unknown);
 }

@@ -8,6 +8,10 @@
 #include "ServerSettings.hpp"
 #include "Socket.hpp"
 
+#include <memory>
+#include <unistd.h>
+#include <unordered_map>
+
 class Client
 {
   public:
@@ -17,9 +21,19 @@ class Client
 	const Client &operator=(const Client &other) = delete;
 	~Client();
 
-	ClientState handleConnection(short events);
+	ClientState handleConnection(
+		short events, Poll &poll, Client &client,
+		std::unordered_map<int, std::shared_ptr<int>> &active_pipes);
 	void resolveServerSetting();
 	int getFD(void) const;
+	int *getCgiToServerFd(void);
+	int *getServerToCgiFd(void);
+	HTTPRequest &getRequest(void);
+	void setState(ClientState state);
+
+	bool cgiBodyIsSent;
+	bool cgiHasBeenRead;
+	bool KO;
 
   private:
 	HTTPRequest _request;
@@ -30,6 +44,8 @@ class Client
 	const std::vector<ServerSettings> &_server_list;
 	ServerSettings &_serversetting;
 	ClientState _state;
+	int _serverToCgiFd[2];
+	int _cgiToServerFd[2];
 };
 
 #endif

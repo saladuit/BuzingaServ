@@ -58,6 +58,11 @@ class HTTPRequest
 	void setHeaderEnd(bool b);
 	bool getHeaderEnd() const;
 
+	const std::string &getExecutable(void) const;
+	void setCGIToTrue(void);
+	const bool &CGITrue(void) const;
+	const size_t &getBodyLength(void) const;
+
   private:
 	bool _header_end;
 	ssize_t _bytes_read;
@@ -69,6 +74,7 @@ class HTTPRequest
 	std::string _http_version;
 	std::string _body;
 	std::unordered_map<std::string, std::string> _headers;
+	bool _cgi;
 
 	size_t parseStartLine(size_t &i);
 	size_t parseHeaders(size_t &i);
