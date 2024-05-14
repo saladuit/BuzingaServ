@@ -19,16 +19,12 @@ FileManager::~FileManager()
 }
 
 std::string
-FileManager::applyLocationSettings(const std::string &request_target,
-								   HTTPMethod method)
+FileManager::applyLocationSettings(const std::string &request_target)
 {
-
 	//  substr is required to remove starting '/'
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
-	if (loc.resolveMethod(method) == false)
-		throw ClientException(StatusCode::MethodNotAllowed);
 	if (!loc.getRedirect().empty())
 		throw ReturnException(StatusCode::Found, loc);
 
@@ -38,10 +34,7 @@ FileManager::applyLocationSettings(const std::string &request_target,
 			return (loc.resolveAlias(request_target).substr(1) +
 					loc.getIndex());
 		else if (loc.getAutoIndex() == false)
-			return (loc.resolveAlias(request_target).substr(1) +
-					"index.html"); /* default value, potential
-								 TODO: set Default values in default
-												assigner;   */
+			return (loc.resolveAlias(request_target).substr(1) + "index.html");
 		_request_target = AutoIndexGenerator::OpenAutoIndex(
 			loc.resolveAlias(request_target).substr(1), request_target);
 		_autoindex = true;
@@ -53,7 +46,7 @@ FileManager::applyLocationSettings(const std::string &request_target,
 void FileManager::openGetFile(const std::string &request_target_path)
 {
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path, HTTPMethod::GET);
+		applyLocationSettings(request_target_path);
 
 	if (_autoindex == true)
 	{
@@ -74,7 +67,7 @@ void FileManager::openGetFile(const std::string &request_target_path)
 void FileManager::openPostFile(const std::string &request_target_path)
 {
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path, HTTPMethod::GET);
+		applyLocationSettings(request_target_path);
 
 	if (!std::filesystem::exists(resolved_target))
 	{

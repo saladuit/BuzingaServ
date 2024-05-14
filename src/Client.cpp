@@ -79,6 +79,18 @@ void Client::setState(ClientState state)
 	_state = state;
 }
 
+void Client::checkCGI(const std::string &request_target, HTTPMethod method)
+{
+	_serversetting.printServerSettings();
+	const LocationSettings &loc =
+		_serversetting.resolveLocation(request_target);
+
+	if (loc.resolveMethod(method) == false)
+		throw ClientException(StatusCode::MethodNotAllowed);
+	if (loc.getCGI())
+		_request.setCGIToTrue();
+}
+
 ClientState Client::handleConnection(
 	short events, Poll &poll, Client &client,
 	std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
@@ -93,9 +105,10 @@ ClientState Client::handleConnection(
 			logger.log(DEBUG, "ClientState::Receiving");
 			_state = _request.receive(_socket.getFD());
 			if (_request.getHeaderEnd())
+			{
 				resolveServerSetting();
-			_request.setCGIToTrue(); // TODO: method returns if current request
-									 // is a CGI
+				checkCGI(_request.getRequestTarget(), _request.getMethodType());
+			}
 			return (_state);
 		}
 		else if (events & POLLOUT && _state == ClientState::CGI_Start)

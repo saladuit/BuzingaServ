@@ -34,7 +34,8 @@ class LocationSettings
 	const std::string &getIndex() const;
 	const std::string &getAllowedMethods() const;
 	const std::string &getRedirect() const;
-	bool getAutoIndex() const;
+	const bool &getCGI() const;
+	const bool &getAutoIndex() const;
 
 	//		resolves:
 
@@ -50,7 +51,7 @@ class LocationSettings
 	std::string _alias;
 	std::string _index;
 	std::string _allowed_methods;
-	std::string _cgi_path;
+	bool _cgi;
 	std::string _redirect;
 	bool _auto_index;
 

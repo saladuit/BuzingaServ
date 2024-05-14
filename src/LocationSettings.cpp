@@ -8,14 +8,14 @@
 #include <string>
 
 LocationSettings::LocationSettings()
-	: _path(), _alias(), _index(), _allowed_methods(), _cgi_path(), _redirect(),
+	: _path(), _alias(), _index(), _allowed_methods(), _cgi(false), _redirect(),
 	  _auto_index(false)
 {
 }
 
 LocationSettings::LocationSettings(const LocationSettings &rhs)
 	: _path(rhs._path), _alias(rhs._alias), _index(rhs._index),
-	  _allowed_methods(rhs._allowed_methods), _cgi_path(rhs._cgi_path),
+	  _allowed_methods(rhs._allowed_methods), _cgi(rhs._cgi),
 	  _redirect(rhs._redirect), _auto_index(rhs._auto_index)
 {
 }
@@ -30,7 +30,7 @@ LocationSettings &LocationSettings::operator=(const LocationSettings &rhs)
 	_alias = rhs._alias;
 	_index = rhs._index;
 	_allowed_methods = rhs._allowed_methods;
-	_cgi_path = rhs._cgi_path;
+	_cgi = rhs._cgi;
 	_redirect = rhs._redirect;
 	_auto_index = rhs._auto_index;
 
@@ -42,6 +42,7 @@ LocationSettings::~LocationSettings()
 }
 
 LocationSettings::LocationSettings(std::vector<Token>::iterator &token)
+	: _cgi(false), _auto_index(false)
 {
 	_path = token->getString();
 	token += 2;
@@ -128,7 +129,13 @@ void LocationSettings::parseCgiPath(const Token token)
 		logger.log(WARNING,
 				   "ConfigParser: redefining cgi_path in locationblock: " +
 					   _path);
-	_cgi_path = token.getString();
+	if (token.getString() == "on" || token.getString() == "ON")
+		_cgi = true;
+	else if (token.getString() == "off" || token.getString() == "OFF")
+		_cgi = false;
+	else
+		throw std::runtime_error("ConfigParser: Unknown VALUE for cgi: " +
+								 token.getString());
 }
 
 void LocationSettings::parseReturn(const Token token)
@@ -164,7 +171,7 @@ const std::string &LocationSettings::getAllowedMethods() const
 	return (_allowed_methods);
 }
 
-bool LocationSettings::getAutoIndex() const
+const bool &LocationSettings::getAutoIndex() const
 {
 	return (_auto_index);
 }
@@ -172,6 +179,11 @@ bool LocationSettings::getAutoIndex() const
 const std::string &LocationSettings::getRedirect() const
 {
 	return (_redirect);
+}
+
+const bool &LocationSettings::getCGI() const
+{
+	return (_cgi);
 }
 
 const std::string MethodToString(HTTPMethod num)
@@ -201,7 +213,7 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 	if (getAllowedMethods().empty())
 		logger.log(WARNING,
 				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
-					   getPath()); // TODO: Should throw exception?
+					   getPath());
 	std::stringstream ss(getAllowedMethods());
 	std::string option;
 	for (; std::getline(ss, option, ' ');)
@@ -250,7 +262,8 @@ void LocationSettings::printLocationSettings() const
 	logger.log(DEBUG, "\t\tAlias:\t\t\t" + _alias);
 	logger.log(DEBUG, "\t\tIndex:\t\t\t" + _index);
 	logger.log(DEBUG, "\t\tAllowed_methods:\t" + _allowed_methods);
-	logger.log(DEBUG, "\t\tCGI Path:\t\t" + _cgi_path);
+	logger.log(DEBUG, "\t\tCGI:\t\t\t" +
+						  (_cgi ? std::string(" ON") : std::string(" OFF")));
 	logger.log(DEBUG, "\t\tRedirect:\t\t" + _redirect);
 	logger.log(DEBUG,
 			   "\t\tAutoIndex:\t\t" +
