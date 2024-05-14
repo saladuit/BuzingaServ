@@ -54,8 +54,8 @@ void Socket::initSockaddrIn(t_sockaddr_in &addr, const std::string &_listen)
 	std::string port = _listen.substr(pos + 1);
 
 	bzero(&addr, sizeof(addr));
+	inet_aton(host.c_str(), &(addr.sin_addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: implement getaddrinfo
 	addr.sin_port = htons(std::stoi(port));
 	std::fill_n(addr.sin_zero, sizeof(addr.sin_zero), '\0');
 }

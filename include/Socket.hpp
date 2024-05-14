@@ -1,11 +1,13 @@
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string>
+#include <sys/socket.h>
 
 // MAX_PENDING_CONNECTION SHOULDN'T BE 1
-// WHY 10? WE CAN ALSO SET IT ON 1024, THAT'S 
+// WHY 10? WE CAN ALSO SET IT ON 1024, THAT'S
 // MORE SAFE, CONCERNING THE AVAILABILITY (siege -b)
 #define MAX_PENDING_CONNECTIONS 10
 
