@@ -32,6 +32,7 @@ void Client::resolveServerSetting()
 {
 	Logger &logger = Logger::getInstance();
 	const std::string &hp = _request.getHeader("Host");
+
 	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
 	{
@@ -82,7 +83,6 @@ void Client::setState(ClientState state)
 
 void Client::checkCGI(const std::string &request_target, HTTPMethod method)
 {
-	_serversetting.printServerSettings();
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
