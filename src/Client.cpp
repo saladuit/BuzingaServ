@@ -1,5 +1,6 @@
 #include "CGI.hpp"
 #include "ClientState.hpp"
+#include "LocationSettings.hpp"
 #include "Poll.hpp"
 #include "ReturnException.hpp"
 #include <Client.hpp>
@@ -144,7 +145,9 @@ ClientState Client::handleConnection(
 			if (_request.CGITrue() == true &&
 				_request.getMethodType() != HTTPMethod::DELETE)
 			{
-				_state = _cgi.parseURIForCGI(_request.getRequestTarget());
+				_state = _cgi.parseURIForCGI(
+					_serversetting.resolveLocation(_request.getRequestTarget())
+						.resolveAlias(_request.getRequestTarget()));
 				logger.log(DEBUG, "executable: " + _cgi.getExecutable());
 				return (_state);
 			}
