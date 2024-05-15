@@ -81,11 +81,11 @@ const std::string convertHost(const std::string &str)
 	{
 		logger.log(WARNING,
 				   "Unable to get IPv4: " + std::string(gai_strerror(ret)));
-		// TODO: trhow?
 	}
 	void *addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
 	char ipstr[INET_ADDRSTRLEN];
 	inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+	freeaddrinfo(res);
 	return (std::string(ipstr));
 }
 
