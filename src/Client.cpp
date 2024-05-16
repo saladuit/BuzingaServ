@@ -183,8 +183,13 @@ ClientState Client::handleConnection(
 			_exit(1);
 		_response.clear();
 		_file_manager.setResponse(e.what());
-		_state = _file_manager.openErrorPage(
-			_serversetting.getErrorDir().substr(1), e.getStatusCode());
+
+		const std::string errdir = _serversetting.getErrorDir();
+		if (errdir.empty())
+			_state = _file_manager.openErrorPage("", e.getStatusCode());
+		else
+			_state = _file_manager.openErrorPage(errdir.substr(1),
+												 e.getStatusCode());
 		return (_state);
 	}
 	catch (ReturnException &e)
