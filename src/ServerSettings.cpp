@@ -227,26 +227,29 @@ const std::string &ServerSettings::getClientMaxBodySize() const
 const LocationSettings &
 ServerSettings::resolveLocation(const std::string &request_target) const
 {
+	Logger &logger = Logger::getInstance();
 	const LocationSettings *ret = nullptr;
 	std::string searched = request_target.substr(0, request_target.find("?"));
 
+	logger.log(DEBUG, "resolveLocation: reques:\t" + request_target);
+	logger.log(DEBUG, "resolveLocation: search:\t" + request_target);
 	for (const auto &instance : _location_settings)
 	{
+		instance.printLocationSettings();
 		const size_t pos = request_target.find(instance.getPath());
 
 		if (pos != 0)
 			continue;
 		if (ret == nullptr)
-		{
 			ret = &instance;
-			continue;
-		}
-		if (instance.getPath().length() > ret->getPath().length())
+		else if (instance.getPath().length() > ret->getPath().length())
 			ret = &instance;
 	}
 	if (ret == nullptr)
 		throw std::logic_error("Couldn't resolve Location in server: " +
 							   _server_name);
+
+	logger.log(DEBUG, "resolveLocation: found Block: " + ret->getPath());
 	return (*ret);
 }
 

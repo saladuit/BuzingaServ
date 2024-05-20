@@ -32,6 +32,8 @@ void Client::resolveServerSetting()
 {
 	Logger &logger = Logger::getInstance();
 	const std::string &hp = _request.getHeader("Host");
+	if (hp.empty())
+		throw ClientException(StatusCode::InternalServerError);
 
 	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
@@ -45,15 +47,14 @@ void Client::resolveServerSetting()
 			{
 				_serversetting = block;
 				_request.setHeaderEnd(false);
-				break;
+				logger.log(INFO, "resolveServerSetting: Found: " +
+									 _serversetting.getServerName());
+				_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
+				_file_manager.setServerSetting(_serversetting);
+				return;
 			}
 		}
-		if (_request.getHeaderEnd() == false)
-			break;
 	}
-	logger.log(INFO, "Found ServerSetting: " + _serversetting.getServerName());
-	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
-	_file_manager.setServerSetting(_serversetting);
 }
 
 int Client::getFD(void) const

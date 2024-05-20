@@ -231,25 +231,12 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 	Logger &logger = Logger::getInstance();
 
 	std::string alias = getAlias();
-	logger.log(DEBUG, "resolveAlias: received: " + inp + "\tAlias: " + alias);
-	if (alias.empty())
-		return (inp);
-	if (_path.length() == 1)
-		return (alias + inp.substr(1, inp.length() - 1));
+	logger.log(DEBUG, "resolveAlias:\treques_target:\t" + inp);
+	logger.log(DEBUG, "resolveAlias:\tAlias:\t\t" + alias);
+	std::string result = inp.substr(_path.length());
 
-	size_t pos_begin = alias.length() - 1;
-	size_t pos_end = pos_begin;
-	while (pos_end != 0)
-	{
-		pos_end = pos_begin;
-		pos_begin = alias.find_last_of("/", pos_end - 1);
-		std::string hit = alias.substr(pos_begin, pos_end - pos_begin + 1);
-		if (inp.find(hit) == std::string::npos) // aka hit not found in inp.
-			break;
-	}
-	std::string request_target = alias.substr(0, pos_end) + inp;
-
-	return (request_target);
+	logger.log(DEBUG, "resolveAlias:\t" + alias + result);
+	return (alias + result);
 }
 
 // THIS IS PRINTING FUNCTION
