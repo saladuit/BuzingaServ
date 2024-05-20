@@ -235,7 +235,6 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 	logger.log(DEBUG, "resolveLocation: search:\t" + request_target);
 	for (const auto &instance : _location_settings)
 	{
-		instance.printLocationSettings();
 		const size_t pos = request_target.find(instance.getPath());
 
 		if (pos != 0)

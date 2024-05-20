@@ -45,9 +45,6 @@ FileManager::applyLocationSettings(const std::string &request_target)
 
 void FileManager::openGetFile(const std::string &request_target_path)
 {
-	const std::string resolved_target =
-		applyLocationSettings(request_target_path);
-
 	if (_autoindex == true)
 	{
 		HTTPStatus status(StatusCode::OK);
@@ -55,9 +52,9 @@ void FileManager::openGetFile(const std::string &request_target_path)
 		return;
 	}
 
-	if (!std::filesystem::exists(resolved_target))
+	if (!std::filesystem::exists(request_target_path))
 		throw ClientException(StatusCode::NotFound);
-	_request_target.open(resolved_target, std::ios::in | std::ios::binary);
+	_request_target.open(request_target_path, std::ios::in | std::ios::binary);
 	if (!_request_target.is_open())
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::OK);
@@ -66,12 +63,9 @@ void FileManager::openGetFile(const std::string &request_target_path)
 
 void FileManager::openPostFile(const std::string &request_target_path)
 {
-	const std::string resolved_target =
-		applyLocationSettings(request_target_path);
-
-	if (!std::filesystem::exists(resolved_target))
+	if (!std::filesystem::exists(request_target_path))
 	{
-		_request_target.open(resolved_target, std::ios::out);
+		_request_target.open(request_target_path, std::ios::out);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::Created);
@@ -80,7 +74,7 @@ void FileManager::openPostFile(const std::string &request_target_path)
 	else
 	{
 		_request_target.open(request_target_path,
-							 std::ios::out | std::ios::app);
+							 std::ios::out | std::ios::trunc);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::OK);
@@ -184,19 +178,24 @@ ClientState FileManager::manage(HTTPMethod method,
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "FileManager::manage: ");
+	logger.log(DEBUG, "FileManager::manage:");
+	logger.log(DEBUG, "request_target:\t" + request_target_path);
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path);
+	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
+
 	if (method == HTTPMethod::DELETE)
-		return (manageDelete(request_target_path));
+		return (manageDelete(resolved_target));
 	if (method == HTTPMethod::GET)
 	{
 		if (!_request_target.is_open())
-			openGetFile(request_target_path);
+			openGetFile(resolved_target);
 		return (manageGet());
 	}
 	else if (method == HTTPMethod::POST)
 	{
 		if (!_request_target.is_open())
-			openPostFile(request_target_path);
+			openPostFile(resolved_target);
 		return (managePost(body));
 	}
 	return (ClientState::Unknown);

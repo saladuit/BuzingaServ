@@ -96,9 +96,9 @@ void Client::checkCGI(const std::string &request_target, HTTPMethod method)
 // TODO:
 // [x] ServerName isn't working propperly, requires testing
 // [x] ResolveAlias needs a rework should copy and replace.
-// [ ] Contentlenght Isnt working, requires testing
-// [ ] Post Doesn't write the body of the request to the file
-// [ ] Delete doens't work, maybe resolve Location
+// [x] Contentlenght Isnt working, requires testing
+// [x] Post Doesn't write the body of the request to the file
+// [x] Delete doens't work, maybe resolve Location
 // [ ] CGI Hangs when the child process gets stuck.
 // [x] I'm still sometimes getting FATAL ERROR getClientPipe
 
@@ -118,6 +118,8 @@ ClientState Client::handleConnection(
 			if (_request.getHeaderEnd())
 			{
 				resolveServerSetting();
+				if (_request.getBody().size() > _request.getMaxBodySize())
+					throw ClientException(StatusCode::RequestBodyTooLarge);
 				checkCGI(_request.getRequestTarget(), _request.getMethodType());
 			}
 			return (_state);
