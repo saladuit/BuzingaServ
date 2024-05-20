@@ -9,7 +9,7 @@ Server::Server(const std::vector<ServerSettings> &server_settings)
 	Logger &logger = Logger::getInstance();
 
 	_socket.setupServer(_server_settings.at(0).getListen());
-	logger.log(DEBUG, "Created Server on host:port " +
+	logger.log(DEBUG, "Created Server on " +
 						  _server_settings.at(0).getListen() +
 						  " on fd: " + std::to_string(_socket.getFD()));
 }

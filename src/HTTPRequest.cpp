@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _header_end(), _bytes_read(0), _content_length(0), _max_body_size(),
+	: _header_end(false), _bytes_read(0), _content_length(0), _max_body_size(),
 	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
 	  _http_version(), _body(), _headers(), _cgi(false)
 {
@@ -30,7 +30,7 @@ void HTTPRequest::setMethodType(const std::string &method_type)
 	else if (method_type == "DELETE")
 		_methodType = HTTPMethod::DELETE;
 	else
-		_methodType = HTTPMethod::UNKNOWN; // TODO: throw exception
+		throw ClientException(StatusCode::NotImplemented);
 }
 
 HTTPMethod HTTPRequest::getMethodType(void) const
@@ -164,7 +164,7 @@ size_t HTTPRequest::parseHeaders(size_t &i)
 
 ClientState HTTPRequest::setRequestVariables(size_t pos)
 {
-	_header_end = true;
+	setHeaderEnd(true);
 	if (_headers.find("Content-length") != _headers.end())
 		_content_length = std::stoi(getHeader("Content-length"));
 

@@ -21,7 +21,7 @@ FileManager::~FileManager()
 std::string
 FileManager::applyLocationSettings(const std::string &request_target)
 {
-	//  substr is required to remove starting '/'
+	//  substr(1) is required to remove starting '/'
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
