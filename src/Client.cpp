@@ -9,6 +9,7 @@
 #include <Server.hpp>
 #include <ServerSettings.hpp>
 
+#include <stdexcept>
 #include <sys/poll.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -31,9 +32,15 @@ Client::~Client()
 void Client::resolveServerSetting()
 {
 	Logger &logger = Logger::getInstance();
-	const std::string &hp = _request.getHeader("Host");
-	if (hp.empty())
-		throw ClientException(StatusCode::InternalServerError);
+	std::string hp;
+	try
+	{
+		hp = _request.getHeader("Host");
+	}
+	catch (std::out_of_range &e)
+	{
+		return;
+	}
 
 	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
