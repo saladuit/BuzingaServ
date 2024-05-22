@@ -1,5 +1,8 @@
 #include "ClientException.hpp"
+#include "ClientState.hpp"
 #include "HTTPRequest.hpp"
+#include "HTTPStatus.hpp"
+#include "StatusCode.hpp"
 #include <HTTPServer.hpp>
 #include <Logger.hpp>
 #include <ServerSettings.hpp>
@@ -84,16 +87,31 @@ void HTTPServer::handleActivePollFDs()
 	Logger &logger = Logger::getInstance();
 	logger.log(DEBUG, "HTTPServer::handleActivePollFDs");
 
-	_poll.pollFDs();
+	if (!_poll.pollFDs())
+	{
+		logger.log(DEBUG, "HTTPServer::Clearup ClientFD's");
+		for (auto &pair : _active_clients)
+		{
+			_poll.setEvents(pair.second->getFD(), POLLOUT);
+			pair.second->getResponse().clear();
+			HTTPStatus status(StatusCode::RequestTimeout);
+			pair.second->getFileManager().setResponse(
+				status.getStatusLine("HTTP/1.1") + status.getHTMLStatus());
+			pair.second->setState(ClientState::Sending);
+		}
+	}
+
 	for (const auto &poll_fd : _poll.getPollFDs())
 	{
 		if (poll_fd.revents == 0)
 			continue;
+
+		logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
+							  " revents: " +
+							  _poll.pollEventsToString(poll_fd.revents));
 		try
 		{
 			if (poll_fd.revents & POLLHUP)
-			// this code block is solving a thrown exception from
-			// the cgi's child process
 			{
 				Client &client = getClientByPipeFd(poll_fd.fd);
 				if (client.getRequest().CGITrue() &&
@@ -118,9 +136,6 @@ void HTTPServer::handleActivePollFDs()
 			_active_clients.erase(poll_fd.fd);
 			continue;
 		}
-		logger.log(DEBUG, "poll fd: " + std::to_string(poll_fd.fd) +
-							  " revents: " +
-							  _poll.pollEventsToString(poll_fd.revents));
 		if (_active_servers.find(poll_fd.fd) != _active_servers.end())
 			handleNewConnection(
 				poll_fd.fd,

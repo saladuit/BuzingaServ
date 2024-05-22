@@ -188,6 +188,9 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_bytes_read == SYSTEM_ERROR)
 		throw ClientException(StatusCode::InternalServerError);
 	logger.log(DEBUG, "in receive _bytes_read is: %", _bytes_read);
+	if (_bytes_read == 0)
+		return (ClientState::Receiving);
+
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);

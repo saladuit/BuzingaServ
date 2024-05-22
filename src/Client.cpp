@@ -3,6 +3,7 @@
 #include "LocationSettings.hpp"
 #include "Poll.hpp"
 #include "ReturnException.hpp"
+#include "StatusCode.hpp"
 #include <Client.hpp>
 #include <ClientException.hpp>
 #include <Logger.hpp>
@@ -89,6 +90,16 @@ void Client::setState(ClientState state)
 	_state = state;
 }
 
+FileManager &Client::getFileManager()
+{
+	return (_file_manager);
+}
+
+HTTPResponse &Client::getResponse()
+{
+	return (_response);
+}
+
 void Client::checkCGI(const std::string &request_target, HTTPMethod method)
 {
 	const LocationSettings &loc =
@@ -127,6 +138,8 @@ ClientState Client::handleConnection(
 				resolveServerSetting();
 				if (_request.getBody().size() > _request.getMaxBodySize())
 					throw ClientException(StatusCode::RequestBodyTooLarge);
+				if (_request.getBody().size() >= _request.getBodyLength())
+					return (ClientState::Loading);
 				checkCGI(_request.getRequestTarget(), _request.getMethodType());
 			}
 			return (_state);
@@ -177,6 +190,7 @@ ClientState Client::handleConnection(
 		}
 		else if (events & POLLOUT && _state == ClientState::Error)
 		{
+			logger.log(DEBUG, "ClientState::Error");
 			_state = _file_manager.loadErrorPage();
 			return (_state);
 		}
@@ -192,6 +206,10 @@ ClientState Client::handleConnection(
 			_state =
 				_response.send(_socket.getFD(), _file_manager.getResponse());
 			return (_state);
+		}
+		else
+		{
+			throw ClientException(StatusCode::BadRequest);
 		}
 	}
 	catch (ClientException &e)
@@ -221,5 +239,6 @@ ClientState Client::handleConnection(
 		_state = ClientState::Sending;
 		return (_state);
 	}
+	logger.log(DEBUG, "ClientState::UNKNOWN");
 	return (ClientState::Unknown);
 }
