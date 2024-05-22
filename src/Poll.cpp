@@ -37,15 +37,18 @@ std::vector<pollfd> Poll::getPollFDs(void) const
 	return (_poll_fds);
 }
 
-void Poll::pollFDs(void)
+bool Poll::pollFDs(void)
 {
 	Logger &logger = Logger::getInstance();
 	logger.log(INFO, "Polling " + std::to_string(_poll_fds.size()) +
 						 " file descriptors");
 
-	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), NO_TIMEOUT);
-	if (poll_count == SYSTEM_ERROR || poll_count == 0)
+	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 5000);
+	if (poll_count == SYSTEM_ERROR)
 		throw SystemException("poll"); // TODO: change poll_count 0 handler
+	if (poll_count == 0)
+		return (false);
+	return (true);
 }
 
 std::string Poll::pollEventsToString(short events) const

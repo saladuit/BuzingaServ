@@ -19,7 +19,7 @@ class Poll
 	~Poll();
 
 	void addPollFD(int fd, short events);
-	void pollFDs(void);
+	bool pollFDs(void);
 	void removeFD(int fd);
 	void setEvents(int fd, short events);
 	void checkREvents(short revents) const;

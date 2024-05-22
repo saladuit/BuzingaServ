@@ -32,6 +32,9 @@ class Client
 	HTTPRequest &getRequest(void);
 	void setState(ClientState state);
 
+	FileManager &getFileManager();
+	HTTPResponse &getResponse();
+
 	bool cgiBodyIsSent;
 	bool cgiHasBeenRead;
 	bool KO;
