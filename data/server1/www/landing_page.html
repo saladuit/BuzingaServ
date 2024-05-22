@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>This is Server 1</title>
+	</head>
+<body>
+    <h1 align="center">This is just to show you what we have here</h1>
+    <p align="center">and we have some plain text underneath <br> with more text under it.</p>
+    <!-- Your poem content here -->
+
+    <!-- Form for leaving notes -->
+    <form id="noteForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        	<label for="note">Note:</label>
+        	<textarea id="note" name="note" required></textarea><br>
+        	<button type="submit">Submit Note</button>
+    </form>
+
+    <div id="notes">
+        <!-- Display notes here -->
+        <P ALIGN="CENTER"></P>
+		<!-- lvanbus: supersu -->
+    	<!-- IMAGES -->
+		<p >with even an image:</p>
+		<img width="500" src="http://localhost:8080/images/Factorio_Wallpaper.jpg" alt="Factorio_Wallpaper via HTTP-request" />
+ <!--	<br>
+		<img width="200" src="../images/nose_monkey.webp" alt="nose_monkey.webp test via directory" />
+--!>
+    <!-- text/plain -->
+    </div>
+
+    	<script>
+    	    // JavaScript code to handle form submission and note retrieval
+    	    const noteForm = document.getElementById('noteForm');
+    	    const notesDiv = document.getElementById('notes');
+
+    	    noteForm.addEventListener('submit', async (e) => {
+    	        e.preventDefault();
+
+    	        const formData = new FormData(noteForm);
+    	        const response = await fetch('/api/notes', {
+    	            method: 'POST',
+    	            body: formData,
+    	        });
+
+    	        if (response.ok) {
+    	            // Clear the form and refresh the notes
+    	            noteForm.reset();
+    	            fetchNotes();
+    	        }
+    	    });
+
+    	    async function fetchNotes() {
+    	        const response = await fetch('/api/notes');
+    	        const notes = await response.json();
+
+    	        // Display the notes in the notesDiv
+    	        notesDiv.innerHTML = '';
+    	        notes.forEach((note) => {
+    	            const noteElement = document.createElement('div');
+    	            noteElement.textContent = `${note.username}: ${note.note}`;
+    	            notesDiv.appendChild(noteElement);
+    	        });
+    	    }
+
+    	    // Initial fetch of notes
+    	    fetchNotes();
+    	</script>
+	</body>
+</html>

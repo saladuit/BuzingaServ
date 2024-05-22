@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 HTTPRequest::HTTPRequest()
-	: _header_end(), _bytes_read(0), _content_length(0), _max_body_size(),
+	: _header_end(false), _bytes_read(0), _content_length(0), _max_body_size(),
 	  _methodType(HTTPMethod::UNKNOWN), _http_request(), _request_target(),
 	  _http_version(), _body(), _headers(), _cgi(false)
 {
@@ -30,7 +30,7 @@ void HTTPRequest::setMethodType(const std::string &method_type)
 	else if (method_type == "DELETE")
 		_methodType = HTTPMethod::DELETE;
 	else
-		_methodType = HTTPMethod::UNKNOWN; // TODO: throw exception
+		throw ClientException(StatusCode::NotImplemented);
 }
 
 HTTPMethod HTTPRequest::getMethodType(void) const
@@ -55,7 +55,7 @@ void HTTPRequest::setMaxBodySize(std::string inp)
 	_max_body_size = std::stoull(nbr);
 }
 
-ssize_t HTTPRequest::getMaxBodySize(void) const
+size_t HTTPRequest::getMaxBodySize(void) const
 {
 	return (_max_body_size);
 }
@@ -164,14 +164,14 @@ size_t HTTPRequest::parseHeaders(size_t &i)
 
 ClientState HTTPRequest::setRequestVariables(size_t pos)
 {
-	_header_end = true;
-	if (_headers.find("Content-length") != _headers.end())
-		_content_length = std::stoi(getHeader("Content-length"));
+	setHeaderEnd(true);
+	if (_headers.find("Content-Length") != _headers.end())
+		_content_length = std::stoi(getHeader("Content-Length"));
 
 	if (_content_length == 0)
 		return (ClientState::Loading);
 	_body += _http_request.substr(pos + 2);
-	if (std::strlen(_body.c_str()) == _content_length)
+	if (_body.size() == _content_length)
 		return (ClientState::Loading);
 	return (ClientState::Receiving);
 }
@@ -191,13 +191,10 @@ ClientState HTTPRequest::receive(int client_fd)
 	if (_content_length != 0)
 	{
 		_body += std::string(buffer, _bytes_read);
-		if (_body.size() >= _max_body_size)
+		if (_body.size() > _max_body_size)
 			throw ClientException(StatusCode::RequestBodyTooLarge);
 		if (_body.size() >= _content_length)
-		{
-			logger.log(DEBUG, "Body: " + _body);
 			return (ClientState::Loading);
-		}
 		return (ClientState::Receiving);
 	}
 	_http_request += std::string(buffer, _bytes_read);

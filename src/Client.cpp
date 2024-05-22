@@ -9,6 +9,7 @@
 #include <Server.hpp>
 #include <ServerSettings.hpp>
 
+#include <stdexcept>
 #include <sys/poll.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -31,7 +32,15 @@ Client::~Client()
 void Client::resolveServerSetting()
 {
 	Logger &logger = Logger::getInstance();
-	const std::string &hp = _request.getHeader("Host");
+	std::string hp;
+	try
+	{
+		hp = _request.getHeader("Host");
+	}
+	catch (std::out_of_range &e)
+	{
+		return;
+	}
 
 	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
@@ -45,15 +54,14 @@ void Client::resolveServerSetting()
 			{
 				_serversetting = block;
 				_request.setHeaderEnd(false);
-				break;
+				logger.log(INFO, "resolveServerSetting: Found: " +
+									 _serversetting.getServerName());
+				_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
+				_file_manager.setServerSetting(_serversetting);
+				return;
 			}
 		}
-		if (_request.getHeaderEnd() == false)
-			break;
 	}
-	logger.log(INFO, "Found ServerSetting: " + _serversetting.getServerName());
-	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
-	_file_manager.setServerSetting(_serversetting);
 }
 
 int Client::getFD(void) const
@@ -92,6 +100,15 @@ void Client::checkCGI(const std::string &request_target, HTTPMethod method)
 		_request.setCGIToTrue();
 }
 
+// TODO:
+// [x] ServerName isn't working propperly, requires testing
+// [x] ResolveAlias needs a rework should copy and replace.
+// [x] Contentlenght Isnt working, requires testing
+// [x] Post Doesn't write the body of the request to the file
+// [x] Delete doens't work, maybe resolve Location
+// [ ] CGI Hangs when the child process gets stuck.
+// [x] I'm still sometimes getting FATAL ERROR getClientPipe
+
 ClientState Client::handleConnection(
 	short events, Poll &poll, Client &client,
 	std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
@@ -108,6 +125,8 @@ ClientState Client::handleConnection(
 			if (_request.getHeaderEnd())
 			{
 				resolveServerSetting();
+				if (_request.getBody().size() > _request.getMaxBodySize())
+					throw ClientException(StatusCode::RequestBodyTooLarge);
 				checkCGI(_request.getRequestTarget(), _request.getMethodType());
 			}
 			return (_state);

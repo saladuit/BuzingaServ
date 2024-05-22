@@ -43,7 +43,7 @@ class HTTPRequest
 	const std::string &getRequestTarget(void) const;
 
 	void setMaxBodySize(std::string inp);
-	ssize_t getMaxBodySize(void) const;
+	size_t getMaxBodySize(void) const;
 
 	void setHTTPVersion(const std::string &http_version);
 	const std::string &getHTTPVersion(void) const;

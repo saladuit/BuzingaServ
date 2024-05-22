@@ -21,7 +21,7 @@ FileManager::~FileManager()
 std::string
 FileManager::applyLocationSettings(const std::string &request_target)
 {
-	//  substr is required to remove starting '/'
+	//  substr(1) is required to remove starting '/'
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
@@ -45,8 +45,12 @@ FileManager::applyLocationSettings(const std::string &request_target)
 
 void FileManager::openGetFile(const std::string &request_target_path)
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "request_target:\t" + request_target_path);
 	const std::string resolved_target =
 		applyLocationSettings(request_target_path);
+	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
 
 	if (_autoindex == true)
 	{
@@ -66,8 +70,12 @@ void FileManager::openGetFile(const std::string &request_target_path)
 
 void FileManager::openPostFile(const std::string &request_target_path)
 {
+	Logger &logger = Logger::getInstance();
+
+	logger.log(DEBUG, "request_target:\t" + request_target_path);
 	const std::string resolved_target =
 		applyLocationSettings(request_target_path);
+	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
 
 	if (!std::filesystem::exists(resolved_target))
 	{
@@ -79,8 +87,7 @@ void FileManager::openPostFile(const std::string &request_target_path)
 	}
 	else
 	{
-		_request_target.open(request_target_path,
-							 std::ios::out | std::ios::app);
+		_request_target.open(resolved_target, std::ios::out | std::ios::trunc);
 		if (!_request_target.is_open())
 			throw ClientException(StatusCode::InternalServerError);
 		HTTPStatus status(StatusCode::OK);
@@ -170,8 +177,13 @@ ClientState FileManager::manageDelete(const std::string &request_target_path)
 {
 	Logger &logger = Logger::getInstance();
 
+	logger.log(DEBUG, "request_target:\t" + request_target_path);
+	const std::string resolved_target =
+		applyLocationSettings(request_target_path);
+	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
+
 	logger.log(DEBUG, "manageDelete method is called");
-	if (std::remove(request_target_path.c_str()) != 0)
+	if (std::remove(resolved_target.c_str()) != 0)
 		throw ClientException(StatusCode::NotFound);
 	HTTPStatus status(StatusCode::NoContent);
 	_response += status.getStatusLine("HTTP/1.1");
@@ -184,7 +196,8 @@ ClientState FileManager::manage(HTTPMethod method,
 {
 	Logger &logger = Logger::getInstance();
 
-	logger.log(DEBUG, "FileManager::manage: ");
+	logger.log(DEBUG, "FileManager::manage:");
+
 	if (method == HTTPMethod::DELETE)
 		return (manageDelete(request_target_path));
 	if (method == HTTPMethod::GET)
