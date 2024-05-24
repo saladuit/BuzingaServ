@@ -9,14 +9,6 @@
     <!-- Your poem content here -->
 
     <!-- Form for leaving notes -->
-    <form id="noteForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        	<label for="note">Note:</label>
-        	<textarea id="note" name="note" required></textarea><br>
-        	<button type="submit">Submit Note</button>
-    </form>
-
     <div id="notes">
         <!-- Display notes here -->
         <P ALIGN="CENTER"></P>
@@ -30,42 +22,5 @@
     <!-- text/plain -->
     </div>
 
-    	<script>
-    	    // JavaScript code to handle form submission and note retrieval
-    	    const noteForm = document.getElementById('noteForm');
-    	    const notesDiv = document.getElementById('notes');
-
-    	    noteForm.addEventListener('submit', async (e) => {
-    	        e.preventDefault();
-
-    	        const formData = new FormData(noteForm);
-    	        const response = await fetch('/api/notes', {
-    	            method: 'POST',
-    	            body: formData,
-    	        });
-
-    	        if (response.ok) {
-    	            // Clear the form and refresh the notes
-    	            noteForm.reset();
-    	            fetchNotes();
-    	        }
-    	    });
-
-    	    async function fetchNotes() {
-    	        const response = await fetch('/api/notes');
-    	        const notes = await response.json();
-
-    	        // Display the notes in the notesDiv
-    	        notesDiv.innerHTML = '';
-    	        notes.forEach((note) => {
-    	            const noteElement = document.createElement('div');
-    	            noteElement.textContent = `${note.username}: ${note.note}`;
-    	            notesDiv.appendChild(noteElement);
-    	        });
-    	    }
-
-    	    // Initial fetch of notes
-    	    fetchNotes();
-    	</script>
 	</body>
 </html>

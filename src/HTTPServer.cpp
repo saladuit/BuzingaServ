@@ -153,7 +153,6 @@ void HTTPServer::handleActivePollFDs()
 		else
 			throw std::runtime_error("Unknown file descriptor");
 	}
-	logger.log(DEBUG, "HTTPServer::handleActivePollFDs -- after for loop");
 }
 
 void HTTPServer::handlePipeConnection(
