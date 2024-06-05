@@ -48,21 +48,27 @@ void Client::resolveServerSetting()
 	{
 		std::stringstream ss(block.getServerName());
 		std::string name;
+		bool flag = false;
 
 		for (; std::getline(ss, name, ' ');)
 		{
+			logger.log(DEBUG, "resolveServerSetting: compare: " + host + " ? " +
+								  name + " " + block.getServerName());
 			if (host == name)
 			{
 				_serversetting = block;
-				_request.setHeaderEnd(false);
-				logger.log(INFO, "resolveServerSetting: Found: " +
-									 _serversetting.getServerName());
-				_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
-				_file_manager.setServerSetting(_serversetting);
-				return;
+				flag = true;
+				break;
 			}
 		}
+		if (flag == true)
+			break;
 	}
+	logger.log(INFO, "resolveServerSetting: Found: " +
+						 _serversetting.getServerName());
+	_request.setHeaderEnd(false);
+	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
+	_file_manager.setServerSetting(_serversetting);
 }
 
 int Client::getFD(void) const
