@@ -43,25 +43,30 @@ void Client::resolveServerSetting()
 		return;
 	}
 
-	_serversetting = _server_list.at(0);
 	std::string host = hp.substr(0, hp.find_first_of(":"));
 	for (const ServerSettings &block : _server_list)
 	{
 		std::stringstream ss(block.getServerName());
 		std::string name;
+		bool flag = false;
 
 		for (; std::getline(ss, name, ' ');)
 		{
+			logger.log(DEBUG, "resolveServerSetting: compare: " + host + " ? " +
+								  name + " " + block.getServerName());
 			if (host == name)
 			{
 				_serversetting = block;
+				flag = true;
 				break;
 			}
 		}
+		if (flag == true)
+			break;
 	}
-	_request.setHeaderEnd(false);
 	logger.log(INFO, "resolveServerSetting: Found: " +
 						 _serversetting.getServerName());
+	_request.setHeaderEnd(false);
 	_request.setMaxBodySize(_serversetting.getClientMaxBodySize());
 	_file_manager.setServerSetting(_serversetting);
 }

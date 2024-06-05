@@ -46,7 +46,7 @@ class Client
 	CGI _cgi;
 	Socket _socket;
 	const std::vector<ServerSettings> &_server_list;
-	ServerSettings &_serversetting;
+	ServerSettings _serversetting;
 	ClientState _state;
 	int _serverToCgiFd[2];
 	int _cgiToServerFd[2];
