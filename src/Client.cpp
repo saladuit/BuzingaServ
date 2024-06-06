@@ -222,12 +222,12 @@ ClientState Client::handleConnection(
 		_response.clear();
 		_file_manager.setResponse(e.what());
 
-		const std::string errdir = _serversetting.getErrorDir();
-		if (errdir.empty())
+		const std::string path = _serversetting.getErrorDir();
+		if (path.empty())
 			_state = _file_manager.openErrorPage("", e.getStatusCode());
 		else
-			_state = _file_manager.openErrorPage(errdir.substr(1),
-												 e.getStatusCode());
+			_state =
+				_file_manager.openErrorPage(path.substr(1), e.getStatusCode());
 		return (_state);
 	}
 	catch (ReturnException &e)

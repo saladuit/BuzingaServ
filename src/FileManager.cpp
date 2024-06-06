@@ -18,24 +18,33 @@ FileManager::~FileManager()
 {
 }
 
-std::string
-FileManager::applyLocationSettings(const std::string &request_target)
+std::string FileManager::resolveRequestTarget(const std::string &request_target)
 {
-	//	_serversetting.printServerSettings();
+	Logger &logger = Logger::getInstance();
+
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
+	const std::string root = _serversetting.getRoot().substr(1);
 
+	logger.log(DEBUG, "resolveRequestTarget:\t" + root + " " + request_target);
 	if (!loc.getRedirect().empty())
 		throw ReturnException(StatusCode::Found, loc);
 
-	if (request_target.back() != '/') // check isdirectory
-		return (loc.resolveAlias(request_target).substr(1));
-	if (!loc.getIndex().empty())
-		return (loc.resolveAlias(request_target).substr(1) + loc.getIndex());
-	_request_target = AutoIndexGenerator::OpenAutoIndex(
-		loc.resolveAlias(request_target).substr(1), request_target);
+	if (request_target.back() != '/')
+		return (root + loc.resolveAlias(request_target));
+	// is a directory
+	if (loc.getIndex().empty() == false)
+		return (root + loc.resolveAlias(request_target) + loc.getIndex());
+	logger.log(DEBUG, "resolveRequestTarget:\tAutoIndex:\t" +
+						  (loc.getAutoIndex() ? std::string(" ON")
+											  : std::string(" OFF")));
+	if (loc.getAutoIndex() == false)
+		throw ClientException(StatusCode::UnAuthorized);
+	const std::string AI_target = root + loc.resolveAlias(request_target);
+	_request_target =
+		AutoIndexGenerator::OpenAutoIndex(AI_target, request_target);
 	_autoindex = true;
-	return (loc.resolveAlias(request_target).substr(1));
+	return (AI_target);
 }
 
 void FileManager::openGetFile(const std::string &request_target_path)
@@ -44,7 +53,7 @@ void FileManager::openGetFile(const std::string &request_target_path)
 
 	logger.log(DEBUG, "request_target:\t" + request_target_path);
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path);
+		resolveRequestTarget(request_target_path);
 	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
 
 	if (_autoindex == true)
@@ -69,7 +78,7 @@ void FileManager::openPostFile(const std::string &request_target_path)
 
 	logger.log(DEBUG, "request_target:\t" + request_target_path);
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path);
+		resolveRequestTarget(request_target_path);
 	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
 
 	if (!std::filesystem::exists(resolved_target))
@@ -174,7 +183,7 @@ ClientState FileManager::manageDelete(const std::string &request_target_path)
 
 	logger.log(DEBUG, "request_target:\t" + request_target_path);
 	const std::string resolved_target =
-		applyLocationSettings(request_target_path);
+		resolveRequestTarget(request_target_path);
 	logger.log(DEBUG, "resolved_target:\t" + resolved_target);
 
 	logger.log(DEBUG, "manageDelete method is called");

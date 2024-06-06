@@ -277,7 +277,7 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 		throw std::logic_error("Couldn't resolve Location in server: " +
 							   _server_name);
 
-	logger.log(DEBUG, "resolveLocation: found Block: " + ret->getPath());
+	logger.log(DEBUG, "resolveLocation: Found:\t\t" + ret->getPath());
 	return (*ret);
 }
 

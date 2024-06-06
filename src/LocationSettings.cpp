@@ -236,13 +236,17 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 }
 
 // resolveAlias
-
 const std::string LocationSettings::resolveAlias(const std::string inp) const
 {
 	Logger &logger = Logger::getInstance();
 
 	std::string alias = getAlias();
 	logger.log(DEBUG, "resolveAlias:\treques_target:\t" + inp);
+	if (alias.empty())
+	{
+		logger.log(DEBUG, "resolveAlias:\tNo Alias:\t" + _path);
+		return (inp);
+	}
 	logger.log(DEBUG, "resolveAlias:\tAlias:\t\t" + alias);
 	std::string result = inp.substr(_path.length());
 
@@ -251,7 +255,6 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 }
 
 // THIS IS PRINTING FUNCTION
-
 void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();
