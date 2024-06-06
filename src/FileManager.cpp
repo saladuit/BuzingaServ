@@ -21,25 +21,20 @@ FileManager::~FileManager()
 std::string
 FileManager::applyLocationSettings(const std::string &request_target)
 {
-	//  substr(1) is required to remove starting '/'
+	//	_serversetting.printServerSettings();
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
 	if (!loc.getRedirect().empty())
 		throw ReturnException(StatusCode::Found, loc);
 
-	if (request_target.find_last_of('/') == request_target.length() - 1)
-	{
-		if (!loc.getIndex().empty())
-			return (loc.resolveAlias(request_target).substr(1) +
-					loc.getIndex());
-		else if (loc.getAutoIndex() == false)
-			return (loc.resolveAlias(request_target).substr(1) + "index.html");
-		_request_target = AutoIndexGenerator::OpenAutoIndex(
-			loc.resolveAlias(request_target).substr(1), request_target);
-		_autoindex = true;
-	}
-
+	if (request_target.back() != '/') // check isdirectory
+		return (loc.resolveAlias(request_target).substr(1));
+	if (!loc.getIndex().empty())
+		return (loc.resolveAlias(request_target).substr(1) + loc.getIndex());
+	_request_target = AutoIndexGenerator::OpenAutoIndex(
+		loc.resolveAlias(request_target).substr(1), request_target);
+	_autoindex = true;
 	return (loc.resolveAlias(request_target).substr(1));
 }
 

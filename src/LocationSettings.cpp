@@ -191,7 +191,7 @@ const bool &LocationSettings::getCGI() const
 	return (_cgi);
 }
 
-static const std::string MethodToString(HTTPMethod num)
+const std::string MethodToString(HTTPMethod num)
 {
 	switch (num)
 	{
