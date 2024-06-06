@@ -106,18 +106,6 @@ HTTPResponse &Client::getResponse()
 	return (_response);
 }
 
-void Client::ClientLocationRelation(const std::string &request_target,
-									HTTPMethod method)
-{
-	const LocationSettings &loc =
-		_serversetting.resolveLocation(request_target);
-
-	if (loc.resolveMethod(method) == false)
-		throw ClientException(StatusCode::MethodNotAllowed);
-	if (loc.getCGI() == true)
-		_request.setCGI(true);
-}
-
 ClientState Client::handleConnection(
 	short events, Poll &poll, Client &client,
 	std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
@@ -133,11 +121,14 @@ ClientState Client::handleConnection(
 			_state = _request.receive(_socket.getFD());
 			if (_request.getHeaderEnd())
 			{
-				logger.log(DEBUG, "Client::handleConnection:" +
-									  std::to_string(__LINE__));
 				resolveServerSetting();
-				ClientLocationRelation(_request.getRequestTarget(),
-									   _request.getMethodType());
+				const LocationSettings &loc =
+					_serversetting.resolveLocation(_request.getRequestTarget());
+
+				if (loc.resolveMethod(_request.getMethodType()) == false)
+					throw ClientException(StatusCode::MethodNotAllowed);
+				if (loc.getCGI() == true)
+					_request.setCGI(true);
 				if (_request.getBody().size() > _request.getMaxBodySize())
 					throw ClientException(StatusCode::RequestBodyTooLarge);
 				if (_request.getBody().size() >= _request.getBodyLength())
