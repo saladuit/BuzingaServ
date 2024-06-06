@@ -107,9 +107,9 @@ void LocationSettings::parseIndex(const Token token)
 
 void LocationSettings::parseAutoIndex(const Token token)
 {
-	if (token.getString() == "on")
+	if (token.getString() == "on" || token.getString() == "ON")
 		_auto_index = true;
-	else if (token.getString() == "off")
+	else if (token.getString() == "off" || token.getString() == "OFF")
 		_auto_index = false;
 	else
 		throw std::runtime_error("ConfigParser: Unknown VALUE for autoindex: " +

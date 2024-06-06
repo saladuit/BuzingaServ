@@ -53,6 +53,8 @@ void ServerSettings::validateBlock(void)
 		throw std::runtime_error("Parsing Error: no listen given");
 	if (_root.empty())
 		throw std::runtime_error("Parsing Error: no root given");
+	if (_location_settings.size() == 0)
+		throw std::runtime_error("Parsing Error: no locationblock given");
 }
 
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
