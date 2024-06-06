@@ -21,6 +21,7 @@ class ServerSettings
 
 	const std::string &getListen() const;
 	const std::string &getServerName() const;
+	const std::string &getRoot() const;
 	const std::string &getErrorDir() const;
 	const std::string &getClientMaxBodySize() const;
 
@@ -30,6 +31,7 @@ class ServerSettings
   private:
 	std::string _listen;
 	std::string _server_name;
+	std::string _root;
 	std::string _error_dir;
 	std::string _client_max_body_size;
 	std::vector<LocationSettings> _location_settings;
@@ -41,8 +43,11 @@ class ServerSettings
 								  std::vector<Token>::iterator &value);
 	void parseListen(const Token value);
 	void parseServerName(const Token value);
+	void parseRoot(const Token value);
 	void parseErrorDir(const Token value);
 	void parseClientMaxBodySize(const Token value);
+
+	void validateBlock();
 };
 
 #endif

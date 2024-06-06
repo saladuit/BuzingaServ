@@ -87,7 +87,12 @@ void LocationSettings::parseAlias(const Token token)
 	if (!_alias.empty())
 		logger.log(WARNING,
 				   "ConfigParser: redefining alias in locationblock: " + _path);
-	_alias = token.getString();
+	if (token.getString().front() == '/' && token.getString().back() == '/')
+		_alias = token.getString();
+	else
+		throw std::runtime_error(
+			"ConfigParser: invalid alias (/path/to/directory/) : [" +
+			token.getString() + "] in block: " + getPath());
 }
 
 void LocationSettings::parseIndex(const Token token)

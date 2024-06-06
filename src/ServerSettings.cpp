@@ -13,13 +13,13 @@
 #include <string>
 
 ServerSettings::ServerSettings()
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _root(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 }
 
 ServerSettings::ServerSettings(const ServerSettings &rhs)
-	: _listen(rhs._listen), _server_name(rhs._server_name),
+	: _listen(rhs._listen), _server_name(rhs._server_name), _root(rhs._root),
 	  _error_dir(rhs._error_dir),
 	  _client_max_body_size(rhs._client_max_body_size),
 	  _location_settings(rhs._location_settings)
@@ -33,6 +33,7 @@ ServerSettings &ServerSettings::operator=(const ServerSettings &rhs)
 	_listen = rhs._listen;
 	_server_name = rhs._server_name;
 	_error_dir = rhs._error_dir;
+	_root = rhs._root;
 	_client_max_body_size = rhs._client_max_body_size;
 	_location_settings = rhs._location_settings;
 	return (*this);
@@ -46,8 +47,16 @@ ServerSettings::~ServerSettings()
 // This constructor takes a vector of Tokens, goes over it and according to the
 // assigned values will fill in the ServerSettings.
 
+void ServerSettings::validateBlock(void)
+{
+	if (_listen.empty())
+		throw std::runtime_error("Parsing Error: no listen given");
+	if (_root.empty())
+		throw std::runtime_error("Parsing Error: no root given");
+}
+
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _root(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 	token += 2;
@@ -63,6 +72,7 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 			addValueToServerSettings(key, token);
 		token++;
 	}
+	validateBlock();
 }
 
 const std::string convertHost(const std::string &str)
@@ -122,7 +132,19 @@ void ServerSettings::parseListen(const Token value)
 
 void ServerSettings::parseServerName(const Token value)
 {
-	_server_name.append(" " + value.getString());
+	if (_server_name.empty())
+		_server_name = value.getString();
+	else
+		_server_name.append(" " + value.getString());
+}
+
+void ServerSettings::parseRoot(const Token value)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_root.empty())
+		logger.log(WARNING, "ConfigParser: redefining root");
+	_root = value.getString();
 }
 
 void ServerSettings::parseErrorDir(const Token value)
@@ -169,6 +191,8 @@ void ServerSettings::addValueToServerSettings(
 			parseListen(*value);
 		else if (key.getString() == "server_name")
 			parseServerName(*value);
+		else if (key.getString() == "root")
+			parseRoot(*value);
 		else if (key.getString() == "error_dir")
 			parseErrorDir(*value);
 		else if (key.getString() == "client_max_body_size")
@@ -190,6 +214,11 @@ const std::string &ServerSettings::getListen() const
 const std::string &ServerSettings::getServerName() const
 {
 	return (_server_name);
+}
+
+const std::string &ServerSettings::getRoot() const
+{
+	return (_root);
 }
 
 const std::string &ServerSettings::getErrorDir() const
@@ -262,14 +291,16 @@ void ServerSettings::printServerSettings() const
 	logger.log(DEBUG, "ServerSettings:");
 
 	// printing Class variables:
-	logger.log(DEBUG, "\t_Listen:" + _listen);
-	logger.log(DEBUG, "\t_ServerName:" + _server_name);
-	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
-	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
+	logger.log(DEBUG, "\t_Listen:\t\t" + _listen);
+	logger.log(DEBUG, "\t_ServerName:\t\t" + _server_name);
+	logger.log(DEBUG, "\t_Root:\t\t\t" + _root);
+	logger.log(DEBUG, "\t_ErrorDir:\t\t" + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize:\t" + _client_max_body_size);
 
 	for (auto &location_instance : _location_settings)
 	{
 		location_instance.printLocationSettings();
+		logger.log(DEBUG, "");
 	}
 	logger.log(DEBUG, "\n");
 
