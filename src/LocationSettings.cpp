@@ -210,10 +210,16 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 {
 	Logger &logger = Logger::getInstance();
 
+	logger.log(DEBUG, "resolveMethod: " + MethodToString(method) + " : " +
+						  getAllowedMethods());
 	if (getAllowedMethods().empty())
+	{
 		logger.log(WARNING,
 				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
 					   getPath());
+		return (false);
+	}
+
 	std::stringstream ss(getAllowedMethods());
 	std::string option;
 	for (; std::getline(ss, option, ' ');)
@@ -235,7 +241,7 @@ const std::string LocationSettings::resolveAlias(const std::string inp) const
 	logger.log(DEBUG, "resolveAlias:\tAlias:\t\t" + alias);
 	std::string result = inp.substr(_path.length());
 
-	logger.log(DEBUG, "resolveAlias:\t" + alias + result);
+	logger.log(DEBUG, "resolveAlias:\t\t\t" + alias + result);
 	return (alias + result);
 }
 

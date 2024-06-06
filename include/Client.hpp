@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "AutoIndexGenerator.hpp"
 #include "CGI.hpp"
 #include "FileManager.hpp"
 #include "HTTPRequest.hpp"

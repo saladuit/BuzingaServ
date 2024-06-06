@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 256
 
 // DEFINES
 

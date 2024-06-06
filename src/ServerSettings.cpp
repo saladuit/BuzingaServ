@@ -71,7 +71,7 @@ const std::string convertHost(const std::string &str)
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
 	struct addrinfo *res = NULL;
@@ -93,7 +93,7 @@ const std::string validateListen(const std::string &str)
 {
 	size_t pos = str.find_first_of(":");
 	if (pos == std::string::npos || pos != str.find_last_of(":"))
-		throw std::runtime_error("Parsing Error: invalid value for listen");
+		throw std::runtime_error("Parsing Error: invalid listen [host:port]");
 
 	const std::string ip = str.substr(0, pos);
 	const std::string port = str.substr(pos + 1, std::string::npos);
@@ -106,7 +106,7 @@ const std::string validateListen(const std::string &str)
 	}
 	catch (std::exception &e)
 	{
-		throw std::runtime_error("Parsing Error: found invalid PORT in listen");
+		throw std::runtime_error("Parsing Error: invalid port [1 - 65535]");
 	}
 	return (convertHost(ip) + ":" + port);
 }
@@ -231,8 +231,8 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 	const LocationSettings *ret = nullptr;
 	std::string searched = request_target.substr(0, request_target.find("?"));
 
-	logger.log(DEBUG, "resolveLocation: request:\t" + request_target);
-	logger.log(DEBUG, "resolveLocation: searched:\t" + searched);
+	logger.log(DEBUG, "resolveLocation: request:\t\t" + request_target);
+	logger.log(DEBUG, "resolveLocation: searched:\t\t" + searched);
 	for (const auto &instance : _location_settings)
 	{
 		const size_t pos = request_target.find(instance.getPath());
