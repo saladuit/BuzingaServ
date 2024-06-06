@@ -100,12 +100,12 @@ const size_t &HTTPRequest::getBodyLength(void) const
 	return (_content_length);
 }
 
-void HTTPRequest::setCGIToTrue(void)
+void HTTPRequest::setCGI(bool b)
 {
-	_cgi = true;
+	_cgi = b;
 }
 
-const bool &HTTPRequest::CGITrue(void) const
+const bool &HTTPRequest::getCGI(void) const
 {
 	return (_cgi);
 }

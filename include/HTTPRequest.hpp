@@ -59,8 +59,8 @@ class HTTPRequest
 	bool getHeaderEnd() const;
 
 	const std::string &getExecutable(void) const;
-	void setCGIToTrue(void);
-	const bool &CGITrue(void) const;
+	void setCGI(bool b);
+	const bool &getCGI(void) const;
 	const size_t &getBodyLength(void) const;
 
   private:

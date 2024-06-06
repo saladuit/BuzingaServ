@@ -106,25 +106,17 @@ HTTPResponse &Client::getResponse()
 	return (_response);
 }
 
-void Client::checkCGI(const std::string &request_target, HTTPMethod method)
+void Client::ClientLocationRelation(const std::string &request_target,
+									HTTPMethod method)
 {
 	const LocationSettings &loc =
 		_serversetting.resolveLocation(request_target);
 
 	if (loc.resolveMethod(method) == false)
 		throw ClientException(StatusCode::MethodNotAllowed);
-	if (loc.getCGI())
-		_request.setCGIToTrue();
+	if (loc.getCGI() == true)
+		_request.setCGI(true);
 }
-
-// TODO:
-// [x] ServerName isn't working propperly, requires testing
-// [x] ResolveAlias needs a rework should copy and replace.
-// [x] Contentlenght Isnt working, requires testing
-// [x] Post Doesn't write the body of the request to the file
-// [x] Delete doens't work, maybe resolve Location
-// [ ] CGI Hangs when the child process gets stuck.
-// [x] I'm still sometimes getting FATAL ERROR getClientPipe
 
 ClientState Client::handleConnection(
 	short events, Poll &poll, Client &client,
@@ -141,12 +133,15 @@ ClientState Client::handleConnection(
 			_state = _request.receive(_socket.getFD());
 			if (_request.getHeaderEnd())
 			{
+				logger.log(DEBUG, "Client::handleConnection:" +
+									  std::to_string(__LINE__));
 				resolveServerSetting();
+				ClientLocationRelation(_request.getRequestTarget(),
+									   _request.getMethodType());
 				if (_request.getBody().size() > _request.getMaxBodySize())
 					throw ClientException(StatusCode::RequestBodyTooLarge);
 				if (_request.getBody().size() >= _request.getBodyLength())
 					return (ClientState::Loading);
-				checkCGI(_request.getRequestTarget(), _request.getMethodType());
 			}
 			return (_state);
 		}
@@ -180,7 +175,7 @@ ClientState Client::handleConnection(
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			logger.log(DEBUG, "ClientState::Loading");
-			if (_request.CGITrue() == true &&
+			if (_request.getCGI() == true &&
 				_request.getMethodType() != HTTPMethod::DELETE)
 			{
 				_state = _cgi.parseURIForCGI(
@@ -221,7 +216,7 @@ ClientState Client::handleConnection(
 	catch (ClientException &e)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
-		if (_request.CGITrue() == true &&
+		if (_request.getCGI() == true &&
 			_request.getMethodType() != HTTPMethod::DELETE)
 			_exit(1);
 		_response.clear();
