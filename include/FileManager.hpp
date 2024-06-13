@@ -18,7 +18,7 @@ class FileManager
 	bool _autoindex;
 	size_t _bytes_sent;
 
-	std::string applyLocationSettings(const std::string &request_target);
+	std::string resolveRequestTarget(const std::string &request_target);
 
   public:
 	FileManager();

@@ -114,7 +114,7 @@ void HTTPServer::handleActivePollFDs()
 			if (poll_fd.revents & POLLHUP)
 			{
 				Client &client = getClientByPipeFd(poll_fd.fd);
-				if (client.getRequest().CGITrue() &&
+				if (client.getRequest().getCGI() &&
 					client.getRequest().getMethodType() != HTTPMethod::DELETE)
 				{
 					_poll.removeFD(poll_fd.fd);

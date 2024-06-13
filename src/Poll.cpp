@@ -43,9 +43,9 @@ bool Poll::pollFDs(void)
 	logger.log(INFO, "Polling " + std::to_string(_poll_fds.size()) +
 						 " file descriptors");
 
-	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 5000);
+	int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 2500);
 	if (poll_count == SYSTEM_ERROR)
-		throw SystemException("poll"); // TODO: change poll_count 0 handler
+		throw SystemException("poll");
 	if (poll_count == 0)
 		return (false);
 	return (true);

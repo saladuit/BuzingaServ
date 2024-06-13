@@ -87,7 +87,12 @@ void LocationSettings::parseAlias(const Token token)
 	if (!_alias.empty())
 		logger.log(WARNING,
 				   "ConfigParser: redefining alias in locationblock: " + _path);
-	_alias = token.getString();
+	if (token.getString().front() == '/' && token.getString().back() == '/')
+		_alias = token.getString();
+	else
+		throw std::runtime_error(
+			"ConfigParser: invalid alias (/path/to/directory/) : [" +
+			token.getString() + "] in block: " + getPath());
 }
 
 void LocationSettings::parseIndex(const Token token)
@@ -102,9 +107,9 @@ void LocationSettings::parseIndex(const Token token)
 
 void LocationSettings::parseAutoIndex(const Token token)
 {
-	if (token.getString() == "on")
+	if (token.getString() == "on" || token.getString() == "ON")
 		_auto_index = true;
-	else if (token.getString() == "off")
+	else if (token.getString() == "off" || token.getString() == "OFF")
 		_auto_index = false;
 	else
 		throw std::runtime_error("ConfigParser: Unknown VALUE for autoindex: " +
@@ -186,7 +191,7 @@ const bool &LocationSettings::getCGI() const
 	return (_cgi);
 }
 
-static const std::string MethodToString(HTTPMethod num)
+const std::string MethodToString(HTTPMethod num)
 {
 	switch (num)
 	{
@@ -210,10 +215,16 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 {
 	Logger &logger = Logger::getInstance();
 
+	logger.log(DEBUG, "resolveMethod: " + MethodToString(method) + " : " +
+						  getAllowedMethods());
 	if (getAllowedMethods().empty())
+	{
 		logger.log(WARNING,
 				   "ResolveMethod: No HTTPMethod specified in Locationblock: " +
 					   getPath());
+		return (false);
+	}
+
 	std::stringstream ss(getAllowedMethods());
 	std::string option;
 	for (; std::getline(ss, option, ' ');)
@@ -225,22 +236,25 @@ bool LocationSettings::resolveMethod(const HTTPMethod method) const
 }
 
 // resolveAlias
-
 const std::string LocationSettings::resolveAlias(const std::string inp) const
 {
 	Logger &logger = Logger::getInstance();
 
 	std::string alias = getAlias();
 	logger.log(DEBUG, "resolveAlias:\treques_target:\t" + inp);
+	if (alias.empty())
+	{
+		logger.log(DEBUG, "resolveAlias:\tNo Alias:\t" + _path);
+		return (inp);
+	}
 	logger.log(DEBUG, "resolveAlias:\tAlias:\t\t" + alias);
 	std::string result = inp.substr(_path.length());
 
-	logger.log(DEBUG, "resolveAlias:\t" + alias + result);
+	logger.log(DEBUG, "resolveAlias:\t\t\t" + alias + result);
 	return (alias + result);
 }
 
 // THIS IS PRINTING FUNCTION
-
 void LocationSettings::printLocationSettings() const
 {
 	Logger &logger = Logger::getInstance();

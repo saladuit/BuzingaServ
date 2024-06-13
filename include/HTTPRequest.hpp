@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 256
 
 // DEFINES
 
@@ -59,8 +59,8 @@ class HTTPRequest
 	bool getHeaderEnd() const;
 
 	const std::string &getExecutable(void) const;
-	void setCGIToTrue(void);
-	const bool &CGITrue(void) const;
+	void setCGI(bool b);
+	const bool &getCGI(void) const;
 	const size_t &getBodyLength(void) const;
 
   private:

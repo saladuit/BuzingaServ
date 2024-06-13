@@ -106,26 +106,6 @@ HTTPResponse &Client::getResponse()
 	return (_response);
 }
 
-void Client::checkCGI(const std::string &request_target, HTTPMethod method)
-{
-	const LocationSettings &loc =
-		_serversetting.resolveLocation(request_target);
-
-	if (loc.resolveMethod(method) == false)
-		throw ClientException(StatusCode::MethodNotAllowed);
-	if (loc.getCGI())
-		_request.setCGIToTrue();
-}
-
-// TODO:
-// [x] ServerName isn't working propperly, requires testing
-// [x] ResolveAlias needs a rework should copy and replace.
-// [x] Contentlenght Isnt working, requires testing
-// [x] Post Doesn't write the body of the request to the file
-// [x] Delete doens't work, maybe resolve Location
-// [ ] CGI Hangs when the child process gets stuck.
-// [x] I'm still sometimes getting FATAL ERROR getClientPipe
-
 ClientState Client::handleConnection(
 	short events, Poll &poll, Client &client,
 	std::unordered_map<int, std::shared_ptr<int>> &active_pipes)
@@ -142,11 +122,17 @@ ClientState Client::handleConnection(
 			if (_request.getHeaderEnd())
 			{
 				resolveServerSetting();
+				const LocationSettings &loc =
+					_serversetting.resolveLocation(_request.getRequestTarget());
+
+				if (loc.resolveMethod(_request.getMethodType()) == false)
+					throw ClientException(StatusCode::MethodNotAllowed);
+				if (loc.getCGI() == true)
+					_request.setCGI(true);
 				if (_request.getBody().size() > _request.getMaxBodySize())
 					throw ClientException(StatusCode::RequestBodyTooLarge);
 				if (_request.getBody().size() >= _request.getBodyLength())
 					return (ClientState::Loading);
-				checkCGI(_request.getRequestTarget(), _request.getMethodType());
 			}
 			return (_state);
 		}
@@ -180,7 +166,7 @@ ClientState Client::handleConnection(
 		else if (events & POLLOUT && _state == ClientState::Loading)
 		{
 			logger.log(DEBUG, "ClientState::Loading");
-			if (_request.CGITrue() == true &&
+			if (_request.getCGI() == true &&
 				_request.getMethodType() != HTTPMethod::DELETE)
 			{
 				_state = _cgi.parseURIForCGI(
@@ -221,18 +207,18 @@ ClientState Client::handleConnection(
 	catch (ClientException &e)
 	{
 		logger.log(ERROR, "Client exception: " + std::string(e.what()));
-		if (_request.CGITrue() == true &&
+		if (_request.getCGI() == true &&
 			_request.getMethodType() != HTTPMethod::DELETE)
 			_exit(1);
 		_response.clear();
 		_file_manager.setResponse(e.what());
 
-		const std::string errdir = _serversetting.getErrorDir();
-		if (errdir.empty())
+		const std::string path = _serversetting.getErrorDir();
+		if (path.empty())
 			_state = _file_manager.openErrorPage("", e.getStatusCode());
 		else
-			_state = _file_manager.openErrorPage(errdir.substr(1),
-												 e.getStatusCode());
+			_state =
+				_file_manager.openErrorPage(path.substr(1), e.getStatusCode());
 		return (_state);
 	}
 	catch (ReturnException &e)

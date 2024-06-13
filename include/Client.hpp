@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "AutoIndexGenerator.hpp"
 #include "CGI.hpp"
 #include "FileManager.hpp"
 #include "HTTPRequest.hpp"
@@ -50,8 +49,8 @@ class Client
 	ClientState _state;
 	int _serverToCgiFd[2];
 	int _cgiToServerFd[2];
-
-	void checkCGI(const std::string &request_target, HTTPMethod method);
 };
+
+const std::string MethodToString(HTTPMethod num);
 
 #endif
