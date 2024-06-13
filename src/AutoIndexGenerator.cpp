@@ -91,9 +91,10 @@ std::string AutoIndexGenerator::AutoIndexGenerator(const std::string dir,
 		<table style = \"width:80%;font-size:15px\">\n\
 		<tbody>\n\
 		<tr>\n\
-		\t<th style = \"text-align:left\"> File Name</th>\n\
-		\t<th style = \"text-align:left\"> File Size</th>\n\
-		\t<th style = \"text-align:left\"> Last Modification</th>\n\
+		\t<th style = \"text-align:left\"> <u>File Name</u></th>\n\
+		\t<th style = \"text-align:left\"> <u>File Size</u></th>\n\
+		\t<th style = \"text-align:left\"> <u>Last Modification</u></th>\n\
+		<hr>\n\
 		</tr>\n";
 
 	getTableLines(response, dir);

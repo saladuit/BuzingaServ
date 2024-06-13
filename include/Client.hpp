@@ -49,9 +49,6 @@ class Client
 	ClientState _state;
 	int _serverToCgiFd[2];
 	int _cgiToServerFd[2];
-
-	void ClientLocationRelation(const std::string &request_target,
-								HTTPMethod method);
 };
 
 const std::string MethodToString(HTTPMethod num);
