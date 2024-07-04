@@ -13,13 +13,13 @@
 #include <string>
 
 ServerSettings::ServerSettings()
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _root(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 }
 
 ServerSettings::ServerSettings(const ServerSettings &rhs)
-	: _listen(rhs._listen), _server_name(rhs._server_name),
+	: _listen(rhs._listen), _server_name(rhs._server_name), _root(rhs._root),
 	  _error_dir(rhs._error_dir),
 	  _client_max_body_size(rhs._client_max_body_size),
 	  _location_settings(rhs._location_settings)
@@ -33,6 +33,7 @@ ServerSettings &ServerSettings::operator=(const ServerSettings &rhs)
 	_listen = rhs._listen;
 	_server_name = rhs._server_name;
 	_error_dir = rhs._error_dir;
+	_root = rhs._root;
 	_client_max_body_size = rhs._client_max_body_size;
 	_location_settings = rhs._location_settings;
 	return (*this);
@@ -46,8 +47,18 @@ ServerSettings::~ServerSettings()
 // This constructor takes a vector of Tokens, goes over it and according to the
 // assigned values will fill in the ServerSettings.
 
+void ServerSettings::validateBlock(void)
+{
+	if (_listen.empty())
+		throw std::runtime_error("Parsing Error: no listen given");
+	if (_root.empty())
+		throw std::runtime_error("Parsing Error: no root given");
+	if (_location_settings.size() == 0)
+		throw std::runtime_error("Parsing Error: no locationblock given");
+}
+
 ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
-	: _listen(), _server_name(), _error_dir(), _client_max_body_size(),
+	: _listen(), _server_name(), _root(), _error_dir(), _client_max_body_size(),
 	  _location_settings()
 {
 	token += 2;
@@ -63,6 +74,7 @@ ServerSettings::ServerSettings(std::vector<Token>::iterator &token)
 			addValueToServerSettings(key, token);
 		token++;
 	}
+	validateBlock();
 }
 
 const std::string convertHost(const std::string &str)
@@ -71,7 +83,7 @@ const std::string convertHost(const std::string &str)
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
 	struct addrinfo *res = NULL;
@@ -93,7 +105,7 @@ const std::string validateListen(const std::string &str)
 {
 	size_t pos = str.find_first_of(":");
 	if (pos == std::string::npos || pos != str.find_last_of(":"))
-		throw std::runtime_error("Parsing Error: invalid value for listen");
+		throw std::runtime_error("Parsing Error: invalid listen [host:port]");
 
 	const std::string ip = str.substr(0, pos);
 	const std::string port = str.substr(pos + 1, std::string::npos);
@@ -106,7 +118,7 @@ const std::string validateListen(const std::string &str)
 	}
 	catch (std::exception &e)
 	{
-		throw std::runtime_error("Parsing Error: found invalid PORT in listen");
+		throw std::runtime_error("Parsing Error: invalid port [1 - 65535]");
 	}
 	return (convertHost(ip) + ":" + port);
 }
@@ -122,7 +134,19 @@ void ServerSettings::parseListen(const Token value)
 
 void ServerSettings::parseServerName(const Token value)
 {
-	_server_name.append(" " + value.getString());
+	if (_server_name.empty())
+		_server_name = value.getString();
+	else
+		_server_name.append(" " + value.getString());
+}
+
+void ServerSettings::parseRoot(const Token value)
+{
+	Logger &logger = Logger::getInstance();
+
+	if (!_root.empty())
+		logger.log(WARNING, "ConfigParser: redefining root");
+	_root = value.getString();
 }
 
 void ServerSettings::parseErrorDir(const Token value)
@@ -169,6 +193,8 @@ void ServerSettings::addValueToServerSettings(
 			parseListen(*value);
 		else if (key.getString() == "server_name")
 			parseServerName(*value);
+		else if (key.getString() == "root")
+			parseRoot(*value);
 		else if (key.getString() == "error_dir")
 			parseErrorDir(*value);
 		else if (key.getString() == "client_max_body_size")
@@ -190,6 +216,11 @@ const std::string &ServerSettings::getListen() const
 const std::string &ServerSettings::getServerName() const
 {
 	return (_server_name);
+}
+
+const std::string &ServerSettings::getRoot() const
+{
+	return (_root);
 }
 
 const std::string &ServerSettings::getErrorDir() const
@@ -231,8 +262,8 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 	const LocationSettings *ret = nullptr;
 	std::string searched = request_target.substr(0, request_target.find("?"));
 
-	logger.log(DEBUG, "resolveLocation: request:\t" + request_target);
-	logger.log(DEBUG, "resolveLocation: searched:\t" + searched);
+	logger.log(DEBUG, "resolveLocation: request:\t\t" + request_target);
+	logger.log(DEBUG, "resolveLocation: searched:\t\t" + searched);
 	for (const auto &instance : _location_settings)
 	{
 		const size_t pos = request_target.find(instance.getPath());
@@ -248,7 +279,7 @@ ServerSettings::resolveLocation(const std::string &request_target) const
 		throw std::logic_error("Couldn't resolve Location in server: " +
 							   _server_name);
 
-	logger.log(DEBUG, "resolveLocation: found Block: " + ret->getPath());
+	logger.log(DEBUG, "resolveLocation: Found:\t\t" + ret->getPath());
 	return (*ret);
 }
 
@@ -262,14 +293,16 @@ void ServerSettings::printServerSettings() const
 	logger.log(DEBUG, "ServerSettings:");
 
 	// printing Class variables:
-	logger.log(DEBUG, "\t_Listen:" + _listen);
-	logger.log(DEBUG, "\t_ServerName:" + _server_name);
-	logger.log(DEBUG, "\t_ErrorDir: " + _error_dir);
-	logger.log(DEBUG, "\t_ClientMaxBodySize: " + _client_max_body_size);
+	logger.log(DEBUG, "\t_Listen:\t\t" + _listen);
+	logger.log(DEBUG, "\t_ServerName:\t\t" + _server_name);
+	logger.log(DEBUG, "\t_Root:\t\t\t" + _root);
+	logger.log(DEBUG, "\t_ErrorDir:\t\t" + _error_dir);
+	logger.log(DEBUG, "\t_ClientMaxBodySize:\t" + _client_max_body_size);
 
 	for (auto &location_instance : _location_settings)
 	{
 		location_instance.printLocationSettings();
+		logger.log(DEBUG, "");
 	}
 	logger.log(DEBUG, "\n");
 
